@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JunkieHub — Configuration Docs</title>
+<title>Configuration Docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
@@ -55,7 +55,7 @@ body::after {
   z-index: 9999;
 }
 
-/* ─── SIDEBAR ─── */
+/* SIDEBAR */
 #sidebar {
   position: fixed; top: 0; left: 0;
   width: var(--sidebar); height: 100vh;
@@ -63,15 +63,45 @@ body::after {
   border-right: 1px solid var(--line);
   display: flex; flex-direction: column;
   overflow-y: auto; z-index: 100;
+  transition: transform 0.3s ease;
 }
+
+#sidebar.collapsed {
+  transform: translateX(-100%);
+}
+
 #sidebar::-webkit-scrollbar { width: 3px; }
 #sidebar::-webkit-scrollbar-thumb { background: var(--line2); }
+
+.toggle-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 101;
+  background: var(--yellow);
+  border: none;
+  color: #000;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-weight: bold;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.toggle-btn:hover {
+  background: #fff;
+}
+
+#sidebar.collapsed ~ #main .toggle-btn {
+  left: 20px;
+}
 
 .sb-header {
   padding: 20px 18px 16px;
   border-bottom: 1px solid var(--line);
   display: flex; flex-direction: column; gap: 10px;
 }
+
 .sb-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
 .sb-logo-icon {
   width: 32px; height: 32px; background: var(--yellow);
@@ -83,7 +113,7 @@ body::after {
   font-family: var(--display); font-size: 18px; font-weight: 800;
   letter-spacing: 0.5px; color: var(--ink); line-height: 1; text-transform: uppercase;
 }
-.sb-domain { font-family: var(--mono); font-size: 10px; color: var(--yellow); letter-spacing: 1px; }
+
 .sb-status {
   display: flex; align-items: center; gap: 7px;
   font-family: var(--mono); font-size: 10px; color: var(--ink3); letter-spacing: 0.5px;
@@ -102,6 +132,18 @@ nav { flex: 1; padding: 10px 0; }
   padding: 10px 18px 4px; display: flex; align-items: center; gap: 8px;
 }
 .nav-group-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+.search-bar {
+  padding: 10px 18px;
+  margin: 10px 10px;
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 12px;
+  border-radius: 4px;
+}
+
 .nav-item {
   display: flex; align-items: center; gap: 9px;
   padding: 7px 18px; text-decoration: none; color: var(--ink3);
@@ -112,7 +154,9 @@ nav { flex: 1; padding: 10px 0; }
 .nav-item svg { width: 14px; height: 14px; flex-shrink: 0; }
 .nav-item:hover { color: var(--ink); background: rgba(255,255,255,0.03); }
 .nav-item.active { color: var(--yellow); border-left-color: var(--yellow); background: rgba(245,200,66,0.05); }
+.nav-item.hidden { display: none; }
 .nav-sub { padding-left: 40px; font-size: 12px; }
+
 .sb-footer {
   padding: 14px 18px; border-top: 1px solid var(--line);
   display: flex; align-items: center; justify-content: space-between;
@@ -120,14 +164,21 @@ nav { flex: 1; padding: 10px 0; }
 .sb-footer-tag { font-family: var(--mono); font-size: 10px; color: var(--ink3); }
 .sb-footer-tag span { color: var(--yellow); font-weight: 600; }
 
-/* ─── MAIN ─── */
-#main { margin-left: var(--sidebar); flex: 1; min-height: 100vh; }
+/* MAIN */
+#main { margin-left: var(--sidebar); flex: 1; min-height: 100vh; transition: margin-left 0.3s ease; }
+#main.sidebar-collapsed { margin-left: 0; }
+
 #bar {
   position: fixed; top: 0; left: var(--sidebar); right: 0; height: 2px;
   background: var(--yellow); transform-origin: left; transform: scaleX(0); z-index: 200;
+  transition: left 0.3s ease;
 }
 
-/* ─── HERO ─── */
+#main.sidebar-collapsed #bar {
+  left: 0;
+}
+
+/* HERO */
 #hero {
   padding: 56px 56px 44px; border-bottom: 1px solid var(--line);
   position: relative; overflow: hidden;
@@ -165,7 +216,43 @@ nav { flex: 1; padding: 10px 0; }
 .badge.g { color: var(--green); }
 .badge.b { color: var(--blue); }
 
-/* ─── CONTENT ─── */
+/* GALLERY */
+.gallery-section {
+  padding: 56px;
+  border-bottom: 1px solid var(--line);
+}
+
+.gallery-title {
+  font-family: var(--display); font-size: 28px; font-weight: 800;
+  text-transform: uppercase; color: var(--ink); margin-bottom: 28px;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.gallery-item {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  overflow: hidden;
+  border: 1px solid var(--line2);
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.1s linear;
+}
+
+.gallery-item img,
+.gallery-item video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* CONTENT */
 #content { padding: 0 56px 100px; max-width: 880px; }
 .doc-section { padding-top: 60px; }
 .sec-eyebrow {
@@ -195,7 +282,6 @@ code {
   padding: 1px 6px; color: var(--orange);
 }
 
-/* ─── PROP TABLE ─── */
 .prop-table { width: 100%; border-collapse: collapse; margin: 16px 0 28px; font-size: 13px; }
 .prop-table thead tr { background: var(--bg2); border-bottom: 1px solid var(--line2); }
 .prop-table th {
@@ -210,7 +296,6 @@ code {
 .ptype { font-family: var(--mono); font-size: 11px; color: var(--purple); white-space: nowrap; }
 .pdesc { color: var(--ink2); font-size: 13px; }
 
-/* ─── CODE BLOCKS ─── */
 .codeblock { background: var(--bg1); border: 1px solid var(--line); margin: 18px 0; overflow: hidden; }
 .cb-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -240,7 +325,6 @@ pre::-webkit-scrollbar-thumb { background: var(--line2); }
 .fn { color: #e8c96d; } .cm { color: #5a5a54; font-style: italic; }
 .key { color: #e8a87c; } .bool { color: #ff7b72; }
 
-/* ─── CALLOUTS ─── */
 .callout {
   display: flex; gap: 14px; padding: 13px 16px;
   border-left: 3px solid; margin: 18px 0;
@@ -256,7 +340,6 @@ pre::-webkit-scrollbar-thumb { background: var(--line2); }
 .callout.info svg { color: var(--blue); }
 .callout strong { font-weight: 700; }
 
-/* ─── STEPS ─── */
 .steps { display: flex; flex-direction: column; margin: 20px 0 28px; position: relative; }
 .steps::before {
   content: ''; position: absolute; left: 15px; top: 32px; bottom: 32px;
@@ -276,7 +359,6 @@ pre::-webkit-scrollbar-thumb { background: var(--line2); }
 }
 .step-desc { font-size: 13.5px; color: var(--ink2); }
 
-/* ─── TAGS ─── */
 .tags-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
 .tags-table tr { border-bottom: 1px solid var(--line); }
 .tags-table tr:hover { background: rgba(255,255,255,0.02); }
@@ -301,9 +383,40 @@ pre::-webkit-scrollbar-thumb { background: var(--line2); }
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--line2); }
+
+/* MODAL */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.8);
+}
+
+.modal.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  max-width: 90%;
+  max-height: 90vh;
+}
+
+.modal-content img,
+.modal-content video {
+  width: 100%;
+  height: auto;
+}
 </style>
 </head>
 <body>
+
+<button class="toggle-btn" onclick="toggleSidebar()">☰</button>
 
 <div id="bar"></div>
 
@@ -312,12 +425,12 @@ pre::-webkit-scrollbar-thumb { background: var(--line2); }
     <a href="#" class="sb-logo">
       <div class="sb-logo-icon"><i data-lucide="key-round"></i></div>
       <div class="sb-logo-text">
-        <span class="sb-name">JunkieHub</span>
-        <span class="sb-domain">jnkie.com</span>
+        <span class="sb-name">Config Docs</span>
       </div>
     </a>
-    <div class="sb-status"><div class="status-dot"></div><span>Config Docs — Live</span></div>
+    <div class="sb-status"><div class="status-dot"></div><span>Docs — Live</span></div>
   </div>
+  <input type="text" class="search-bar" id="searchInput" placeholder="Search tabs..." onkeyup="searchTabs()">
   <nav>
     <div class="nav-group">
       <div class="nav-group-label">Start</div>
@@ -344,6 +457,7 @@ pre::-webkit-scrollbar-thumb { background: var(--line2); }
       <div class="nav-group-label">Reference</div>
       <a class="nav-item" href="#tags"><i data-lucide="tag"></i> Changelog Tags</a>
       <a class="nav-item" href="#full-example"><i data-lucide="code-2"></i> Full Example</a>
+      <a class="nav-item" href="#gallery"><i data-lucide="image"></i> Gallery</a>
     </div>
   </nav>
   <div class="sb-footer">
@@ -357,8 +471,8 @@ pre::-webkit-scrollbar-thumb { background: var(--line2); }
     <div class="hero-grid-bg"></div>
     <div class="hero-inner">
       <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Havoc Key System</div>
-      <h1 class="hero-title">JunkieHub<br><em>Config</em> Docs</h1>
-      <p class="hero-desc">Complete reference for the JunkieHub UI library — key validation, visuals, providers, game support, and everything in between.</p>
+      <h1 class="hero-title">Config<br><em>Docs</em></h1>
+      <p class="hero-desc">Complete reference for the UI library — key validation, visuals, providers, game support, and everything in between.</p>
       <div class="hero-badges">
         <span class="badge y"><i data-lucide="zap"></i> loadstring delivery</span>
         <span class="badge g"><i data-lucide="shield-check"></i> Junkie SDK</span>
@@ -367,17 +481,30 @@ pre::-webkit-scrollbar-thumb { background: var(--line2); }
     </div>
   </section>
 
-  <div id="content">
+  <section class="gallery-section" id="gallery">
+    <h2 class="gallery-title">Gallery</h2>
+    <div class="gallery-grid">
+      <div class="gallery-item" onmousemove="tilt3d(event)" onmouseout="reset3d(event)">
+        <img src="https://raw.githubusercontent.com/1NFERNO-HUB/Junkie/refs/heads/main/Screenshot_20260223_154320_Roblox.jpg" onclick="openModal(this.src)" alt="UI Screenshot">
+      </div>
+      <div class="gallery-item" onmousemove="tilt3d(event)" onmouseout="reset3d(event)">
+        <video controls onclick="openModal(this.src)">
+          <source src="https://github.com/1NFERNO-HUB/Junkie/raw/refs/heads/main/XRecorder_20260223_02.mp4" type="video/mp4">
+        </video>
+      </div>
+    </div>
+  </section>
 
+  <div id="content">
     <div class="doc-section" id="overview">
       <div class="inline-rule"></div>
       <div style="padding-top:36px">
         <div class="sec-eyebrow"><i data-lucide="circle-dot"></i> 01 — Overview</div>
-        <h2 class="sec-title">What is JunkieHub?</h2>
-        <p class="sec-desc">JunkieHub is a Roblox key system UI library. Loaded externally via <code>loadstring</code> and configured entirely from your own script — no modifying the library. When a valid key is redeemed, it sets <code>getgenv().LOAD = true</code> and your game script continues.</p>
+        <h2 class="sec-title">What is it?</h2>
+        <p class="sec-desc">This is a Roblox key system UI library. Loaded externally via <code>loadstring</code> and configured entirely from your own script — no modifying the library. When a valid key is redeemed, it sets <code>getgenv().LOAD = true</code> and your game script continues.</p>
         <div class="callout tip">
           <div class="callout-ico"><i data-lucide="check-circle-2"></i></div>
-          <div><strong>TIP —</strong> The library is CDN-hosted and loaded remotely. You only write a loader script with your config — stefan handles the library internals.</div>
+          <div><strong>TIP —</strong> The library is CDN-hosted and loaded remotely. You only write a loader script with your config.</div>
         </div>
       </div>
     </div>
@@ -555,39 +682,26 @@ hub:<span class="fn">Init</span>()
             <tr><td class="pname">Pinned</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = rendered first with a highlight border.</td></tr>
           </tbody>
         </table>
-        <div class="callout info">
-          <div class="callout-ico"><i data-lucide="info"></i></div>
-          <div><strong>AUTO-ICONS —</strong> Set <code>Icon</code> to <code>"rbxassetid://0"</code> for built-in icons: Discord, Twitter, YouTube, TikTok, Instagram, Telegram, Reddit, GitHub, Guilded, Patreon, Ko-fi, Twitch, V3rm, Website, Linkvertise, LootLabs, Work.ink, Shrtfly, Lockr, Cuty, ShrinkEarn, Rinku.</div>
-        </div>
 
         <h3 id="instructions"><i data-lucide="list-ordered"></i> Instructions</h3>
-        <p>Step cards on the How-To page (opened via the <code>?</code> button). Each card has a title and body description.</p>
+        <p>Step cards on the How-To page. Each card has a title and body description.</p>
         <div class="codeblock">
           <div class="cb-header"><div class="cb-lang"><div class="dot"></div> Lua</div><button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy"></i> Copy</button></div>
 <pre><span class="key">Instructions</span> = {
-  { <span class="key">Title</span> = <span class="str">"Open Junkie"</span>,      <span class="key">Body</span> = <span class="str">"Click Junkie Development to open your key link."</span> },
-  { <span class="key">Title</span> = <span class="str">"Complete Steps"</span>,   <span class="key">Body</span> = <span class="str">"Finish all checkpoints on the Junkie page."</span> },
-  { <span class="key">Title</span> = <span class="str">"Paste &amp; Redeem"</span>,   <span class="key">Body</span> = <span class="str">"Paste your jnk- key above and hit Redeem."</span> },
+  { <span class="key">Title</span> = <span class="str">"Open Key Link"</span>,      <span class="key">Body</span> = <span class="str">"Click the button to open your key link."</span> },
+  { <span class="key">Title</span> = <span class="str">"Complete Steps"</span>,   <span class="key">Body</span> = <span class="str">"Finish all checkpoints on the key page."</span> },
+  { <span class="key">Title</span> = <span class="str">"Paste &amp; Redeem"</span>,   <span class="key">Body</span> = <span class="str">"Paste your key above and hit Redeem."</span> },
 }</pre>
         </div>
 
         <h3 id="changelog"><i data-lucide="history"></i> Changelog</h3>
-        <p>Shown when users click the <code>★</code> button. Controls tag pill colours and bullet points per version.</p>
+        <p>Controls tag pill colours and bullet points per version.</p>
         <table class="prop-table">
           <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
           <tbody>
-            <tr><td class="pname">Show</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = shows the ★ changelog button.</td></tr>
+            <tr><td class="pname">Show</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = shows the changelog button.</td></tr>
             <tr><td class="pname">Title</td><td class="ptype">string</td><td class="pdesc">Header text on the changelog page.</td></tr>
             <tr><td class="pname">Versions</td><td class="ptype">array</td><td class="pdesc">Array of version entries. Each has Version, Date, Tag, Notes.</td></tr>
-          </tbody>
-        </table>
-        <table class="prop-table" style="margin-top:8px">
-          <thead><tr><th>Entry Field</th><th>Type</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td class="pname">Version</td><td class="ptype">string</td><td class="pdesc">Version pill label. e.g. <code>"1.2"</code></td></tr>
-            <tr><td class="pname">Date</td><td class="ptype">string</td><td class="pdesc">Optional date shown right-aligned. e.g. <code>"Feb 2026"</code></td></tr>
-            <tr><td class="pname">Tag</td><td class="ptype">string</td><td class="pdesc">One tag per version. Controls pill colour. See tag table below.</td></tr>
-            <tr><td class="pname">Notes</td><td class="ptype">string[]</td><td class="pdesc">Each string becomes a bullet point on that version card.</td></tr>
           </tbody>
         </table>
       </div>
@@ -600,11 +714,11 @@ hub:<span class="fn">Init</span>()
         <h2 class="sec-title">Changelog Tags</h2>
         <table class="tags-table">
           <tbody>
-            <tr><td><span class="tag tag-new">NEW</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--ink3)">RGB(45, 185, 100)</td><td style="color:var(--ink2);font-size:13px">New feature or addition</td></tr>
-            <tr><td><span class="tag tag-fix">FIX</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--ink3)">RGB(215, 70, 70)</td><td style="color:var(--ink2);font-size:13px">Bug fix or correction</td></tr>
-            <tr><td><span class="tag tag-imp">IMPROVED</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--ink3)">RGB(70, 145, 235)</td><td style="color:var(--ink2);font-size:13px">Enhancement to existing feature</td></tr>
-            <tr><td><span class="tag tag-rem">REMOVED</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--ink3)">RGB(185, 85, 45)</td><td style="color:var(--ink2);font-size:13px">Feature removed</td></tr>
-            <tr><td><span class="tag tag-sec">SECURITY</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--ink3)">RGB(195, 155, 35)</td><td style="color:var(--ink2);font-size:13px">Security-related change</td></tr>
+            <tr><td><span class="tag tag-new">NEW</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--ink3)">New feature or addition</td></tr>
+            <tr><td><span class="tag tag-fix">FIX</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--ink3)">Bug fix or correction</td></tr>
+            <tr><td><span class="tag tag-imp">IMPROVED</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--ink3)">Enhancement to existing feature</td></tr>
+            <tr><td><span class="tag tag-rem">REMOVED</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--ink3)">Feature removed</td></tr>
+            <tr><td><span class="tag tag-sec">SECURITY</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--ink3)">Security-related change</td></tr>
           </tbody>
         </table>
       </div>
@@ -621,66 +735,24 @@ hub:<span class="fn">Init</span>()
 <pre><span class="fn">getgenv</span>().<span class="key">LOAD</span> = <span class="bool">nil</span>
 
 <span class="kw">local</span> Junkie_Configs = {
-  <span class="key">UseJunkie</span>       = <span class="bool">true</span>,
-  <span class="key">Junkie_Webhook</span>  = <span class="str">"https://jnkie.com/api/v1/webhooks/relay/YOUR_ID/send"</span>,
-  <span class="key">Service</span>         = <span class="str">"My Hub"</span>,
-  <span class="key">Identifier</span>      = <span class="str">"1234"</span>,
-  <span class="key">Provider</span>        = <span class="str">"My Hub"</span>,
-  <span class="key">MaxKeyAttempts</span>  = <span class="num">5</span>,
-  <span class="key">Premium</span>         = <span class="bool">false</span>,
+  <span class="key">UseJunkie</span> = <span class="bool">true</span>,
+  <span class="key">Service</span> = <span class="str">"My Hub"</span>,
+  <span class="key">MaxKeyAttempts</span> = <span class="num">5</span>,
   <span class="key">Providers</span> = {
-    { <span class="key">Name</span>=<span class="str">"Junkie Development"</span>, <span class="key">Icon</span>=<span class="str">"rbxassetid://0"</span>, <span class="key">Url</span>=<span class="str">"https://jnkie.com/junkiehub"</span>, <span class="key">Show</span>=<span class="bool">true</span>, <span class="key">IsJunkie</span>=<span class="bool">true</span>, <span class="key">Pinned</span>=<span class="bool">true</span> },
-    { <span class="key">Name</span>=<span class="str">"Linkvertise"</span>, <span class="key">Icon</span>=<span class="str">"rbxassetid://0"</span>, <span class="key">Url</span>=<span class="str">"https://linkvertise.com/yourhub"</span>, <span class="key">Show</span>=<span class="bool">true</span>, <span class="key">Pinned</span>=<span class="bool">false</span> },
-  },
-  <span class="key">GameSupport</span> = {
-    <span class="key">Universal</span> = { <span class="key">Name</span>=<span class="str">"Universal"</span>, <span class="key">Free</span>=<span class="str">"https://api.jnkie.com/.../HASH/download"</span>, <span class="key">Premium</span>=<span class="str">"https://api.jnkie.com/.../HASH/download"</span> },
+    { <span class="key">Name</span>=<span class="str">"Get Key"</span>, <span class="key">Url</span>=<span class="str">"https://example.com"</span>, <span class="key">Show</span>=<span class="bool">true</span> },
   },
 }
 
 <span class="kw">local</span> UI_Configs = {
-  <span class="key">Name</span> = <span class="str">"My Hub"</span>, <span class="key">Version</span> = <span class="str">"1.0"</span>,
-  <span class="key">Color</span> = <span class="fn">Color3</span>.<span class="fn">fromRGB</span>(<span class="num">138</span>, <span class="num">43</span>, <span class="num">226</span>), <span class="key">Text_Color</span> = <span class="str">""</span>,
-  <span class="key">GradientAnimated</span> = <span class="bool">true</span>, <span class="key">GradientAnimationSpeed</span> = <span class="num">4</span>,
-  <span class="key">Icon</span> = <span class="str">"rbxassetid://YOUR_ICON_ID"</span>, <span class="key">BadgeText</span> = <span class="str">"KEY SYSTEM"</span>,
-  <span class="key">CustomFont</span> = <span class="str">""</span>, <span class="key">ShowOutline</span> = <span class="bool">true</span>,
-  <span class="key">KeySystemLabel</span> = <span class="str">"Enter Key"</span>, <span class="key">KeySystemPlaceholder</span> = <span class="str">"jnk-XXXXXXXXXXXXXXXX"</span>,
-  <span class="key">ShowMemberCount</span> = <span class="bool">true</span>,
-  <span class="key">SnowEnabled</span> = <span class="bool">true</span>, <span class="key">SnowDensity</span> = <span class="num">1.0</span>,
-  <span class="key">SnowColor</span> = <span class="fn">Color3</span>.<span class="fn">fromRGB</span>(<span class="num">220</span>, <span class="num">235</span>, <span class="num">255</span>), <span class="key">SnowSize</span> = { <span class="key">Min</span>=<span class="num">3</span>, <span class="key">Max</span>=<span class="num">7</span> },
-  <span class="key">GlassOpacity</span> = <span class="num">0.18</span>, <span class="key">SlideInEnabled</span> = <span class="bool">true</span>,
-  <span class="key">BlurEnabled</span> = <span class="bool">true</span>, <span class="key">BlurSize</span> = <span class="num">30</span>, <span class="key">OverlayOpacity</span> = <span class="num">0.65</span>,
-  <span class="key">CloseOnSuccess</span> = <span class="bool">true</span>, <span class="key">SuccessMessage</span> = <span class="str">"✓ Access Granted!"</span>,
-  <span class="key">KeyFile</span> = <span class="str">"myhub_key.txt"</span>, <span class="key">Discord</span> = <span class="str">"your_invite_code"</span>,
-  <span class="key">Socials</span> = {
-    { <span class="key">Name</span>=<span class="str">"Discord"</span>, <span class="key">Icon</span>=<span class="str">"rbxassetid://0"</span>, <span class="key">Link</span>=<span class="str">"https://discord.gg/your"</span>, <span class="key">Show</span>=<span class="bool">true</span>, <span class="key">Pinned</span>=<span class="bool">true</span> },
-    { <span class="key">Name</span>=<span class="str">"YouTube"</span>, <span class="key">Icon</span>=<span class="str">"rbxassetid://0"</span>, <span class="key">Link</span>=<span class="str">"https://youtube.com/@you"</span>, <span class="key">Show</span>=<span class="bool">true</span>, <span class="key">Pinned</span>=<span class="bool">false</span> },
-  },
-  <span class="key">AppLinks</span> = {
-    { <span class="key">Name</span>=<span class="str">"Discord App"</span>, <span class="key">Icon</span>=<span class="str">"rbxassetid://0"</span>, <span class="key">Link</span>=<span class="str">"https://discord.gg/your"</span>, <span class="key">Show</span>=<span class="bool">true</span>, <span class="key">Pinned</span>=<span class="bool">true</span> },
-  },
-  <span class="key">Instructions</span> = {
-    { <span class="key">Title</span>=<span class="str">"Open Junkie"</span>,     <span class="key">Body</span>=<span class="str">"Click the Junkie button to open your key link."</span> },
-    { <span class="key">Title</span>=<span class="str">"Complete Steps"</span>,  <span class="key">Body</span>=<span class="str">"Finish all checkpoints to get your key."</span> },
-    { <span class="key">Title</span>=<span class="str">"Paste &amp; Redeem"</span>,  <span class="key">Body</span>=<span class="str">"Paste your key above and hit Redeem."</span> },
-  },
-  <span class="key">Changelog</span> = {
-    <span class="key">Show</span>=<span class="bool">true</span>, <span class="key">Title</span>=<span class="str">"What's New"</span>,
-    <span class="key">Versions</span> = {
-      { <span class="key">Version</span>=<span class="str">"1.0"</span>, <span class="key">Date</span>=<span class="str">"Feb 2026"</span>, <span class="key">Tag</span>=<span class="str">"NEW"</span>, <span class="key">Notes</span>={ <span class="str">"Initial release."</span> } },
-    },
-  },
+  <span class="key">Name</span> = <span class="str">"My Hub"</span>,
+  <span class="key">Color</span> = <span class="fn">Color3</span>.<span class="fn">fromRGB</span>(<span class="num">138</span>, <span class="num">43</span>, <span class="num">226</span>),
+  <span class="key">SnowEnabled</span> = <span class="bool">true</span>,
 }
 
-<span class="cm">-- Merge tables into Config, then:</span>
 <span class="kw">local</span> system = <span class="fn">loadstring</span>(<span class="fn">game</span>:<span class="fn">HttpGet</span>(<span class="str">"LIBRARY_URL"</span>))()
-<span class="kw">local</span> hub = system.<span class="fn">new</span>(Config)
+<span class="kw">local</span> hub = system.<span class="fn">new</span>(Junkie_Configs, UI_Configs)
 hub:<span class="fn">Init</span>()
-<span class="kw">while</span> <span class="kw">not</span> <span class="fn">getgenv</span>().<span class="key">LOAD</span> <span class="kw">do</span> task.<span class="fn">wait</span>(<span class="num">1</span>) <span class="kw">end</span>
-<span class="cm">-- YOUR SCRIPT STARTS HERE</span></pre>
-        </div>
-        <div class="callout info">
-          <div class="callout-ico"><i data-lucide="info"></i></div>
-          <div><strong>NOTE —</strong> Never modify the library itself. All customisation is in your loader's Config table. Only change the library if stefan tells you to.</div>
+<span class="kw">while</span> <span class="kw">not</span> <span class="fn">getgenv</span>().<span class="key">LOAD</span> <span class="kw">do</span> task.<span class="fn">wait</span>(<span class="num">1</span>) <span class="kw">end</span></pre>
         </div>
       </div>
     </div>
@@ -688,8 +760,69 @@ hub:<span class="fn">Init</span>()
   </div>
 </main>
 
+<div id="modal" class="modal" onclick="closeModal(event)">
+  <div class="modal-content">
+    <img id="modalImg" style="display:none">
+    <video id="modalVid" controls style="display:none"></video>
+  </div>
+</div>
+
 <script>
   lucide.createIcons();
+
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const main = document.getElementById('main');
+    sidebar.classList.toggle('collapsed');
+    main.classList.toggle('sidebar-collapsed');
+    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+  }
+
+  function searchTabs() {
+    const input = document.getElementById('searchInput').value.toLowerCase();
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+      const text = item.textContent.toLowerCase();
+      item.classList.toggle('hidden', !text.includes(input));
+    });
+  }
+
+  function tilt3d(event) {
+    const item = event.currentTarget;
+    const rect = item.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const rotateX = (event.clientY - centerY) / 10;
+    const rotateY = -(event.clientX - centerX) / 10;
+    item.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+  }
+
+  function reset3d(event) {
+    event.currentTarget.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)';
+  }
+
+  function openModal(src) {
+    const modal = document.getElementById('modal');
+    const modalImg = document.getElementById('modalImg');
+    const modalVid = document.getElementById('modalVid');
+    
+    if (src.endsWith('.mp4')) {
+      modalVid.src = src;
+      modalVid.style.display = 'block';
+      modalImg.style.display = 'none';
+    } else {
+      modalImg.src = src;
+      modalImg.style.display = 'block';
+      modalVid.style.display = 'none';
+    }
+    modal.classList.add('active');
+  }
+
+  function closeModal(event) {
+    if (event.target.id === 'modal') {
+      document.getElementById('modal').classList.remove('active');
+    }
+  }
 
   const bar = document.getElementById('bar');
   window.addEventListener('scroll', () => {
@@ -724,6 +857,12 @@ hub:<span class="fn">Init</span>()
         lucide.createIcons();
       }, 2000);
     });
+  }
+
+  // Load sidebar state
+  if (localStorage.getItem('sidebarCollapsed') === 'true') {
+    document.getElementById('sidebar').classList.add('collapsed');
+    document.getElementById('main').classList.add('sidebar-collapsed');
   }
 </script>
 </body>
