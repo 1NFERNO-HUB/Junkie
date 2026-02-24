@@ -1,0 +1,1579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Havoc Preset — Tutorial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&family=Cal+Sans&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
+<style>
+/* ─────────────────────────────────
+   TOKENS
+───────────────────────────────── */
+:root {
+  --bg:       #08100a;
+  --surface:  #0d180f;
+  --surface2: #122016;
+  --border:   rgba(74,222,128,0.08);
+  --border2:  rgba(74,222,128,0.14);
+  --border3:  rgba(74,222,128,0.22);
+
+  --fg:       #e2f0e2;
+  --fg2:      #8aab8a;
+  --fg3:      #4d6b4d;
+
+  --green:    #4ade80;
+  --green-dim:#22c55e;
+  --green-bg: rgba(74,222,128,0.07);
+  --green-bg2:rgba(74,222,128,0.12);
+
+  --red:      #f87171;
+  --blue:     #93c5fd;
+  --amber:    #fcd34d;
+  --purple:   #c4b5fd;
+  --orange:   #fdba74;
+
+  --radius:   10px;
+  --radius-sm:6px;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Inter', sans-serif;
+  --display: 'Inter', sans-serif;
+  --sidebar-w: 256px;
+
+  --spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease:   cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─────────────────────────────────
+   RESET
+───────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.7;
+  min-height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--green); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* subtle noise texture */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 9998; opacity: 0.4;
+}
+
+/* ─────────────────────────────────
+   KEYFRAMES
+───────────────────────────────── */
+@keyframes fadeUp   { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
+@keyframes fadeIn   { from { opacity:0 } to { opacity:1 } }
+@keyframes scalePop { from { opacity:0; transform:scale(0.96) } to { opacity:1; transform:scale(1) } }
+@keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:0.3} }
+@keyframes gridMove { from{background-position:0 0} to{background-position:60px 60px} }
+@keyframes shimmer  { from{transform:translateX(-100%)} to{transform:translateX(200%)} }
+@keyframes glow     { 0%,100%{opacity:0.6} 50%{opacity:1} }
+@keyframes orbit    {
+  from { transform: rotate(0deg) translateX(180px) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(180px) rotate(-360deg); }
+}
+@keyframes float {
+  0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)}
+}
+@keyframes pageSlide {
+  from { opacity:0; transform:translateX(18px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+
+/* ─────────────────────────────────
+   HOME SCREEN
+───────────────────────────────── */
+#home {
+  position: fixed; inset: 0; z-index: 500;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: var(--bg);
+  transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
+  overflow: hidden;
+}
+#home.out { opacity: 0; transform: scale(1.03); pointer-events: none; }
+
+/* grid bg */
+.h-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(74,222,128,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(74,222,128,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridMove 24s linear infinite;
+}
+
+/* radial glow center */
+.h-glow {
+  position: absolute;
+  width: 600px; height: 600px;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(74,222,128,0.06) 0%, transparent 70%);
+  animation: glow 5s ease-in-out infinite;
+  border-radius: 50%;
+}
+
+/* floating orbs */
+.h-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.15;
+  animation: float 8s ease-in-out infinite;
+}
+.h-orb-1 { width:300px; height:300px; background:var(--green-dim); top:-80px; left:-60px; animation-delay:0s; }
+.h-orb-2 { width:200px; height:200px; background:#16a34a; bottom:-40px; right:-40px; animation-delay:3s; }
+
+.h-content {
+  position: relative; z-index: 1;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0;
+}
+
+/* pill tag */
+.h-tag {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 5px 14px;
+  background: var(--green-bg);
+  border: 1px solid var(--border2);
+  border-radius: 999px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.5px;
+  color: var(--green);
+  margin-bottom: 28px;
+  animation: fadeUp 0.8s 0.1s var(--spring) both;
+}
+.h-tag-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+
+/* title */
+.h-title {
+  font-size: clamp(52px, 9vw, 100px);
+  font-weight: 700;
+  letter-spacing: -3px;
+  line-height: 0.95;
+  color: var(--fg);
+  animation: fadeUp 0.8s 0.2s var(--spring) both;
+}
+.h-title-accent {
+  display: block;
+  background: linear-gradient(135deg, var(--green) 0%, #86efac 50%, var(--green-dim) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  letter-spacing: -3px;
+}
+
+/* subtitle */
+.h-sub {
+  font-size: 15px; color: var(--fg3);
+  font-weight: 400; margin-top: 18px;
+  letter-spacing: 0.3px;
+  animation: fadeUp 0.8s 0.3s var(--spring) both;
+}
+
+/* links row */
+.h-links {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 36px;
+  animation: fadeUp 0.8s 0.4s var(--spring) both;
+  flex-wrap: wrap; justify-content: center;
+}
+
+.h-btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 26px;
+  background: var(--green);
+  color: #071209;
+  font-weight: 600; font-size: 14px;
+  border-radius: var(--radius);
+  border: none; cursor: pointer;
+  transition: all 0.2s var(--ease);
+  position: relative; overflow: hidden;
+}
+.h-btn-primary::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+  transition: opacity 0.2s;
+}
+.h-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(74,222,128,0.3); }
+.h-btn-primary:active { transform: translateY(0); }
+.h-btn-primary svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+.h-btn-secondary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 22px;
+  background: var(--surface);
+  color: var(--fg2);
+  font-weight: 500; font-size: 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  cursor: pointer; text-decoration: none;
+  transition: all 0.2s var(--ease);
+}
+.h-btn-secondary:hover {
+  background: var(--surface2); color: var(--fg);
+  border-color: var(--border3); text-decoration: none;
+  transform: translateY(-2px);
+}
+.h-btn-secondary svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* social links below */
+.h-socials {
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 20px;
+  animation: fadeUp 0.8s 0.5s var(--spring) both;
+}
+.h-social-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px;
+  color: var(--fg3); font-size: 12px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: color 0.15s, background 0.15s;
+}
+.h-social-link svg { width: 13px; height: 13px; }
+.h-social-link:hover { color: var(--green); background: var(--green-bg); text-decoration: none; }
+.h-divider { width: 1px; height: 14px; background: var(--border2); }
+
+/* ─────────────────────────────────
+   APP SHELL
+───────────────────────────────── */
+#app { display: none; height: 100vh; width: 100vw; overflow: hidden; flex-direction: column; }
+#app.visible { display: flex; animation: fadeIn 0.4s ease both; }
+
+/* progress bar */
+#bar {
+  position: fixed; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--green-dim), var(--green));
+  transform-origin: left; transform: scaleX(0);
+  z-index: 300; opacity: 0.8;
+  box-shadow: 0 0 12px rgba(74,222,128,0.4);
+  transition: transform 0.1s linear;
+}
+
+/* ─────────────────────────────────
+   TOPBAR
+───────────────────────────────── */
+#topbar {
+  height: 54px; flex-shrink: 0;
+  background: rgba(8,16,10,0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  position: relative; z-index: 200;
+}
+
+.tb-logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 20px; text-decoration: none;
+  border-right: 1px solid var(--border);
+  height: 100%; flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.tb-logo:hover { opacity: 0.8; text-decoration: none; }
+.tb-logo-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--green-dim), var(--green));
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(74,222,128,0.2);
+}
+.tb-logo-mark svg { width: 14px; height: 14px; color: #071209; }
+.tb-name { font-size: 14px; font-weight: 600; color: var(--fg); letter-spacing: -0.2px; }
+.tb-domain { font-family: var(--mono); font-size: 10px; color: var(--green); opacity: 0.7; letter-spacing: 0.5px; }
+
+#sb-toggle {
+  display: flex; align-items: center; gap: 7px;
+  padding: 0 16px; background: transparent;
+  border: none; border-right: 1px solid var(--border);
+  height: 100%; color: var(--fg3);
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+#sb-toggle svg { width: 15px; height: 15px; }
+#sb-toggle:hover { color: var(--fg); background: var(--green-bg); }
+
+.tb-mid { flex: 1; display: flex; align-items: center; padding: 0 16px; gap: 14px; }
+
+/* search */
+.tb-search {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  width: 220px;
+  transition: border-color 0.2s, box-shadow 0.2s, width 0.3s var(--spring);
+}
+.tb-search:focus-within {
+  border-color: var(--border3);
+  box-shadow: 0 0 0 3px rgba(74,222,128,0.06);
+  width: 280px;
+}
+.tb-search svg { width: 13px; height: 13px; color: var(--fg3); flex-shrink: 0; }
+.tb-search input {
+  background: transparent; border: none; outline: none;
+  font-family: var(--sans); font-size: 13px; color: var(--fg); width: 100%;
+}
+.tb-search input::placeholder { color: var(--fg3); }
+
+.tb-breadcrumb {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--fg3);
+}
+.tb-breadcrumb svg { width: 12px; height: 12px; }
+.tb-breadcrumb-curr { color: var(--fg2); font-weight: 500; }
+
+.tb-right {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 16px; height: 100%;
+  border-left: 1px solid var(--border);
+}
+.tb-status-pill {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 10px;
+  background: rgba(74,222,128,0.07);
+  border: 1px solid rgba(74,222,128,0.12);
+  border-radius: 999px;
+  font-family: var(--mono); font-size: 10px; color: var(--green);
+  letter-spacing: 0.3px;
+}
+.tb-status-dot { width: 5px; height: 5px; background: var(--green); border-radius: 50%; animation: pulse 2.5s ease-in-out infinite; }
+
+/* ─────────────────────────────────
+   LAYOUT
+───────────────────────────────── */
+#body { flex: 1; display: flex; overflow: hidden; }
+
+/* ─────────────────────────────────
+   SIDEBAR
+───────────────────────────────── */
+#sidebar {
+  width: var(--sidebar-w); flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  transition: width 0.32s var(--spring), opacity 0.25s ease, transform 0.32s var(--spring);
+}
+#sidebar.hidden { width: 0; opacity: 0; pointer-events: none; transform: translateX(-10px); }
+
+.sb-inner { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 8px; }
+.sb-inner::-webkit-scrollbar { width: 3px; }
+.sb-inner::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.nav-section { margin-bottom: 6px; }
+.nav-section-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--fg3);
+  padding: 8px 10px 4px;
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+.nav-btn {
+  display: flex; align-items: center; gap: 9px;
+  width: 100%; padding: 7px 10px;
+  background: transparent; border: none; border-radius: var(--radius-sm);
+  color: var(--fg3); font-size: 13px; font-weight: 400; font-family: var(--sans);
+  cursor: pointer; text-align: left;
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap; overflow: hidden;
+}
+.nav-btn svg { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.7; transition: opacity 0.15s; }
+.nav-btn:hover { color: var(--fg); background: rgba(255,255,255,0.04); }
+.nav-btn:hover svg { opacity: 1; }
+.nav-btn.active {
+  color: var(--green); background: var(--green-bg);
+  font-weight: 500;
+}
+.nav-btn.active svg { color: var(--green); opacity: 1; }
+.nav-btn.sub { padding-left: 32px; font-size: 12.5px; }
+.nav-btn.sub svg { width: 12px; height: 12px; }
+.nav-btn.search-hidden { display: none; }
+
+.sb-footer {
+  padding: 12px 16px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.sb-footer-text { font-size: 11px; color: var(--fg3); }
+.sb-footer-text span { color: var(--green); }
+
+/* ─────────────────────────────────
+   PAGES
+───────────────────────────────── */
+#pages { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+.page { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+.page.active { display: flex; animation: pageSlide 0.3s var(--spring) both; }
+
+.page-scroll {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 36px 44px 48px;
+}
+.page-scroll::-webkit-scrollbar { width: 4px; }
+.page-scroll::-webkit-scrollbar-track { background: transparent; }
+.page-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ─── Hero (page 0) ─── */
+.page-hero {
+  padding: 0;
+  border-bottom: 1px solid var(--border);
+  position: relative; overflow: hidden; flex-shrink: 0;
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 50% 80% at 0% 50%, rgba(74,222,128,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 100% 0%, rgba(74,222,128,0.03) 0%, transparent 50%);
+}
+.hero-inner {
+  position: relative; z-index: 1;
+  padding: 44px 44px 36px;
+}
+
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 4px 12px; border-radius: 999px;
+  background: var(--green-bg); border: 1px solid var(--border2);
+  font-family: var(--mono); font-size: 10px; color: var(--green); letter-spacing: 0.5px;
+  margin-bottom: 20px;
+  animation: fadeUp 0.5s 0.05s var(--spring) both;
+}
+.hero-eyebrow svg { width: 11px; height: 11px; }
+
+.hero-title {
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 700; letter-spacing: -1.5px; line-height: 1.05;
+  color: var(--fg); margin-bottom: 14px;
+  animation: fadeUp 0.5s 0.1s var(--spring) both;
+}
+.hero-title em { color: var(--green); font-style: normal; }
+
+.hero-desc {
+  font-size: 14.5px; color: var(--fg2); max-width: 500px; line-height: 1.7;
+  margin-bottom: 24px;
+  animation: fadeUp 0.5s 0.15s var(--spring) both;
+}
+
+.hero-badges {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  animation: fadeUp 0.5s 0.2s var(--spring) both;
+}
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 11px; font-family: var(--mono); letter-spacing: 0.3px;
+  border: 1px solid var(--border2); background: var(--surface);
+}
+.badge svg { width: 11px; height: 11px; }
+.badge-green { color: var(--green); border-color: rgba(74,222,128,0.2); background: var(--green-bg); }
+.badge-blue  { color: var(--blue);  border-color: rgba(147,197,253,0.2); background: rgba(147,197,253,0.05); }
+.badge-dim   { color: var(--fg2);   border-color: var(--border2);        background: var(--surface2); }
+
+/* ─── Generic page header ─── */
+.page-header {
+  padding: 36px 44px 28px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.page-eyebrow {
+  font-family: var(--mono); font-size: 10px; font-weight: 500;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--green);
+  opacity: 0.7; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+  animation: fadeUp 0.4s var(--spring) both;
+}
+.page-eyebrow svg { width: 10px; height: 10px; }
+.page-title {
+  font-size: clamp(24px, 3.5vw, 38px);
+  font-weight: 700; letter-spacing: -0.8px; line-height: 1.1;
+  color: var(--fg);
+  animation: fadeUp 0.4s 0.05s var(--spring) both;
+}
+.page-desc {
+  font-size: 14px; color: var(--fg2); max-width: 560px;
+  margin-top: 8px; line-height: 1.7;
+  animation: fadeUp 0.4s 0.1s var(--spring) both;
+}
+
+/* ─── Content ─── */
+.doc-content { padding-top: 28px; }
+
+h3 {
+  font-size: 16px; font-weight: 600; letter-spacing: -0.3px; color: var(--fg);
+  margin: 32px 0 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+h3 svg { width: 15px; height: 15px; color: var(--green); flex-shrink: 0; }
+h3::after { content:''; flex:1; height:1px; background:var(--border); max-width:120px; }
+
+p { font-size: 14px; color: var(--fg2); margin-bottom: 12px; line-height: 1.75; }
+code {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 4px; padding: 1px 5px; color: var(--orange);
+}
+
+/* ─── Card ─── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px;
+  margin-bottom: 14px;
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: var(--border2); }
+
+/* ─── Prop table ─── */
+.prop-table {
+  width: 100%; border-collapse: collapse;
+  margin: 12px 0 24px; font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.prop-table thead tr { background: var(--surface2); }
+.prop-table th {
+  font-family: var(--mono); font-size: 9.5px; text-transform: uppercase;
+  letter-spacing: 1.2px; color: var(--fg3); font-weight: 600;
+  padding: 9px 14px; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.prop-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+.prop-table tbody tr:last-child { border-bottom: none; }
+.prop-table tbody tr:hover { background: rgba(74,222,128,0.02); }
+.prop-table td { padding: 10px 14px; vertical-align: top; line-height: 1.55; }
+.pname { font-family: var(--mono); font-size: 12px; color: var(--green); font-weight: 500; white-space: nowrap; }
+.ptype { font-family: var(--mono); font-size: 11px; color: var(--purple); white-space: nowrap; }
+.pdesc { color: var(--fg2); font-size: 13px; }
+
+/* ─── Code block ─── */
+.codeblock {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden; margin: 14px 0;
+}
+.cb-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.cb-lang {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 10.5px; color: var(--fg3);
+  letter-spacing: 0.5px;
+}
+.cb-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; opacity: 0.8; }
+.copy-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: transparent; border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); padding: 3px 10px;
+  font-family: var(--mono); font-size: 10px; color: var(--fg3);
+  cursor: pointer; transition: all 0.15s; letter-spacing: 0.3px;
+}
+.copy-btn svg { width: 11px; height: 11px; }
+.copy-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-bg); }
+pre {
+  padding: 16px 18px; overflow-x: auto;
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.7; color: #94b894;
+}
+pre::-webkit-scrollbar { height: 3px; }
+pre::-webkit-scrollbar-thumb { background: var(--border2); }
+.kw   { color: #f97583; } .str { color: #9ecfb8; } .num  { color: #79c0ff; }
+.fn   { color: #b8d4a0; } .cm  { color: #4a5e4a; font-style:italic; }
+.key  { color: #dda678; } .bool{ color: #f97583; }
+
+/* ─── Callout ─── */
+.callout {
+  display: flex; gap: 12px; padding: 12px 16px;
+  border-left: 2px solid; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin: 14px 0; font-size: 13px; line-height: 1.65;
+  background: var(--surface);
+}
+.callout-icon { flex-shrink: 0; margin-top: 1px; }
+.callout-icon svg { width: 14px; height: 14px; }
+.callout strong { font-weight: 600; }
+.callout.tip  { border-color: var(--green); color: #a8d8a8; }
+.callout.tip .callout-icon svg  { color: var(--green); }
+.callout.warn { border-color: var(--amber); color: #d4b87a; }
+.callout.warn .callout-icon svg { color: var(--amber); }
+.callout.info { border-color: var(--blue);  color: #93b8d4; }
+.callout.info .callout-icon svg { color: var(--blue);  }
+
+/* ─── Steps ─── */
+.steps { display: flex; flex-direction: column; gap: 2px; margin: 16px 0 24px; }
+.step {
+  display: flex; gap: 16px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+  position: relative;
+}
+.step:hover { background: rgba(74,222,128,0.02); }
+.step-num {
+  width: 28px; height: 28px; flex-shrink: 0;
+  background: var(--green-bg); border: 1px solid var(--border2);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--green);
+  margin-top: 1px;
+}
+.step-title {
+  font-size: 14px; font-weight: 600; color: var(--fg); margin-bottom: 3px;
+}
+.step-desc { font-size: 13px; color: var(--fg2); line-height: 1.65; }
+
+/* ─── Tags table ─── */
+.tags-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+.tags-table tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+.tags-table tr:hover { background: rgba(74,222,128,0.02); }
+.tags-table td { padding: 10px 14px; font-size: 13px; }
+.tag {
+  display: inline-flex; align-items: center;
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.8px; padding: 2px 8px; border-radius: 4px;
+  text-transform: uppercase; border: 1px solid;
+}
+.tag-new  { color: var(--green); border-color: rgba(74,222,128,0.3);  background: rgba(74,222,128,0.1);  }
+.tag-fix  { color: var(--red);   border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.1); }
+.tag-imp  { color: var(--blue);  border-color: rgba(147,197,253,0.3); background: rgba(147,197,253,0.1); }
+.tag-rem  { color: var(--orange);border-color: rgba(253,186,116,0.3); background: rgba(253,186,116,0.1); }
+.tag-sec  { color: var(--amber); border-color: rgba(252,211,77,0.3);  background: rgba(252,211,77,0.1);  }
+
+/* ─── Divider ─── */
+.divider { height: 1px; background: var(--border); margin: 28px 0; }
+
+/* ─── Image showcase ─── */
+.img-showcase {
+  position: relative; overflow: hidden;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  perspective: 800px;
+}
+.img-showcase:hover {
+  border-color: var(--border3);
+  box-shadow: 0 8px 40px rgba(74,222,128,0.08);
+}
+.img-showcase img { width: 100%; display: block; transition: transform 0.08s ease; border-radius: calc(var(--radius) - 1px); }
+.img-overlay { position:absolute;inset:0;border-radius:calc(var(--radius) - 1px);pointer-events:none; }
+.img-hint {
+  position: absolute; bottom: 10px; right: 10px;
+  background: rgba(8,16,10,0.85); backdrop-filter: blur(8px);
+  border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  color: var(--green); padding: 4px 10px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.5px;
+  opacity: 0; transition: opacity 0.2s;
+  pointer-events: none; display: flex; align-items: center; gap: 5px;
+}
+.img-hint svg { width: 10px; height: 10px; }
+.img-showcase:hover .img-hint { opacity: 1; }
+
+/* ─── Lightbox ─── */
+#lightbox {
+  position: fixed; inset: 0; z-index: 900;
+  background: rgba(0,0,0,0.92); backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+#lightbox.open { opacity: 1; pointer-events: all; }
+#lightbox img {
+  max-width: 88vw; max-height: 86vh;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+  cursor: default; transition: transform 0.08s ease;
+}
+#lb-close {
+  position: absolute; top: 20px; right: 20px;
+  width: 36px; height: 36px;
+  background: var(--surface); border: 1px solid var(--border2); border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--fg2); transition: all 0.15s;
+}
+#lb-close svg { width: 15px; height: 15px; }
+#lb-close:hover { background: var(--surface2); border-color: var(--border3); color: var(--fg); }
+
+/* ─── Bottom nav ─── */
+#page-nav {
+  flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 44px;
+  border-top: 1px solid var(--border);
+  background: rgba(8,16,10,0.6); backdrop-filter: blur(8px);
+  gap: 12px;
+}
+.pnav-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 16px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500; color: var(--fg2);
+  cursor: pointer; transition: all 0.15s;
+}
+.pnav-btn svg { width: 13px; height: 13px; }
+.pnav-btn:hover:not(:disabled) {
+  color: var(--green); border-color: var(--border3);
+  background: var(--green-bg); transform: translateY(-1px);
+}
+.pnav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.pnav-center { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.pnav-dots { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: center; max-width: 180px; }
+.pnav-dot {
+  width: 5px; height: 5px; background: var(--border2); border-radius: 50%;
+  cursor: pointer; transition: all 0.2s var(--spring);
+}
+.pnav-dot:hover:not(.active) { background: var(--fg3); transform: scale(1.2); }
+.pnav-dot.active { background: var(--green); transform: scale(1.4); box-shadow: 0 0 6px rgba(74,222,128,0.5); }
+.pnav-label { font-size: 11px; color: var(--fg3); font-family: var(--mono); letter-spacing: 0.3px; }
+
+/* ─── Mobile overlay ─── */
+#sb-overlay { display:none; position:fixed; inset:0; top:54px; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:140; }
+#sb-overlay.visible { display:block; }
+
+/* ─────────────────────────────────
+   RESPONSIVE
+───────────────────────────────── */
+@media (max-width: 800px) {
+  #sidebar {
+    position: fixed; top: 54px; left: 0; bottom: 0; z-index: 150;
+    box-shadow: 8px 0 40px rgba(0,0,0,0.4);
+  }
+  #sidebar.hidden { transform: translateX(-100%); width: var(--sidebar-w); opacity: 1; }
+  #sidebar:not(.hidden) { width: var(--sidebar-w); opacity: 1; transform: translateX(0); }
+  .page-scroll { padding: 24px 20px 32px; }
+  .page-hero .hero-inner, .page-header { padding-left: 20px; padding-right: 20px; }
+  #page-nav { padding: 10px 20px; }
+  .tb-mid { display: none; }
+  .tb-right { display: none; }
+}
+@media (max-width: 520px) {
+  #page-nav { flex-direction: column; gap: 10px; }
+  .pnav-btn { width: 100%; justify-content: center; }
+  .h-links { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     HOME SCREEN
+══════════════════════════════ -->
+<div id="home">
+  <div class="h-grid"></div>
+  <div class="h-glow"></div>
+  <div class="h-orb h-orb-1"></div>
+  <div class="h-orb h-orb-2"></div>
+
+  <div class="h-content">
+    <div class="h-tag">
+      <div class="h-tag-dot"></div>
+      Roblox Config Documentation
+    </div>
+
+    <div class="h-title">
+      Havoc
+      <span class="h-title-accent">Preset</span>
+    </div>
+
+    <div class="h-sub">Tutorial & Configuration Reference</div>
+
+    <div class="h-links">
+      <button class="h-btn-primary" onclick="enterApp()">
+        <i data-lucide="book-open"></i>
+        <span>Open Docs</span>
+      </button>
+      <a class="h-btn-secondary" href="https://jnkie.com" target="_blank" rel="noopener">
+        <i data-lucide="globe"></i>
+        <span>jnkie.com</span>
+      </a>
+      <a class="h-btn-secondary" href="https://discord.gg/jnkie" target="_blank" rel="noopener">
+        <i data-lucide="message-circle"></i>
+        <span>discord.gg/jnkie</span>
+      </a>
+    </div>
+
+    <div class="h-socials">
+      <a class="h-social-link" href="https://jnkie.com" target="_blank" rel="noopener">
+        <i data-lucide="globe"></i> jnkie.com
+      </a>
+      <div class="h-divider"></div>
+      <a class="h-social-link" href="https://discord.gg/jnkie" target="_blank" rel="noopener">
+        <i data-lucide="users"></i> Community
+      </a>
+      <div class="h-divider"></div>
+      <span class="h-social-link" style="cursor:default;">
+        <i data-lucide="key-round"></i> Havoc Preset v1.0
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     APP
+══════════════════════════════ -->
+<div id="app">
+  <div id="bar"></div>
+  <div id="sb-overlay" onclick="closeSbMobile()"></div>
+
+  <!-- TOPBAR -->
+  <header id="topbar">
+    <a href="#" class="tb-logo" onclick="return false;">
+      <div class="tb-logo-mark"><i data-lucide="key-round"></i></div>
+      <div>
+        <div class="tb-name">Havoc Preset</div>
+        <div class="tb-domain">jnkie.com</div>
+      </div>
+    </a>
+
+    <button id="sb-toggle" onclick="toggleSidebar()">
+      <i data-lucide="sidebar"></i>
+      <span>Tabs</span>
+    </button>
+
+    <div class="tb-mid">
+      <div class="tb-search">
+        <i data-lucide="search"></i>
+        <input type="text" id="tab-search" placeholder="Search tabs…" oninput="filterTabs(this.value)">
+      </div>
+      <div class="tb-breadcrumb">
+        <i data-lucide="chevron-right"></i>
+        <span class="tb-breadcrumb-curr" id="breadcrumb">Overview</span>
+      </div>
+    </div>
+
+    <div class="tb-right">
+      <div class="tb-status-pill">
+        <div class="tb-status-dot"></div>
+        Live
+      </div>
+    </div>
+  </header>
+
+  <!-- BODY -->
+  <div id="body">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+      <div class="sb-inner">
+
+        <div class="nav-section">
+          <div class="nav-section-label">Start</div>
+          <button class="nav-btn active" onclick="goTo(0)" data-label="Overview" data-idx="0"><i data-lucide="book-open"></i>Overview</button>
+          <button class="nav-btn" onclick="goTo(1)" data-label="How It Works" data-idx="1"><i data-lucide="git-branch"></i>How It Works</button>
+          <button class="nav-btn" onclick="goTo(2)" data-label="Minimal Template" data-idx="2"><i data-lucide="file-code"></i>Minimal Template</button>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-label">Configuration</div>
+          <button class="nav-btn" onclick="goTo(3)" data-label="Junkie Configs" data-idx="3"><i data-lucide="settings-2"></i>Junkie Configs</button>
+          <button class="nav-btn sub" onclick="goTo(4)" data-label="Providers" data-idx="4"><i data-lucide="link-2"></i>Providers</button>
+          <button class="nav-btn sub" onclick="goTo(5)" data-label="GameSupport" data-idx="5"><i data-lucide="gamepad-2"></i>GameSupport</button>
+          <button class="nav-btn" onclick="goTo(6)" data-label="UI Configs" data-idx="6"><i data-lucide="palette"></i>UI Configs</button>
+          <button class="nav-btn sub" onclick="goTo(7)" data-label="General" data-idx="7"><i data-lucide="sliders-horizontal"></i>General</button>
+          <button class="nav-btn sub" onclick="goTo(8)" data-label="Background" data-idx="8"><i data-lucide="layers"></i>Background</button>
+          <button class="nav-btn sub" onclick="goTo(9)" data-label="Snow" data-idx="9"><i data-lucide="snowflake"></i>Snow</button>
+          <button class="nav-btn sub" onclick="goTo(10)" data-label="Key System" data-idx="10"><i data-lucide="keyboard"></i>Key System</button>
+          <button class="nav-btn sub" onclick="goTo(11)" data-label="Discord" data-idx="11"><i data-lucide="message-square"></i>Discord</button>
+          <button class="nav-btn sub" onclick="goTo(12)" data-label="Socials" data-idx="12"><i data-lucide="share-2"></i>Socials &amp; AppLinks</button>
+          <button class="nav-btn sub" onclick="goTo(13)" data-label="Instructions" data-idx="13"><i data-lucide="list-ordered"></i>Instructions</button>
+          <button class="nav-btn sub" onclick="goTo(14)" data-label="Changelog Config" data-idx="14"><i data-lucide="history"></i>Changelog</button>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-label">Reference</div>
+          <button class="nav-btn" onclick="goTo(15)" data-label="Changelog Tags" data-idx="15"><i data-lucide="tag"></i>Changelog Tags</button>
+          <button class="nav-btn" onclick="goTo(16)" data-label="Full Config Example" data-idx="16"><i data-lucide="code-2"></i>Full Example</button>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-label">Media</div>
+          <button class="nav-btn" onclick="goTo(17)" data-label="UI Showcase" data-idx="17"><i data-lucide="image"></i>UI Showcase</button>
+        </div>
+
+      </div>
+      <div class="sb-footer">
+        <span class="sb-footer-text">Made by <span>Havoc</span></span>
+        <span class="sb-footer-text">v1.0</span>
+      </div>
+    </aside>
+
+    <!-- PAGES -->
+    <div id="pages">
+
+      <!-- ── 0: OVERVIEW ── -->
+      <div class="page active" data-idx="0">
+        <div class="page-hero">
+          <div class="hero-bg"></div>
+          <div class="hero-inner">
+            <div class="hero-eyebrow"><i data-lucide="lock-keyhole"></i> Havoc Key System · v1.0</div>
+            <h1 class="hero-title">Havoc Preset<br><em>Configuration</em> Docs</h1>
+            <p class="hero-desc">Complete reference for the Havoc Preset UI library — key validation, visuals, providers, game support, and everything in between.</p>
+            <div class="hero-badges">
+              <span class="badge badge-green"><i data-lucide="zap"></i> loadstring delivery</span>
+              <span class="badge badge-green"><i data-lucide="shield-check"></i> Junkie SDK</span>
+              <span class="badge badge-blue"><i data-lucide="monitor"></i> Roblox UI</span>
+              <span class="badge badge-dim"><i data-lucide="globe"></i> jnkie.com</span>
+            </div>
+
+            <div style="margin-top:24px;display:flex;gap:10px;flex-wrap:wrap;">
+              <a href="https://jnkie.com" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);font-size:13px;font-weight:500;color:var(--fg2);text-decoration:none;transition:all 0.2s;" onmouseover="this.style.color='var(--fg)';this.style.borderColor='var(--border3)'" onmouseout="this.style.color='var(--fg2)';this.style.borderColor='var(--border2)'">
+                <i data-lucide="globe" style="width:14px;height:14px;"></i> Visit jnkie.com
+              </a>
+              <a href="https://discord.gg/jnkie" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.2);border-radius:var(--radius);font-size:13px;font-weight:500;color:#a5b4fc;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.background='rgba(88,101,242,0.15)'" onmouseout="this.style.background='rgba(88,101,242,0.08)'">
+                <i data-lucide="message-circle" style="width:14px;height:14px;"></i> Join Discord
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="page-scroll">
+          <div class="doc-content">
+            <div class="card">
+              <div style="font-size:13px;font-weight:600;color:var(--fg);margin-bottom:6px;display:flex;align-items:center;gap:7px;">
+                <i data-lucide="info" style="width:14px;height:14px;color:var(--green);"></i>
+                What is Havoc Preset?
+              </div>
+              <p style="margin:0;font-size:13.5px;">Havoc Preset is a Roblox key system UI library. Loaded externally via <code>loadstring</code> and configured entirely from your own script. When a valid key is redeemed, it sets <code>getgenv().LOAD = true</code> and your game script continues.</p>
+            </div>
+            <div class="callout tip">
+              <div class="callout-icon"><i data-lucide="check-circle-2"></i></div>
+              <div><strong>Tip —</strong> The library is CDN-hosted. You only write a loader script with your config — Havoc handles the library internals. Never modify the library directly.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 1: HOW IT WORKS ── -->
+      <div class="page" data-idx="1">
+        <div class="page-header">
+          <div class="page-eyebrow"><i data-lucide="git-branch"></i> 02 — Flow</div>
+          <div class="page-title">How It Works</div>
+        </div>
+        <div class="page-scroll"><div class="doc-content">
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div><div class="step-title">Load the Library</div><div class="step-desc">Your script calls <code>loadstring(game:HttpGet(LIBRARY_URL))()</code> — fetches the library from CDN and returns a Hub object.</div></div></div>
+            <div class="step"><div class="step-num">2</div><div><div class="step-title">Configure &amp; Init</div><div class="step-desc">Pass your <code>Config</code> to <code>Hub.new(Config)</code> then call <code>hub:Init()</code> to render the key system UI.</div></div></div>
+            <div class="step"><div class="step-num">3</div><div><div class="step-title">Wait for Redemption</div><div class="step-desc"><code>while not getgenv().LOAD do task.wait(1) end</code> blocks until a valid key is entered, then execution continues.</div></div></div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- ── 2: MINIMAL TEMPLATE ── -->
+      <div class="page" data-idx="2">
+        <div class="page-header">
+          <div class="page-eyebrow"><i data-lucide="file-code"></i> 03 — Template</div>
+          <div class="page-title">Minimal Template</div>
+        </div>
+        <div class="page-scroll"><div class="doc-content">
+          <div class="codeblock">
+            <div class="cb-header"><div class="cb-lang"><div class="cb-dot"></div>Lua</div><button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy"></i> Copy</button></div>
+<pre><span class="kw">local</span> system = <span class="fn">loadstring</span>(<span class="fn">game</span>:<span class="fn">HttpGet</span>(<span class="str">"LIBRARY_URL"</span>))()
+<span class="kw">local</span> Config = { <span class="cm">-- your config here</span> }
+<span class="kw">local</span> hub = system.<span class="fn">new</span>(Config)
+hub:<span class="fn">Init</span>()
+<span class="kw">while</span> <span class="kw">not</span> <span class="fn">getgenv</span>().<span class="key">LOAD</span> <span class="kw">do</span>
+  task.<span class="fn">wait</span>(<span class="num">1</span>)
+<span class="kw">end</span>
+<span class="cm">-- game script runs here</span></pre>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- ── 3: JUNKIE CONFIGS ── -->
+      <div class="page" data-idx="3">
+        <div class="page-header">
+          <div class="page-eyebrow"><i data-lucide="settings-2"></i> 04 — Core</div>
+          <div class="page-title">Junkie_Configs</div>
+          <div class="page-desc">Controls Junkie SDK integration — key validation, webhook relay, and provider setup.</div>
+        </div>
+        <div class="page-scroll"><div class="doc-content">
+          <table class="prop-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="pname">UseJunkie</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> loads the Junkie SDK for real-time key validation. <code>false</code> accepts any key (testing mode).</td></tr>
+              <tr><td class="pname">Junkie_Webhook</td><td class="ptype">string</td><td class="pdesc">Your Junkie relay webhook URL. Notifies you on key redemption. Leave <code>""</code> to disable.</td></tr>
+              <tr><td class="pname">Service</td><td class="ptype">string</td><td class="pdesc">Your service name from the Junkie dashboard. Must match exactly.</td></tr>
+              <tr><td class="pname">Identifier</td><td class="ptype">string</td><td class="pdesc">Your user/dashboard identifier from Junkie.</td></tr>
+              <tr><td class="pname">Provider</td><td class="ptype">string</td><td class="pdesc">The provider name configured in your Junkie dashboard.</td></tr>
+              <tr><td class="pname">MaxKeyAttempts</td><td class="ptype">number</td><td class="pdesc">Failed attempts before UI force-closes. Recommended: <code>5</code>.</td></tr>
+              <tr><td class="pname">Premium</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> loads the Premium script URL from GameSupport instead of Free.</td></tr>
+            </tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- ── 4: PROVIDERS ── -->
+      <div class="page" data-idx="4">
+        <div class="page-header">
+          <div class="page-eyebrow"><i data-lucide="link-2"></i> Providers</div>
+          <div class="page-title">Providers</div>
+          <div class="page-desc">Array of key provider buttons shown in the UI. Each can be shown, hidden, or pinned.</div>
+        </div>
+        <div class="page-scroll"><div class="doc-content">
+          <table class="prop-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="pname">Name</td><td class="ptype">string</td><td class="pdesc">Display name on the provider button.</td></tr>
+              <tr><td class="pname">Icon</td><td class="ptype">string</td><td class="pdesc">rbxassetid for the icon. Use <code>"rbxassetid://0"</code> for the built-in default.</td></tr>
+              <tr><td class="pname">Url</td><td class="ptype">string</td><td class="pdesc">URL opened on click. Fallback if <code>get_key_link()</code> returns nil.</td></tr>
+              <tr><td class="pname">Show</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = visible.</td></tr>
+              <tr><td class="pname">IsJunkie</td><td class="ptype">boolean</td><td class="pdesc">Exactly ONE provider should have this. Enables SDK's <code>get_key_link()</code> flow.</td></tr>
+              <tr><td class="pname">Pinned</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = rendered first with a highlight border.</td></tr>
+            </tbody>
+          </table>
+          <div class="callout warn">
+            <div class="callout-icon"><i data-lucide="alert-triangle"></i></div>
+            <div><strong>Warning —</strong> Only one provider should have <code>IsJunkie = true</code>. If none, all providers render as regular URL buttons.</div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- ── 5: GAMESUPPORT ── -->
+      <div class="page" data-idx="5">
+        <div class="page-header">
+          <div class="page-eyebrow"><i data-lucide="gamepad-2"></i> GameSupport</div>
+          <div class="page-title">GameSupport</div>
+          <div class="page-desc">Maps Roblox Place IDs to script URLs. After key acceptance the matching script loads. <code>Universal</code> is required as a fallback.</div>
+        </div>
+        <div class="page-scroll"><div class="doc-content">
+          <div class="codeblock">
+            <div class="cb-header"><div class="cb-lang"><div class="cb-dot"></div>Lua</div><button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy"></i> Copy</button></div>
+<pre><span class="key">GameSupport</span> = {
+  [<span class="num">2788229376</span>] = {
+    <span class="key">Name</span>    = <span class="str">"Da Hood"</span>,
+    <span class="key">Free</span>    = <span class="str">"https://api.jnkie.com/.../DAHOOD_FREE_HASH/download"</span>,
+    <span class="key">Premium</span> = <span class="str">"https://api.jnkie.com/.../DAHOOD_PREMIUM_HASH/download"</span>,
+  },
+  <span class="key">Universal</span> = {
+    <span class="key">Name</span>    = <span class="str">"Universal"</span>,
+    <span class="key">Free</span>    = <span class="str">"https://api.jnkie.com/.../UNIVERSAL_FREE_HASH/download"</span>,
+    <span class="key">Premium</span> = <span class="str">"https://api.jnkie.com/.../UNIVERSAL_PREMIUM_HASH/download"</span>,
+  },
+}</pre>
+          </div>
+          <div class="callout warn">
+            <div class="callout-icon"><i data-lucide="alert-triangle"></i></div>
+            <div><strong>Warning —</strong> Replace all <code>HASH</code> placeholders with your actual Junkie script hashes. The <code>Universal</code> entry is required as a fallback.</div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- ── 6: UI CONFIGS OVERVIEW ── -->
+      <div class="page" data-idx="6">
+        <div class="page-header">
+          <div class="page-eyebrow"><i data-lucide="palette"></i> 05 — Visual</div>
+          <div class="page-title">UI_Configs</div>
+          <div class="page-desc">Controls the visual appearance and behaviour of the key system UI. Split into focused sub-sections below.</div>
+        </div>
+        <div class="page-scroll"><div class="doc-content">
+          <div class="callout info">
+            <div class="callout-icon"><i data-lucide="info"></i></div>
+            <div>Navigate using the sidebar or Next button to reach General, Background, Snow, Key System, Discord, Socials, Instructions, and Changelog sub-sections.</div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- ── 7: GENERAL ── -->
+      <div class="page" data-idx="7">
+        <div class="page-header">
+          <div class="page-eyebrow"><i data-lucide="sliders-horizontal"></i> General</div>
+          <div class="page-title">General Settings</div>
+        </div>
+        <div class="page-scroll"><div class="doc-content">
+          <table class="prop-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="pname">Name</td><td class="ptype">string</td><td class="pdesc">Hub display name in the title section.</td></tr>
+              <tr><td class="pname">Version</td><td class="ptype">string</td><td class="pdesc">Version pill under the hub name. e.g. <code>"1.0"</code></td></tr>
+              <tr><td class="pname">Color</td><td class="ptype">Color3</td><td class="pdesc">Primary accent colour — buttons, borders, glows, badges.</td></tr>
+              <tr><td class="pname">Text_Color</td><td class="ptype">Color3 / ""</td><td class="pdesc">Text on coloured buttons. Leave <code>""</code> to auto-pick black/white.</td></tr>
+              <tr><td class="pname">Icon</td><td class="ptype">string</td><td class="pdesc">rbxassetid for your hub logo in the title bar.</td></tr>
+              <tr><td class="pname">BadgeText</td><td class="ptype">string</td><td class="pdesc">Badge label next to the icon. e.g. <code>"KEY SYSTEM"</code></td></tr>
+              <tr><td class="pname">CustomFont</td><td class="ptype">string</td><td class="pdesc">rbxassetid of a custom font. Leave <code>""</code> for built-in Gotham.</td></tr>
+              <tr><td class="pname">ShowOutline</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = accent-coloured border around the main panel.</td></tr>
+            </tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- ── 8: BACKGROUND ── -->
+      <div class="page" data-idx="8">
+        <div class="page-header">
+          <div class="page-eyebrow"><i data-lucide="layers"></i> Background &amp; Overlay</div>
+          <div class="page-title">Background &amp; Overlay</div>
+        </div>
+        <div class="page-scroll"><div class="doc-content">
+          <table class="prop-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="pname">GradientAnimated</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = background gradient slowly rotates.</td></tr>
+              <tr><td class="pname">GradientAnimationSpeed</td><td class="ptype">number</td><td class="pdesc">Seconds per full rotation. Lower = faster.</td></tr>
+              <tr><td class="pname">GlassOpacity</td><td class="ptype">number</td><td class="pdesc">Panel transparency. <code>0</code> = opaque, <code>1</code> = invisible. <code>0.18</code> = frosted glass.</td></tr>
+              <tr><td class="pname">SlideInEnabled</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = panel slides up on open.</td></tr>
+              <tr><td class="pname">BlurEnabled</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = applies BlurEffect to Lighting while UI is open.</td></tr>
+              <tr><td class="pname">BlurSize</td><td class="ptype">number</td><td class="pdesc">Blur strength 0–56.</td></tr>
+              <tr><td class="pname">OverlayOpacity</td><td class="ptype">number</td><td class="pdesc">Background overlay darkness. <code>0</code> = none, <code>1</code> = black.</td></tr>
+            </tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- ── 9: SNOW ── -->
+      <div class="page" data-idx="9">
+        <div class="page-header">
+          <div class="page-eyebrow"><i data-lucide="snowflake"></i> Snow</div>
+          <div class="page-title">Snow Settings</div>
+        </div>
+        <div class="page-scroll"><div class="doc-content">
+          <table class="prop-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="pname">SnowEnabled</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = falling snowflake particles over the background.</td></tr>
+              <tr><td class="pname">SnowDensity</td><td class="ptype">number</td><td class="pdesc">Snowflake count multiplier. <code>1.0</code> = default.</td></tr>
+              <tr><td class="pname">SnowColor</td><td class="ptype">Color3</td><td class="pdesc">Snowflake colour.</td></tr>
+              <tr><td class="pname">SnowSize</td><td class="ptype">{Min, Max}</td><td class="pdesc">Pixel diameter range. e.g. <code>{Min=3, Max=7}</code></td></tr>
+            </tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- ── 10: KEY SYSTEM ── -->
+      <div class="page" data-idx="10">
+        <div class="page-header">
+          <div class="page-eyebrow"><i data-lucide="keyboard"></i> Key System</div>
+          <div class="page-title">Key System Settings</div>
+        </div>
+        <div class="page-scroll"><div class="doc-content">
+          <table class="prop-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="pname">KeySystemLabel</td><td class="ptype">string</td><td class="pdesc">Label text above the key input box.</td></tr>
+              <tr><td class="pname">KeySystemPlaceholder</td><td class="ptype">string</td><td class="pdesc">Animated placeholder that types itself when the box is empty.</td></tr>
+              <tr><td class="pname">KeyFile</td><td class="ptype">string</td><td class="pdesc">Filename to save/load the verified key locally.</td></tr>
+              <tr><td class="pname">CloseOnSuccess</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = UI auto-closes after successful redeem.</td></tr>
+              <tr><td class="pname">SuccessMessage</td><td class="ptype">string</td><td class="pdesc">Toast shown on success. e.g. <code>"✓ Access Granted!"</code></td></tr>
+            </tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- ── 11: DISCORD ── -->
+      <div class="page" data-idx="11">
+        <div class="page-header">
+          <div class="page-eyebrow"><i data-lucide="message-square"></i> Discord</div>
+          <div class="page-title">Discord Settings</div>
+        </div>
+        <div class="page-scroll"><div class="doc-content">
+          <table class="prop-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="pname">Discord</td><td class="ptype">string</td><td class="pdesc">Your invite code (part after <code>discord.gg/</code>). Powers the Join button and live member count.</td></tr>
+              <tr><td class="pname">ShowMemberCount</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = fetches and shows live member + online count.</td></tr>
+            </tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- ── 12: SOCIALS ── -->
+      <div class="page" data-idx="12">
+        <div class="page-header">
+          <div class="page-eyebrow"><i data-lucide="share-2"></i> Socials &amp; AppLinks</div>
+          <div class="page-title">Socials &amp; AppLinks</div>
+          <div class="page-desc">Both arrays share the same field structure.</div>
+        </div>
+        <div class="page-scroll"><div class="doc-content">
+          <table class="prop-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="pname">Name</td><td class="ptype">string</td><td class="pdesc">Display name. Used to auto-resolve icon if <code>Icon</code> is <code>"rbxassetid://0"</code>.</td></tr>
+              <tr><td class="pname">Icon</td><td class="ptype">string</td><td class="pdesc">rbxassetid for the icon image.</td></tr>
+              <tr><td class="pname">Link</td><td class="ptype">string</td><td class="pdesc">URL copied to clipboard on click.</td></tr>
+              <tr><td class="pname">Show</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = visible.</td></tr>
+              <tr><td class="pname">Pinned</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = rendered first with a highlight border.</td></tr>
+            </tbody>
+          </table>
+          <div class="callout info">
+            <div class="callout-icon"><i data-lucide="info"></i></div>
+            <div><strong>Auto-icons —</strong> Set <code>Icon</code> to <code>"rbxassetid://0"</code> for built-in icons: Discord, Twitter, YouTube, TikTok, Instagram, Telegram, Reddit, GitHub, Guilded, Patreon, Ko-fi, Twitch, V3rm, Website, Linkvertise, LootLabs, Work.ink, Shrtfly, Lockr, Cuty, ShrinkEarn, Rinku.</div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- ── 13: INSTRUCTIONS ── -->
+      <div class="page" data-idx="13">
+        <div class="page-header">
+          <div class="page-eyebrow"><i data-lucide="list-ordered"></i> Instructions</div>
+          <div class="page-title">Instructions</div>
+          <div class="page-desc">Step cards on the How-To page (opened via the <code>?</code> button).</div>
+        </div>
+        <div class="page-scroll"><div class="doc-content">
+          <div class="codeblock">
+            <div class="cb-header"><div class="cb-lang"><div class="cb-dot"></div>Lua</div><button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy"></i> Copy</button></div>
+<pre><span class="key">Instructions</span> = {
+  { <span class="key">Title</span> = <span class="str">"Open Junkie"</span>,     <span class="key">Body</span> = <span class="str">"Click Junkie Development to open your key link."</span> },
+  { <span class="key">Title</span> = <span class="str">"Complete Steps"</span>,  <span class="key">Body</span> = <span class="str">"Finish all checkpoints on the Junkie page."</span> },
+  { <span class="key">Title</span> = <span class="str">"Paste &amp; Redeem"</span>,  <span class="key">Body</span> = <span class="str">"Paste your jnk- key above and hit Redeem."</span> },
+}</pre>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- ── 14: CHANGELOG CONFIG ── -->
+      <div class="page" data-idx="14">
+        <div class="page-header">
+          <div class="page-eyebrow"><i data-lucide="history"></i> Changelog Config</div>
+          <div class="page-title">Changelog Config</div>
+          <div class="page-desc">Controls the ★ changelog popup. Each version entry has its own tag colour and bullet notes.</div>
+        </div>
+        <div class="page-scroll"><div class="doc-content">
+          <table class="prop-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="pname">Show</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = shows the ★ changelog button.</td></tr>
+              <tr><td class="pname">Title</td><td class="ptype">string</td><td class="pdesc">Header text on the changelog page.</td></tr>
+              <tr><td class="pname">Versions</td><td class="ptype">array</td><td class="pdesc">Array of version entries — each has Version, Date, Tag, Notes.</td></tr>
+            </tbody>
+          </table>
+          <div class="divider"></div>
+          <table class="prop-table">
+            <thead><tr><th>Entry Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="pname">Version</td><td class="ptype">string</td><td class="pdesc">Version pill label. e.g. <code>"1.2"</code></td></tr>
+              <tr><td class="pname">Date</td><td class="ptype">string</td><td class="pdesc">Optional date shown right-aligned. e.g. <code>"Feb 2026"</code></td></tr>
+              <tr><td class="pname">Tag</td><td class="ptype">string</td><td class="pdesc">One tag per version — controls pill colour. See Changelog Tags page.</td></tr>
+              <tr><td class="pname">Notes</td><td class="ptype">string[]</td><td class="pdesc">Each string becomes a bullet point.</td></tr>
+            </tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- ── 15: CHANGELOG TAGS ── -->
+      <div class="page" data-idx="15">
+        <div class="page-header">
+          <div class="page-eyebrow"><i data-lucide="tag"></i> 06 — Reference</div>
+          <div class="page-title">Changelog Tags</div>
+        </div>
+        <div class="page-scroll"><div class="doc-content">
+          <table class="tags-table">
+            <tbody>
+              <tr><td><span class="tag tag-new">NEW</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--fg3)">RGB(34,197,94)</td><td style="color:var(--fg2);font-size:13px">New feature or addition</td></tr>
+              <tr><td><span class="tag tag-fix">FIX</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--fg3)">RGB(248,113,113)</td><td style="color:var(--fg2);font-size:13px">Bug fix or correction</td></tr>
+              <tr><td><span class="tag tag-imp">IMPROVED</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--fg3)">RGB(147,197,253)</td><td style="color:var(--fg2);font-size:13px">Enhancement to existing feature</td></tr>
+              <tr><td><span class="tag tag-rem">REMOVED</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--fg3)">RGB(253,186,116)</td><td style="color:var(--fg2);font-size:13px">Feature removed</td></tr>
+              <tr><td><span class="tag tag-sec">SECURITY</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--fg3)">RGB(252,211,77)</td><td style="color:var(--fg2);font-size:13px">Security-related change</td></tr>
+            </tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- ── 16: FULL EXAMPLE ── -->
+      <div class="page" data-idx="16">
+        <div class="page-header">
+          <div class="page-eyebrow"><i data-lucide="code-2"></i> 07 — Example</div>
+          <div class="page-title">Full Config Example</div>
+          <div class="page-desc">A complete, working config you can copy and customise.</div>
+        </div>
+        <div class="page-scroll"><div class="doc-content">
+          <div class="codeblock">
+            <div class="cb-header"><div class="cb-lang"><div class="cb-dot"></div>Lua — Full Config</div><button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy"></i> Copy</button></div>
+<pre><span class="fn">getgenv</span>().<span class="key">LOAD</span> = <span class="bool">nil</span>
+
+<span class="kw">local</span> Junkie_Configs = {
+  <span class="key">UseJunkie</span>       = <span class="bool">true</span>,
+  <span class="key">Junkie_Webhook</span>  = <span class="str">"https://jnkie.com/api/v1/webhooks/relay/YOUR_ID/send"</span>,
+  <span class="key">Service</span>         = <span class="str">"My Hub"</span>,
+  <span class="key">Identifier</span>      = <span class="str">"1234"</span>,
+  <span class="key">Provider</span>        = <span class="str">"My Hub"</span>,
+  <span class="key">MaxKeyAttempts</span>  = <span class="num">5</span>,
+  <span class="key">Premium</span>         = <span class="bool">false</span>,
+  <span class="key">Providers</span> = {
+    { <span class="key">Name</span>=<span class="str">"Junkie Development"</span>, <span class="key">Url</span>=<span class="str">"https://jnkie.com/junkiehub"</span>, <span class="key">Show</span>=<span class="bool">true</span>, <span class="key">IsJunkie</span>=<span class="bool">true</span>, <span class="key">Pinned</span>=<span class="bool">true</span> },
+    { <span class="key">Name</span>=<span class="str">"Linkvertise"</span>, <span class="key">Url</span>=<span class="str">"https://linkvertise.com/yourhub"</span>, <span class="key">Show</span>=<span class="bool">true</span>, <span class="key">Pinned</span>=<span class="bool">false</span> },
+  },
+  <span class="key">GameSupport</span> = {
+    <span class="key">Universal</span> = { <span class="key">Name</span>=<span class="str">"Universal"</span>, <span class="key">Free</span>=<span class="str">"https://api.jnkie.com/.../HASH/download"</span> },
+  },
+}
+
+<span class="kw">local</span> UI_Configs = {
+  <span class="key">Name</span> = <span class="str">"My Hub"</span>,  <span class="key">Version</span> = <span class="str">"1.0"</span>,
+  <span class="key">Color</span> = <span class="fn">Color3</span>.<span class="fn">fromRGB</span>(<span class="num">138</span>, <span class="num">43</span>, <span class="num">226</span>),
+  <span class="key">BadgeText</span> = <span class="str">"KEY SYSTEM"</span>,  <span class="key">ShowOutline</span> = <span class="bool">true</span>,
+  <span class="key">KeySystemLabel</span>      = <span class="str">"Enter Key"</span>,
+  <span class="key">KeySystemPlaceholder</span> = <span class="str">"jnk-XXXXXXXXXXXXXXXX"</span>,
+  <span class="key">ShowMemberCount</span> = <span class="bool">true</span>,
+  <span class="key">SnowEnabled</span> = <span class="bool">true</span>,  <span class="key">SnowDensity</span> = <span class="num">1.0</span>,
+  <span class="key">GlassOpacity</span> = <span class="num">0.18</span>,  <span class="key">SlideInEnabled</span> = <span class="bool">true</span>,
+  <span class="key">BlurEnabled</span> = <span class="bool">true</span>,  <span class="key">BlurSize</span> = <span class="num">30</span>,
+  <span class="key">CloseOnSuccess</span> = <span class="bool">true</span>,
+  <span class="key">SuccessMessage</span> = <span class="str">"✓ Access Granted!"</span>,
+  <span class="key">KeyFile</span>  = <span class="str">"myhub_key.txt"</span>,
+  <span class="key">Discord</span>  = <span class="str">"your_invite_code"</span>,
+}
+
+<span class="kw">local</span> system = <span class="fn">loadstring</span>(<span class="fn">game</span>:<span class="fn">HttpGet</span>(<span class="str">"LIBRARY_URL"</span>))()
+<span class="kw">local</span> hub = system.<span class="fn">new</span>(Config)
+hub:<span class="fn">Init</span>()
+<span class="kw">while</span> <span class="kw">not</span> <span class="fn">getgenv</span>().<span class="key">LOAD</span> <span class="kw">do</span> task.<span class="fn">wait</span>(<span class="num">1</span>) <span class="kw">end</span>
+<span class="cm">-- YOUR SCRIPT STARTS HERE</span></pre>
+          </div>
+          <div class="callout info">
+            <div class="callout-icon"><i data-lucide="info"></i></div>
+            <div><strong>Note —</strong> Never modify the library itself. All customisation lives in your loader's Config table.</div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- ── 17: UI SHOWCASE ── -->
+      <div class="page" data-idx="17">
+        <div class="page-header">
+          <div class="page-eyebrow"><i data-lucide="image"></i> Media</div>
+          <div class="page-title">UI Showcase</div>
+          <div class="page-desc">Click the screenshot to expand. Hover for a 3D tilt effect.</div>
+        </div>
+        <div class="page-scroll"><div class="doc-content">
+          <div class="img-showcase" id="img3d" onclick="openLightbox()">
+            <img id="showcase-img"
+              src="https://raw.githubusercontent.com/1NFERNO-HUB/Junkie/refs/heads/main/Screenshot_20260223_154320_Roblox.jpg"
+              alt="Havoc Preset UI in Roblox"
+              onerror="this.parentElement.innerHTML='<div style=\'height:220px;display:flex;align-items:center;justify-content:center;background:var(--surface);color:var(--fg3);font-family:var(--mono);font-size:11px;letter-spacing:1px;border:1px dashed var(--border2);border-radius:var(--radius);\'>[screenshot unavailable]</div>'"
+            />
+            <div class="img-overlay"></div>
+            <div class="img-hint"><i data-lucide="zoom-in"></i> Click to expand</div>
+          </div>
+
+          <div style="margin-top:28px;">
+            <h3><i data-lucide="play-circle"></i> Video Preview</h3>
+            <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:10px;">
+              <video controls preload="metadata" style="width:100%;display:block;background:#000;">
+                <source src="https://github.com/1NFERNO-HUB/Junkie/raw/refs/heads/main/XRecorder_20260223_02.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- BOTTOM NAV -->
+      <div id="page-nav">
+        <button class="pnav-btn" id="prev-btn" onclick="goTo(currentPage-1)">
+          <i data-lucide="arrow-left"></i> Prev
+        </button>
+        <div class="pnav-center">
+          <div class="pnav-dots" id="dots"></div>
+          <div class="pnav-label" id="pnav-label"></div>
+        </div>
+        <button class="pnav-btn" id="next-btn" onclick="goTo(currentPage+1)">
+          Next <i data-lucide="arrow-right"></i>
+        </button>
+      </div>
+
+    </div><!-- /pages -->
+  </div><!-- /body -->
+</div><!-- /app -->
+
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="lbBg(event)">
+  <button id="lb-close" onclick="closeLightbox()"><i data-lucide="x"></i></button>
+  <img id="lb-img"
+    src="https://raw.githubusercontent.com/1NFERNO-HUB/Junkie/refs/heads/main/Screenshot_20260223_154320_Roblox.jpg"
+    alt="UI Preview"
+  />
+</div>
+
+<!-- TOAST -->
+<div id="toast" style="
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);
+  padding:10px 18px;font-size:13px;color:var(--fg);
+  display:flex;align-items:center;gap:8px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  transition:transform 0.3s var(--spring),opacity 0.3s ease;
+  opacity:0;pointer-events:none;z-index:1000;white-space:nowrap;
+">
+  <i data-lucide="check-circle-2" style="width:14px;height:14px;color:var(--green);flex-shrink:0;"></i>
+  <span id="toast-msg">Copied to clipboard</span>
+</div>
+
+<script>
+// ── lucide ──
+window.addEventListener('DOMContentLoaded', () => lucide.createIcons());
+
+// ── state ──
+const TOTAL = 18;
+const NAMES = ['Overview','How It Works','Minimal Template','Junkie Configs','Providers','GameSupport',
+  'UI Configs','General','Background','Snow','Key System','Discord','Socials',
+  'Instructions','Changelog Config','Changelog Tags','Full Example','UI Showcase'];
+let current = 0;
+let sbOpen = true;
+
+// ── nav ──
+function buildDots() {
+  const c = document.getElementById('dots');
+  if (!c) return;
+  c.innerHTML = '';
+  for (let i = 0; i < TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'pnav-dot' + (i === current ? ' active' : '');
+    d.title = NAMES[i];
+    (i => d.onclick = () => goTo(i))(i);
+    c.appendChild(d);
+  }
+  const lbl = document.getElementById('pnav-label');
+  if (lbl) lbl.textContent = NAMES[current] + ' — ' + (current+1) + ' / ' + TOTAL;
+  const bc = document.getElementById('breadcrumb');
+  if (bc) bc.textContent = NAMES[current];
+}
+
+function goTo(idx) {
+  if (idx < 0 || idx >= TOTAL) return;
+  const old = document.querySelector('.page.active');
+  if (old) old.classList.remove('active');
+  current = idx;
+  const next = document.querySelector('.page[data-idx="'+idx+'"]');
+  if (next) {
+    next.classList.add('active');
+    const s = next.querySelector('.page-scroll');
+    if (s) s.scrollTop = 0;
+  }
+  document.querySelectorAll('.nav-btn[data-idx]').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.idx) === idx);
+  });
+  const pb = document.getElementById('prev-btn');
+  const nb = document.getElementById('next-btn');
+  if (pb) pb.disabled = idx === 0;
+  if (nb) nb.disabled = idx === TOTAL - 1;
+  buildDots();
+  if (window.innerWidth <= 800) closeSbMobile();
+  lucide.createIcons();
+}
+
+// ── sidebar ──
+function toggleSidebar() {
+  sbOpen = !sbOpen;
+  document.getElementById('sidebar').classList.toggle('hidden', !sbOpen);
+  if (window.innerWidth <= 800)
+    document.getElementById('sb-overlay').classList.toggle('visible', sbOpen);
+}
+function closeSbMobile() {
+  if (window.innerWidth <= 800) {
+    sbOpen = false;
+    document.getElementById('sidebar').classList.add('hidden');
+    document.getElementById('sb-overlay').classList.remove('visible');
+  }
+}
+
+// ── search ──
+function filterTabs(val) {
+  const q = val.toLowerCase().trim();
+  document.querySelectorAll('.nav-btn[data-label]').forEach(b => {
+    b.classList.toggle('search-hidden', q.length > 0 && !b.dataset.label.toLowerCase().includes(q));
+  });
+}
+
+// ── home ──
+function enterApp() {
+  document.getElementById('home').classList.add('out');
+  const app = document.getElementById('app');
+  app.classList.add('visible');
+  setTimeout(() => { buildDots(); goTo(0); }, 60);
+}
+
+// ── keyboard ──
+document.addEventListener('keydown', e => {
+  const homeOut = document.getElementById('home').classList.contains('out');
+  if (homeOut) {
+    if (e.key === 'ArrowRight') goTo(current + 1);
+    if (e.key === 'ArrowLeft')  goTo(current - 1);
+  }
+  if (e.key === 'Escape') closeLightbox();
+});
+
+// ── toast ──
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  lucide.createIcons();
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  t.style.opacity = '1';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    t.style.transform = 'translateX(-50%) translateY(60px)';
+    t.style.opacity = '0';
+  }, 2200);
+}
+
+// ── copy ──
+function copyCode(btn) {
+  const pre = btn.closest('.codeblock').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.innerHTML = '<i data-lucide="check"></i> Copied';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'rgba(74,222,128,0.3)';
+    lucide.createIcons();
+    showToast('Copied to clipboard');
+    setTimeout(() => {
+      btn.innerHTML = '<i data-lucide="copy"></i> Copy';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+      lucide.createIcons();
+    }, 2000);
+  });
+}
+
+// ── 3D tilt ──
+const img3d = document.getElementById('img3d');
+if (img3d) {
+  img3d.addEventListener('mousemove', e => {
+    const r = img3d.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    const img = img3d.querySelector('img');
+    if (img) img.style.transform = 'perspective(700px) rotateY('+x*12+'deg) rotateX('+(-y*8)+'deg) scale(1.025)';
+  });
+  img3d.addEventListener('mouseleave', () => {
+    const img = img3d.querySelector('img');
+    if (img) { img.style.transition = 'transform 0.4s var(--spring)'; img.style.transform = ''; setTimeout(() => { if(img) img.style.transition = 'transform 0.08s ease'; }, 400); }
+  });
+}
+
+// ── lightbox ──
+function openLightbox() { document.getElementById('lightbox').classList.add('open'); }
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+function lbBg(e) { if (e.target === document.getElementById('lightbox')) closeLightbox(); }
+const lbImg = document.getElementById('lb-img');
+if (lbImg) {
+  lbImg.addEventListener('mousemove', e => {
+    const r = lbImg.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    lbImg.style.transform = 'perspective(1000px) rotateY('+x*8+'deg) rotateX('+(-y*5)+'deg)';
+  });
+  lbImg.addEventListener('mouseleave', () => {
+    lbImg.style.transition = 'transform 0.4s var(--spring)';
+    lbImg.style.transform = '';
+    setTimeout(() => lbImg.style.transition = 'transform 0.08s ease', 400);
+  });
+}
+</script>
+</body>
+</html>
