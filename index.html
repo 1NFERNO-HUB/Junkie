@@ -5,902 +5,314 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Configuration Docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
 <style>
 :root {
-  --bg: #0a0a08;
-  --bg1: #0f0f0d;
-  --bg2: #141412;
-  --bg3: #1a1a18;
-  --line: #2a2a26;
-  --line2: #333330;
-  --ink: #e8e6df;
-  --ink2: #9a9890;
-  --ink3: #5a5a54;
-  --yellow: #f5c842;
-  --red: #e84040;
-  --green: #3ecf6e;
-  --blue: #4da6ff;
-  --orange: #ff7043;
-  --purple: #b06aff;
-  --sidebar: 260px;
-  --mono: 'IBM Plex Mono', monospace;
-  --display: 'Barlow Condensed', sans-serif;
-  --body: 'Barlow', sans-serif;
+  --bg: #050a08;
+  --bg1: #0a0f0d;
+  --bg2: #0f1612;
+  --green: #1db876;
+  --green-light: #2dd490;
+  --yellow: #00d4aa;
+  --line: #1f3230;
+  --ink: #e8f0ee;
+  --ink2: #a8bfbc;
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
-
 body {
-  background: var(--bg);
+  background: linear-gradient(135deg, var(--bg) 0%, #0a0f0d 100%);
   color: var(--ink);
-  font-family: var(--body);
-  font-size: 15px;
-  line-height: 1.65;
-  min-height: 100vh;
-}
-
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: repeating-linear-gradient(
-    0deg, transparent, transparent 2px,
-    rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px
-  );
-  pointer-events: none;
-  z-index: 9999;
-}
-
-/* CONTAINER */
-.container {
-  display: flex;
-  min-height: 100vh;
+  font-family: 'Space Grotesk', sans-serif;
+  overflow-x: hidden;
 }
 
 /* SIDEBAR */
 #sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: var(--sidebar);
-  height: 100vh;
-  background: var(--bg1);
+  position: fixed; top: 0; left: 0; width: 280px; height: 100vh;
+  background: linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
   border-right: 1px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  z-index: 100;
-  transition: transform 0.3s ease;
+  z-index: 100; overflow-y: auto;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 4px 0 20px rgba(0,0,0,0.5);
 }
 
-#sidebar.collapsed {
-  transform: translateX(-100%);
-}
+#sidebar.collapsed { transform: translateX(-100%); }
 
-#sidebar::-webkit-scrollbar { width: 3px; }
-#sidebar::-webkit-scrollbar-thumb { background: var(--line2); }
-
-/* TOGGLE BUTTON */
-.toggle-btn {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  z-index: 101;
-  background: var(--yellow);
-  border: none;
-  color: #000;
-  padding: 12px 14px;
-  cursor: pointer;
-  font-weight: bold;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-
-.toggle-btn:hover {
-  background: #fff;
-  transform: scale(1.05);
-}
-
-.toggle-btn:active {
-  transform: scale(0.95);
-}
-
-.sb-header {
-  padding: 20px 18px 16px;
+.sidebar-header {
+  padding: 24px 20px;
+  background: linear-gradient(135deg, rgba(29,184,118,0.1) 0%, rgba(0,212,170,0.05) 100%);
   border-bottom: 1px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
-.sb-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-}
-
-.sb-logo-icon {
-  width: 32px;
-  height: 32px;
-  background: var(--yellow);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border-radius: 4px;
-}
-
-.sb-logo-icon svg {
-  width: 18px;
-  height: 18px;
-  color: #000;
-}
-
-.sb-logo-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.sb-name {
-  font-family: var(--display);
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  color: var(--ink);
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.sb-status {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--ink3);
-  letter-spacing: 0.5px;
-}
-
-.status-dot {
-  width: 6px;
-  height: 6px;
-  background: var(--green);
-  border-radius: 50%;
-  animation: blink 2.5s ease-in-out infinite;
-}
-
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-nav {
-  flex: 1;
-  padding: 10px 0;
-}
-
-.nav-group {
-  margin-bottom: 2px;
-}
-
-.nav-group-label {
-  font-family: var(--mono);
-  font-size: 8px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: var(--ink3);
-  padding: 10px 18px 4px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.nav-group-label::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--line);
+.sidebar-logo {
+  display: flex; align-items: center; gap: 12px; font-weight: bold;
+  font-size: 18px; color: var(--yellow);
+  text-transform: uppercase; letter-spacing: 1px;
 }
 
 .search-bar {
-  padding: 10px 12px;
-  margin: 10px 10px;
-  background: var(--bg2);
-  border: 1px solid var(--line2);
-  color: var(--ink);
-  font-family: var(--mono);
-  font-size: 11px;
-  border-radius: 4px;
+  width: 100%; padding: 10px 16px; margin: 12px 0;
+  background: rgba(29,184,118,0.05); border: 1px solid var(--line);
+  color: var(--ink); border-radius: 8px; font-size: 12px;
+  transition: all 0.3s;
+}
+
+.search-bar:focus {
+  outline: none; background: rgba(29,184,118,0.15);
+  border-color: var(--green); box-shadow: 0 0 12px rgba(29,184,118,0.2);
+}
+
+nav { padding: 12px 0; }
+
+.nav-group { margin-bottom: 8px; }
+
+.nav-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 2px; color: var(--yellow);
+  padding: 12px 20px 6px;
 }
 
 .nav-item {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 7px 18px;
-  text-decoration: none;
-  color: var(--ink3);
-  font-size: 12px;
-  font-weight: 500;
-  font-family: var(--body);
-  transition: color 0.1s, background 0.1s;
-  border-left: 2px solid transparent;
-  cursor: pointer;
-}
-
-.nav-item svg {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 18px; color: var(--ink2); text-decoration: none;
+  cursor: pointer; transition: all 0.3s;
+  border-left: 3px solid transparent;
 }
 
 .nav-item:hover {
-  color: var(--ink);
-  background: rgba(255,255,255,0.03);
+  color: var(--ink); background: rgba(29,184,118,0.1);
+  padding-left: 22px;
 }
 
 .nav-item.active {
-  color: var(--yellow);
-  border-left-color: var(--yellow);
-  background: rgba(245,200,66,0.05);
+  color: var(--yellow); background: linear-gradient(90deg, rgba(29,184,118,0.15) 0%, transparent 100%);
+  border-left-color: var(--green);
 }
 
-.nav-item.hidden {
-  display: none;
+.nav-item.hidden { display: none; }
+
+.nav-item svg { width: 14px; height: 14px; }
+
+.nav-sub { padding-left: 50px; font-size: 12px; }
+
+/* TOGGLE BUTTON */
+.toggle-btn {
+  position: fixed; top: 20px; left: 20px; z-index: 102;
+  background: linear-gradient(135deg, var(--green) 0%, var(--yellow) 100%);
+  border: none; color: #000; padding: 12px 14px;
+  cursor: pointer; border-radius: 10px; font-weight: bold;
+  display: none; transition: all 0.3s;
+  box-shadow: 0 8px 32px rgba(29,184,118,0.3);
 }
 
-.nav-sub {
-  padding-left: 40px;
-  font-size: 11px;
+.toggle-btn:hover { transform: translateY(-3px); }
+
+@media (max-width: 1024px) {
+  .toggle-btn { display: flex; align-items: center; justify-content: center; }
+  #sidebar { width: 85vw; }
+  #main { margin-left: 0; }
+  #main.sidebar-collapsed { margin-left: 0; }
 }
 
-.sb-footer {
-  padding: 14px 18px;
-  border-top: 1px solid var(--line);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.sb-footer-tag {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--ink3);
-}
-
-.sb-footer-tag span {
-  color: var(--yellow);
-  font-weight: 600;
-}
-
-/* MAIN CONTENT */
+/* MAIN */
 #main {
-  margin-left: var(--sidebar);
-  flex: 1;
-  min-height: 100vh;
-  transition: margin-left 0.3s ease;
+  margin-left: 280px; transition: margin-left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-#main.sidebar-collapsed {
-  margin-left: 0;
-}
+#main.sidebar-collapsed { margin-left: 280px; }
 
-.page {
-  display: none;
-  min-height: 100vh;
-  padding-bottom: 100px;
-}
+.page { display: none; min-height: 100vh; animation: fadeIn 0.5s ease; }
+.page.active { display: block; }
 
-.page.active {
-  display: block;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* HERO */
-#hero {
-  padding: 40px 20px;
-  border-bottom: 1px solid var(--line);
-  position: relative;
-  overflow: hidden;
+.hero {
+  padding: 60px 40px; background: linear-gradient(135deg, rgba(29,184,118,0.1) 0%, rgba(0,212,170,0.05) 100%);
+  border-bottom: 1px solid var(--line); position: relative; overflow: hidden;
 }
 
-@media (min-width: 768px) {
-  #hero {
-    padding: 56px 56px 44px;
-  }
+.hero h1 {
+  font-size: clamp(36px, 8vw, 64px); font-weight: 900;
+  background: linear-gradient(135deg, var(--ink) 0%, var(--yellow) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 16px; text-transform: uppercase;
 }
 
-.hero-grid-bg {
-  position: absolute;
-  inset: 0;
-  background-image: linear-gradient(var(--line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line) 1px, transparent 1px);
-  background-size: 40px 40px;
-  opacity: 0.4;
-  mask-image: linear-gradient(to bottom, transparent, rgba(0,0,0,0.5) 40%, transparent);
-}
-
-.hero-inner {
-  position: relative;
-  z-index: 1;
-}
-
-.hero-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: var(--bg2);
-  border: 1px solid var(--line2);
-  padding: 5px 12px;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--yellow);
-  letter-spacing: 0.5px;
-  margin-bottom: 18px;
-  border-radius: 4px;
-}
-
-.hero-tag svg {
-  width: 12px;
-  height: 12px;
-}
-
-.hero-title {
-  font-family: var(--display);
-  font-size: clamp(32px, 6vw, 76px);
-  font-weight: 900;
-  line-height: 0.95;
-  letter-spacing: -1px;
-  text-transform: uppercase;
-  color: var(--ink);
-  margin-bottom: 20px;
-}
-
-.hero-title em {
-  color: var(--yellow);
-  font-style: normal;
-}
-
-.hero-desc {
-  font-size: 14px;
-  color: var(--ink2);
-  max-width: 520px;
-  margin-bottom: 28px;
-  line-height: 1.6;
-}
-
-.hero-badges {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 11px;
-  border: 1px solid var(--line2);
-  font-family: var(--mono);
-  font-size: 10px;
-  background: var(--bg2);
-  border-radius: 4px;
-}
-
-.badge svg {
-  width: 12px;
-  height: 12px;
-}
-
-.badge.y { color: var(--yellow); }
-.badge.g { color: var(--green); }
-.badge.b { color: var(--blue); }
+.hero p { color: var(--ink2); max-width: 600px; line-height: 1.8; }
 
 /* CONTENT */
-#content {
-  padding: 20px;
-  max-width: 100%;
+.content {
+  padding: 40px; max-width: 100%;
 }
 
-@media (min-width: 768px) {
-  #content {
-    padding: 0 56px 100px;
-    max-width: 880px;
-  }
+.section { padding-top: 40px; }
+
+.section-title {
+  font-size: clamp(24px, 5vw, 42px); font-weight: 900;
+  background: linear-gradient(135deg, var(--ink) 0%, var(--green) 50%, var(--yellow) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 16px; text-transform: uppercase;
 }
 
-.doc-section {
-  padding-top: 40px;
-}
+.section-desc { color: var(--ink2); max-width: 680px; line-height: 1.8; margin-bottom: 32px; }
 
-.sec-eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: var(--ink3);
-  margin-bottom: 12px;
-}
+h3 { font-size: 20px; font-weight: 800; text-transform: uppercase; margin: 32px 0 16px; color: var(--ink); }
 
-.sec-eyebrow svg {
-  width: 12px;
-  height: 12px;
-  color: var(--yellow);
-}
-
-.sec-eyebrow::after {
-  content: '';
-  flex: 1;
-  max-width: 32px;
-  height: 1px;
-  background: var(--line2);
-}
-
-.sec-title {
-  font-family: var(--display);
-  font-size: clamp(24px, 5vw, 38px);
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: -0.5px;
-  line-height: 1;
-  color: var(--ink);
-  margin-bottom: 14px;
-}
-
-.sec-desc {
-  font-size: 13px;
-  color: var(--ink2);
-  max-width: 620px;
-  line-height: 1.65;
-  margin-bottom: 28px;
-}
-
-h3 {
-  font-family: var(--display);
-  font-size: 18px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  color: var(--ink);
-  margin: 28px 0 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-h3 svg {
-  width: 16px;
-  height: 16px;
-  color: var(--yellow);
-  flex-shrink: 0;
-}
-
-p {
-  font-size: 13px;
-  color: var(--ink2);
-  margin-bottom: 14px;
-  line-height: 1.7;
-}
+p { color: var(--ink2); margin-bottom: 16px; line-height: 1.8; }
 
 code {
-  font-family: var(--mono);
-  font-size: 11px;
-  background: var(--bg2);
-  border: 1px solid var(--line2);
-  padding: 1px 6px;
-  color: var(--orange);
-  border-radius: 3px;
+  background: linear-gradient(135deg, rgba(29,184,118,0.1) 0%, rgba(0,212,170,0.05) 100%);
+  border: 1px solid var(--line); padding: 2px 8px;
+  color: var(--yellow); border-radius: 4px; font-weight: 600;
+  font-family: monospace;
 }
 
-.prop-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 16px 0 28px;
-  font-size: 12px;
-  overflow-x: auto;
-}
-
-.prop-table thead tr {
-  background: var(--bg2);
-  border-bottom: 1px solid var(--line2);
-}
-
-.prop-table th {
-  font-family: var(--mono);
-  font-size: 8px;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: var(--ink3);
-  font-weight: 600;
-  padding: 8px 10px;
-  text-align: left;
-}
-
-.prop-table tbody tr {
-  border-bottom: 1px solid var(--line);
-  transition: background 0.1s;
-}
-
-.prop-table tbody tr:hover {
-  background: rgba(255,255,255,0.02);
-}
-
-.prop-table td {
-  padding: 8px 10px;
-  vertical-align: top;
-  line-height: 1.5;
-}
-
-.pname {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--yellow);
-  white-space: nowrap;
-  font-weight: 600;
-}
-
-.ptype {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--purple);
-  white-space: nowrap;
-}
-
-.pdesc {
-  color: var(--ink2);
-  font-size: 12px;
-}
-
-.codeblock {
-  background: var(--bg1);
-  border: 1px solid var(--line);
-  margin: 18px 0;
-  overflow: hidden;
-  border-radius: 4px;
-}
-
-.cb-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--line);
-  background: var(--bg2);
-}
-
-.cb-lang {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--ink3);
-}
-
-.cb-lang .dot {
-  width: 8px;
-  height: 8px;
-  background: var(--yellow);
-  border-radius: 50%;
-}
-
-.copy-btn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background: transparent;
-  border: 1px solid var(--line2);
-  padding: 3px 10px;
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--ink3);
-  cursor: pointer;
-  transition: all 0.15s;
-  letter-spacing: 0.5px;
-  border-radius: 3px;
-}
-
-.copy-btn svg {
-  width: 11px;
-  height: 11px;
-}
-
-.copy-btn:hover {
-  border-color: var(--yellow);
-  color: var(--yellow);
-}
-
-pre {
-  padding: 12px;
-  overflow-x: auto;
-  font-family: var(--mono);
-  font-size: 11px;
-  line-height: 1.5;
-  color: #c5c3bc;
-}
-
-pre::-webkit-scrollbar {
-  height: 3px;
-}
-
-pre::-webkit-scrollbar-thumb {
-  background: var(--line2);
-}
-
-.kw { color: #ff7b72; }
-.str { color: #a8d8a8; }
-.num { color: #79c0ff; }
-.fn { color: #e8c96d; }
-.cm { color: #5a5a54; font-style: italic; }
-.key { color: #e8a87c; }
-.bool { color: #ff7b72; }
-
-.callout {
-  display: flex;
-  gap: 14px;
-  padding: 12px 14px;
-  border-left: 3px solid;
-  margin: 18px 0;
-  background: var(--bg2);
-  font-size: 12px;
-  line-height: 1.6;
-  border-radius: 4px;
-}
-
-.callout-ico {
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.callout-ico svg {
-  width: 14px;
-  height: 14px;
-}
-
-.callout.tip { border-color: var(--green); color: #a3d9b0; }
-.callout.tip svg { color: var(--green); }
-.callout.warn { border-color: var(--red); color: #e8a0a0; }
-.callout.warn svg { color: var(--red); }
-.callout.info { border-color: var(--blue); color: #a0c8e8; }
-.callout.info svg { color: var(--blue); }
-.callout strong { font-weight: 700; }
-
-.steps {
-  display: flex;
-  flex-direction: column;
-  margin: 20px 0 28px;
-  position: relative;
-}
-
-.steps::before {
-  content: '';
-  position: absolute;
-  left: 15px;
-  top: 32px;
-  bottom: 32px;
-  width: 1px;
-  background: linear-gradient(to bottom, var(--yellow), var(--line));
-}
-
-.step {
-  display: flex;
-  gap: 20px;
-  padding: 14px 0;
-  position: relative;
-}
-
-.step-n {
-  width: 30px;
-  height: 30px;
-  background: var(--yellow);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 700;
-  color: #000;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
-  border-radius: 50%;
-}
-
-.step-body {
-  padding-top: 4px;
-}
-
-.step-title {
-  font-family: var(--display);
-  font-size: 14px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  color: var(--ink);
-  margin-bottom: 4px;
-}
-
-.step-desc {
-  font-size: 12px;
-  color: var(--ink2);
-}
-
-.gallery-section {
-  padding: 20px;
-}
-
-@media (min-width: 768px) {
-  .gallery-section {
-    padding: 56px;
-    border-bottom: 1px solid var(--line);
-  }
-}
-
-.gallery-title {
-  font-family: var(--display);
-  font-size: clamp(20px, 5vw, 28px);
-  font-weight: 800;
-  text-transform: uppercase;
-  color: var(--ink);
-  margin-bottom: 20px;
-}
-
+/* GALLERY */
 .gallery-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-}
-
-@media (min-width: 768px) {
-  .gallery-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-  }
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 24px; margin: 40px 0;
 }
 
 .gallery-item {
-  position: relative;
-  width: 100%;
-  height: 200px;
-  overflow: hidden;
-  border: 1px solid var(--line2);
-  cursor: pointer;
-  transform-style: preserve-3d;
-  transition: transform 0.1s linear;
-  border-radius: 6px;
+  position: relative; width: 100%; height: 250px;
+  border: 2px solid var(--line); cursor: pointer;
+  border-radius: 12px; overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@media (min-width: 768px) {
-  .gallery-item {
-    height: 250px;
-  }
+.gallery-item:hover {
+  border-color: var(--green);
+  box-shadow: 0 12px 48px rgba(29,184,118,0.25);
 }
 
 .gallery-item img,
 .gallery-item video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+  width: 100%; height: 100%; object-fit: cover;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.inline-rule {
-  height: 1px;
-  background: linear-gradient(to right, var(--yellow), var(--line), transparent);
-  opacity: 0.6;
-  margin-top: 28px;
+.gallery-item:hover img,
+.gallery-item:hover video {
+  transform: scale(1.08);
+}
+
+/* TABLES */
+.table {
+  width: 100%; border-collapse: collapse; margin: 24px 0;
+  border-radius: 8px; overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.table thead {
+  background: linear-gradient(90deg, rgba(29,184,118,0.1) 0%, rgba(0,212,170,0.05) 100%);
+  border-bottom: 2px solid var(--line);
+}
+
+.table th {
+  font-size: 11px; text-transform: uppercase;
+  letter-spacing: 1.5px; color: var(--yellow);
+  font-weight: 700; padding: 12px 16px; text-align: left;
+}
+
+.table td { padding: 12px 16px; border-bottom: 1px solid var(--line); }
+
+.table tr:hover { background: linear-gradient(90deg, rgba(29,184,118,0.08) 0%, transparent 100%); }
+
+/* CODE BLOCK */
+.codeblock {
+  background: linear-gradient(135deg, rgba(29,184,118,0.05) 0%, rgba(0,212,170,0.02) 100%);
+  border: 1px solid var(--line); margin: 24px 0; border-radius: 10px;
+  overflow: hidden; box-shadow: 0 8px 32px rgba(29,184,118,0.05);
+}
+
+.cb-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px; border-bottom: 1px solid var(--line);
+  background: linear-gradient(90deg, rgba(29,184,118,0.08) 0%, transparent 100%);
+}
+
+.cb-lang { font-size: 10px; font-weight: 700; color: var(--yellow); text-transform: uppercase; }
+
+.copy-btn {
+  background: linear-gradient(135deg, var(--green) 0%, var(--yellow) 100%);
+  border: none; color: #000; padding: 6px 12px;
+  cursor: pointer; border-radius: 6px; font-weight: 700;
+  transition: all 0.3s; font-size: 11px;
+}
+
+.copy-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(29,184,118,0.3); }
+
+pre {
+  padding: 16px 18px; overflow-x: auto;
+  font-family: monospace; font-size: 12px;
+  line-height: 1.7; color: #c5c3bc;
 }
 
 /* PAGINATION */
 .pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-top: 1px solid var(--line);
-  margin-top: 40px;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-@media (min-width: 768px) {
-  .pagination {
-    padding: 20px 56px;
-  }
+  display: flex; justify-content: space-between;
+  padding: 24px 40px; border-top: 1px solid var(--line);
+  margin-top: 40px; gap: 16px; flex-wrap: wrap;
 }
 
 .pagination-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: var(--bg2);
-  border: 1px solid var(--line2);
-  color: var(--ink);
-  cursor: pointer;
-  font-family: var(--body);
-  font-size: 12px;
-  border-radius: 4px;
-  transition: all 0.2s;
-  text-decoration: none;
+  padding: 10px 18px; background: linear-gradient(135deg, var(--green) 0%, var(--yellow) 100%);
+  border: none; color: #000; cursor: pointer; border-radius: 8px;
+  font-weight: 700; transition: all 0.3s; text-decoration: none;
+  display: flex; align-items: center; gap: 8px;
 }
 
-.pagination-btn:hover:not(:disabled) {
-  background: var(--yellow);
-  color: #000;
-  border-color: var(--yellow);
+.pagination-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(29,184,118,0.3); }
+
+.pagination-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.pagination-info { flex: 1; text-align: center; color: var(--yellow); font-weight: 700; text-transform: uppercase; }
+
+/* MODAL */
+#modal {
+  position: fixed; z-index: 1000;
+  inset: 0; background: rgba(5,10,8,0.95);
+  backdrop-filter: blur(10px);
+  display: none; align-items: center; justify-content: center;
 }
 
-.pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+#modal.active { display: flex; animation: fadeIn 0.3s ease; }
+
+#modal img,
+#modal video {
+  max-width: 90vw; max-height: 90vh; border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(29,184,118,0.3);
 }
 
-.pagination-btn svg {
-  width: 16px;
-  height: 16px;
+.modal-close {
+  position: absolute; top: 20px; right: 20px;
+  background: linear-gradient(135deg, var(--green) 0%, var(--yellow) 100%);
+  border: none; color: #000; width: 40px; height: 40px;
+  border-radius: 50%; cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  transition: all 0.3s; font-weight: bold; z-index: 1001;
 }
 
-.pagination-info {
-  text-align: center;
-  flex: 1;
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--ink3);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
+.modal-close:hover { transform: scale(1.1); }
 
-::-webkit-scrollbar {
-  width: 5px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg);
-}
-
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb {
-  background: var(--line2);
+  background: linear-gradient(180deg, var(--green) 0%, var(--yellow) 100%);
+  border-radius: 10px;
 }
 
-/* MOBILE ADJUSTMENTS */
-@media (max-width: 767px) {
-  .toggle-btn {
-    top: 15px;
-    left: 15px;
-    padding: 10px 12px;
-  }
-
-  #sidebar {
-    width: 80vw;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-  }
-
-  #main {
-    margin-left: 0;
-  }
-
-  .page {
-    overflow: hidden;
-  }
+@media (max-width: 768px) {
+  .content { padding: 20px; }
+  .hero { padding: 40px 20px; }
+  .gallery-grid { grid-template-columns: 1fr; }
+  .pagination { padding: 16px 20px; flex-direction: column-reverse; }
 }
 </style>
 </head>
@@ -908,421 +320,251 @@ pre::-webkit-scrollbar-thumb {
 
 <button class="toggle-btn" onclick="toggleSidebar()"><i data-lucide="menu"></i></button>
 
-<div class="container">
-  <aside id="sidebar">
-    <div class="sb-header">
-      <a href="#" class="sb-logo">
-        <div class="sb-logo-icon"><i data-lucide="key-round"></i></div>
-        <div class="sb-logo-text">
-          <span class="sb-name">Docs</span>
-        </div>
-      </a>
-      <div class="sb-status"><div class="status-dot"></div><span>Live</span></div>
-    </div>
-    <input type="text" class="search-bar" id="searchInput" placeholder="Search..." onkeyup="searchTabs()">
-    <nav>
-      <div class="nav-group">
-        <div class="nav-group-label">Start</div>
-        <a class="nav-item active" onclick="goToPage('gallery')"><i data-lucide="image"></i> Gallery</a>
-        <a class="nav-item" onclick="goToPage('overview')"><i data-lucide="book-open"></i> Overview</a>
-        <a class="nav-item" onclick="goToPage('how-it-works')"><i data-lucide="git-branch"></i> How It Works</a>
-        <a class="nav-item" onclick="goToPage('template')"><i data-lucide="file-code"></i> Template</a>
-      </div>
-      <div class="nav-group">
-        <div class="nav-group-label">Config</div>
-        <a class="nav-item" onclick="goToPage('junkie-configs')"><i data-lucide="settings-2"></i> Junkie Config</a>
-        <a class="nav-item" onclick="goToPage('ui-configs')"><i data-lucide="palette"></i> UI Config</a>
-        <a class="nav-item" onclick="goToPage('tags')"><i data-lucide="tag"></i> Tags</a>
-        <a class="nav-item" onclick="goToPage('example')"><i data-lucide="code-2"></i> Example</a>
-      </div>
-    </nav>
-    <div class="sb-footer">
-      <span class="sb-footer-tag">v1.0</span>
-    </div>
-  </aside>
-
-  <main id="main">
-    <!-- GALLERY PAGE -->
-    <div id="page-gallery" class="page active">
-      <section id="hero">
-        <div class="hero-grid-bg"></div>
-        <div class="hero-inner">
-          <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Havoc Key System</div>
-          <h1 class="hero-title">Gallery</h1>
-          <p class="hero-desc">Preview of the user interface and video demo.</p>
-        </div>
-      </section>
-      <div id="content">
-        <section class="gallery-section">
-          <div class="gallery-grid">
-            <div class="gallery-item" onmousemove="tilt3d(event)" onmouseout="reset3d(event)">
-              <img src="https://raw.githubusercontent.com/1NFERNO-HUB/Junkie/refs/heads/main/Screenshot_20260223_154320_Roblox.jpg" onclick="openModal(this.src)" alt="UI Screenshot">
-            </div>
-            <div class="gallery-item" onmousemove="tilt3d(event)" onmouseout="reset3d(event)">
-              <video controls onclick="openModal(this.src)">
-                <source src="https://github.com/1NFERNO-HUB/Junkie/raw/refs/heads/main/XRecorder_20260223_02.mp4" type="video/mp4">
-              </video>
-            </div>
-          </div>
-        </section>
-      </div>
-      <div class="pagination">
-        <button class="pagination-btn" disabled><i data-lucide="arrow-left"></i> Previous</button>
-        <div class="pagination-info">Gallery</div>
-        <button class="pagination-btn" onclick="goToPage('overview')">Next <i data-lucide="arrow-right"></i></button>
-      </div>
-    </div>
-
-    <!-- OVERVIEW PAGE -->
-    <div id="page-overview" class="page">
-      <section id="hero">
-        <div class="hero-grid-bg"></div>
-        <div class="hero-inner">
-          <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Getting Started</div>
-          <h1 class="hero-title">Overview</h1>
-          <p class="hero-desc">What is this library and how it works.</p>
-        </div>
-      </section>
-      <div id="content">
-        <div class="doc-section">
-          <div class="inline-rule"></div>
-          <div style="padding-top:36px">
-            <div class="sec-eyebrow"><i data-lucide="circle-dot"></i> Overview</div>
-            <h2 class="sec-title">What is it?</h2>
-            <p class="sec-desc">This is a Roblox key system UI library. Loaded externally via <code>loadstring</code> and configured entirely from your own script — no modifying the library. When a valid key is redeemed, it sets <code>getgenv().LOAD = true</code> and your game script continues.</p>
-            <div class="callout tip">
-              <div class="callout-ico"><i data-lucide="check-circle-2"></i></div>
-              <div><strong>TIP —</strong> The library is CDN-hosted and loaded remotely. You only write a loader script with your config.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="pagination">
-        <button class="pagination-btn" onclick="goToPage('gallery')"><i data-lucide="arrow-left"></i> Gallery</button>
-        <div class="pagination-info">Overview</div>
-        <button class="pagination-btn" onclick="goToPage('how-it-works')">How It Works <i data-lucide="arrow-right"></i></button>
-      </div>
-    </div>
-
-    <!-- HOW IT WORKS PAGE -->
-    <div id="page-how-it-works" class="page">
-      <section id="hero">
-        <div class="hero-grid-bg"></div>
-        <div class="hero-inner">
-          <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Getting Started</div>
-          <h1 class="hero-title">How It Works</h1>
-          <p class="hero-desc">The flow of the key system.</p>
-        </div>
-      </section>
-      <div id="content">
-        <div class="doc-section">
-          <div class="inline-rule"></div>
-          <div style="padding-top:36px">
-            <h2 class="sec-title">Flow</h2>
-            <div class="steps">
-              <div class="step"><div class="step-n">1</div><div class="step-body"><div class="step-title">Load</div><div class="step-desc">Your script calls <code>loadstring(game:HttpGet(URL))()</code> — fetches library from CDN.</div></div></div>
-              <div class="step"><div class="step-n">2</div><div class="step-body"><div class="step-title">Configure</div><div class="step-desc">Pass your <code>Config</code> to <code>Hub.new(Config)</code> then call <code>hub:Init()</code>.</div></div></div>
-              <div class="step"><div class="step-n">3</div><div class="step-body"><div class="step-title">Wait</div><div class="step-desc"><code>while not getgenv().LOAD do task.wait(1) end</code> blocks until valid key entered.</div></div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="pagination">
-        <button class="pagination-btn" onclick="goToPage('overview')"><i data-lucide="arrow-left"></i> Overview</button>
-        <div class="pagination-info">How It Works</div>
-        <button class="pagination-btn" onclick="goToPage('template')">Template <i data-lucide="arrow-right"></i></button>
-      </div>
-    </div>
-
-    <!-- TEMPLATE PAGE -->
-    <div id="page-template" class="page">
-      <section id="hero">
-        <div class="hero-grid-bg"></div>
-        <div class="hero-inner">
-          <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Getting Started</div>
-          <h1 class="hero-title">Minimal Template</h1>
-          <p class="hero-desc">Copy and use this basic template.</p>
-        </div>
-      </section>
-      <div id="content">
-        <div class="doc-section">
-          <div class="inline-rule"></div>
-          <div style="padding-top:36px">
-            <h2 class="sec-title">Template</h2>
-            <div class="codeblock">
-              <div class="cb-header"><div class="cb-lang"><div class="dot"></div> Lua</div><button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy"></i> Copy</button></div>
-<pre><span class="kw">local</span> system = <span class="fn">loadstring</span>(<span class="fn">game</span>:<span class="fn">HttpGet</span>(<span class="str">"LIBRARY_URL"</span>))()
-<span class="kw">local</span> Config = { <span class="cm">-- config here</span> }
-<span class="kw">local</span> hub = system.<span class="fn">new</span>(Config)
-hub:<span class="fn">Init</span>()
-<span class="kw">while</span> <span class="kw">not</span> <span class="fn">getgenv</span>().<span class="key">LOAD</span> <span class="kw">do</span>
-  task.<span class="fn">wait</span>(<span class="num">1</span>)
-<span class="kw">end</span></pre>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="pagination">
-        <button class="pagination-btn" onclick="goToPage('how-it-works')"><i data-lucide="arrow-left"></i> How It Works</button>
-        <div class="pagination-info">Template</div>
-        <button class="pagination-btn" onclick="goToPage('junkie-configs')">Junkie Config <i data-lucide="arrow-right"></i></button>
-      </div>
-    </div>
-
-    <!-- JUNKIE CONFIG PAGE -->
-    <div id="page-junkie-configs" class="page">
-      <section id="hero">
-        <div class="hero-grid-bg"></div>
-        <div class="hero-inner">
-          <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Configuration</div>
-          <h1 class="hero-title">Junkie Configs</h1>
-          <p class="hero-desc">Core configuration for the key system.</p>
-        </div>
-      </section>
-      <div id="content">
-        <div class="doc-section">
-          <div class="inline-rule"></div>
-          <div style="padding-top:36px">
-            <h2 class="sec-title">Junkie_Configs</h2>
-            <p class="sec-desc">Controls Junkie SDK integration — key validation, webhook relay, and provider setup.</p>
-            <table class="prop-table">
-              <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
-              <tbody>
-                <tr><td class="pname">UseJunkie</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> for real-time validation.</td></tr>
-                <tr><td class="pname">Service</td><td class="ptype">string</td><td class="pdesc">Your service name from dashboard.</td></tr>
-                <tr><td class="pname">MaxKeyAttempts</td><td class="ptype">number</td><td class="pdesc">Failed attempts before closing. Recommended: <code>5</code>.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      <div class="pagination">
-        <button class="pagination-btn" onclick="goToPage('template')"><i data-lucide="arrow-left"></i> Template</button>
-        <div class="pagination-info">Junkie Config</div>
-        <button class="pagination-btn" onclick="goToPage('ui-configs')">UI Config <i data-lucide="arrow-right"></i></button>
-      </div>
-    </div>
-
-    <!-- UI CONFIG PAGE -->
-    <div id="page-ui-configs" class="page">
-      <section id="hero">
-        <div class="hero-grid-bg"></div>
-        <div class="hero-inner">
-          <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Configuration</div>
-          <h1 class="hero-title">UI Configs</h1>
-          <p class="hero-desc">Visual appearance and behaviour settings.</p>
-        </div>
-      </section>
-      <div id="content">
-        <div class="doc-section">
-          <div class="inline-rule"></div>
-          <div style="padding-top:36px">
-            <h2 class="sec-title">UI_Configs</h2>
-            <table class="prop-table">
-              <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
-              <tbody>
-                <tr><td class="pname">Name</td><td class="ptype">string</td><td class="pdesc">Hub display name.</td></tr>
-                <tr><td class="pname">Color</td><td class="ptype">Color3</td><td class="pdesc">Primary accent color.</td></tr>
-                <tr><td class="pname">SnowEnabled</td><td class="ptype">boolean</td><td class="pdesc">Enable falling snow effect.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      <div class="pagination">
-        <button class="pagination-btn" onclick="goToPage('junkie-configs')"><i data-lucide="arrow-left"></i> Junkie Config</button>
-        <div class="pagination-info">UI Config</div>
-        <button class="pagination-btn" onclick="goToPage('tags')">Tags <i data-lucide="arrow-right"></i></button>
-      </div>
-    </div>
-
-    <!-- TAGS PAGE -->
-    <div id="page-tags" class="page">
-      <section id="hero">
-        <div class="hero-grid-bg"></div>
-        <div class="hero-inner">
-          <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Reference</div>
-          <h1 class="hero-title">Changelog Tags</h1>
-          <p class="hero-desc">Available tags for changelog versions.</p>
-        </div>
-      </section>
-      <div id="content">
-        <div class="doc-section">
-          <div class="inline-rule"></div>
-          <div style="padding-top:36px">
-            <h2 class="sec-title">Tags</h2>
-            <div style="overflow-x: auto;">
-              <table class="prop-table">
-                <tbody>
-                  <tr><td><span style="background: rgba(62,207,110,0.2); padding: 2px 8px; border-radius: 3px; color: #3ecf6e; font-size: 11px; font-weight: bold;">NEW</span></td><td>New feature</td></tr>
-                  <tr><td><span style="background: rgba(232,64,64,0.2); padding: 2px 8px; border-radius: 3px; color: #e84040; font-size: 11px; font-weight: bold;">FIX</span></td><td>Bug fix</td></tr>
-                  <tr><td><span style="background: rgba(77,166,255,0.2); padding: 2px 8px; border-radius: 3px; color: #4da6ff; font-size: 11px; font-weight: bold;">IMPROVED</span></td><td>Enhancement</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="pagination">
-        <button class="pagination-btn" onclick="goToPage('ui-configs')"><i data-lucide="arrow-left"></i> UI Config</button>
-        <div class="pagination-info">Tags</div>
-        <button class="pagination-btn" onclick="goToPage('example')">Example <i data-lucide="arrow-right"></i></button>
-      </div>
-    </div>
-
-    <!-- EXAMPLE PAGE -->
-    <div id="page-example" class="page">
-      <section id="hero">
-        <div class="hero-grid-bg"></div>
-        <div class="hero-inner">
-          <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Reference</div>
-          <h1 class="hero-title">Full Example</h1>
-          <p class="hero-desc">Complete configuration example.</p>
-        </div>
-      </section>
-      <div id="content">
-        <div class="doc-section">
-          <div class="inline-rule"></div>
-          <div style="padding-top:36px">
-            <h2 class="sec-title">Complete Config</h2>
-            <div class="codeblock">
-              <div class="cb-header"><div class="cb-lang"><div class="dot"></div> Lua</div><button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy"></i> Copy</button></div>
-<pre><span class="fn">getgenv</span>().<span class="key">LOAD</span> = <span class="bool">nil</span>
-
-<span class="kw">local</span> Config = {
-  <span class="key">UseJunkie</span> = <span class="bool">true</span>,
-  <span class="key">Service</span> = <span class="str">"My Hub"</span>,
-  <span class="key">Name</span> = <span class="str">"My Hub"</span>,
-  <span class="key">Color</span> = <span class="fn">Color3</span>.<span class="fn">fromRGB</span>(<span class="num">138</span>, <span class="num">43</span>, <span class="num">226</span>),
-  <span class="key">SnowEnabled</span> = <span class="bool">true</span>,
-}
-
-<span class="kw">local</span> system = <span class="fn">loadstring</span>(<span class="fn">game</span>:<span class="fn">HttpGet</span>(<span class="str">"URL"</span>))()
-<span class="kw">local</span> hub = system.<span class="fn">new</span>(Config)
-hub:<span class="fn">Init</span>()
-<span class="kw">while</span> <span class="kw">not</span> <span class="fn">getgenv</span>().<span class="key">LOAD</span> <span class="kw">do</span>
-  task.<span class="fn">wait</span>(<span class="num">1</span>)
-<span class="kw">end</span></pre>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="pagination">
-        <button class="pagination-btn" onclick="goToPage('tags')"><i data-lucide="arrow-left"></i> Tags</button>
-        <div class="pagination-info">Example</div>
-        <button class="pagination-btn" disabled>Next</button>
-      </div>
-    </div>
-
-  </main>
-</div>
-
-<!-- MODAL -->
-<div id="modal" onclick="closeModal(event)" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center;">
-  <div style="max-width: 90%; max-height: 90vh; display: flex; align-items: center; justify-content: center;">
-    <img id="modalImg" style="display:none; max-width: 100%; max-height: 100%;">
-    <video id="modalVid" controls style="display:none; max-width: 100%; max-height: 100%;"></video>
+<aside id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">📚 Docs</div>
   </div>
+  <input type="text" class="search-bar" id="searchInput" placeholder="Search..." onkeyup="searchTabs()">
+  <nav>
+    <div class="nav-group">
+      <div class="nav-label">📷 Gallery</div>
+      <a class="nav-item active" onclick="goToPage('gallery')"><i data-lucide="image"></i> Gallery</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">📖 Docs</div>
+      <a class="nav-item" onclick="goToPage('overview')"><i data-lucide="book-open"></i> Overview</a>
+      <a class="nav-item" onclick="goToPage('how-it-works')"><i data-lucide="zap"></i> How It Works</a>
+      <a class="nav-item" onclick="goToPage('template')"><i data-lucide="code"></i> Template</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">⚙️ Config</div>
+      <a class="nav-item" onclick="goToPage('junkie')"><i data-lucide="settings"></i> Junkie</a>
+      <a class="nav-item nav-sub" onclick="goToPage('providers')"><i data-lucide="link"></i> Providers</a>
+      <a class="nav-item nav-sub" onclick="goToPage('gamesupport')"><i data-lucide="gamepad-2"></i> GameSupport</a>
+      <a class="nav-item" onclick="goToPage('ui')"><i data-lucide="palette"></i> UI Config</a>
+      <a class="nav-item nav-sub" onclick="goToPage('general')"><i data-lucide="sliders"></i> General</a>
+      <a class="nav-item nav-sub" onclick="goToPage('background')"><i data-lucide="layers"></i> Background</a>
+      <a class="nav-item nav-sub" onclick="goToPage('snow')"><i data-lucide="snowflake"></i> Snow</a>
+    </div>
+  </nav>
+</aside>
+
+<main id="main">
+  <!-- GALLERY PAGE -->
+  <div id="page-gallery" class="page active">
+    <div class="hero">
+      <h1>Gallery</h1>
+      <p>Check out the UI and demo video. Click images to expand and hover for 3D effect.</p>
+    </div>
+    <div class="content">
+      <div class="gallery-grid">
+        <div class="gallery-item" onmousemove="tilt3d(event)" onmouseout="reset3d(event)">
+          <img src="https://raw.githubusercontent.com/1NFERNO-HUB/Junkie/refs/heads/main/Screenshot_20260223_154320_Roblox.jpg" onclick="openModal(this.src)" alt="UI">
+        </div>
+        <div class="gallery-item" onmousemove="tilt3d(event)" onmouseout="reset3d(event)">
+          <video controls><source src="https://github.com/1NFERNO-HUB/Junkie/raw/refs/heads/main/XRecorder_20260223_02.mp4" type="video/mp4"></video>
+        </div>
+      </div>
+    </div>
+    <div class="pagination">
+      <button class="pagination-btn" disabled><i data-lucide="arrow-left"></i> Back</button>
+      <div class="pagination-info">Gallery</div>
+      <button class="pagination-btn" onclick="goToPage('overview')">Overview →</button>
+    </div>
+  </div>
+
+  <!-- OTHER PAGES (simplified for brevity) -->
+  <div id="page-overview" class="page">
+    <div class="hero"><h1>Overview</h1><p>Learn about this key system library.</p></div>
+    <div class="content">
+      <div class="section">
+        <h2 class="section-title">What is it?</h2>
+        <p class="section-desc">A powerful Roblox key system UI library that's fully customizable and cloud-hosted.</p>
+      </div>
+    </div>
+    <div class="pagination">
+      <button class="pagination-btn" onclick="goToPage('gallery')">← Gallery</button>
+      <div class="pagination-info">Overview</div>
+      <button class="pagination-btn" onclick="goToPage('how-it-works')">How It Works →</button>
+    </div>
+  </div>
+
+  <div id="page-how-it-works" class="page">
+    <div class="hero"><h1>How It Works</h1><p>Three simple steps to get started.</p></div>
+    <div class="content"><div class="section"><h2 class="section-title">The Flow</h2><p>Load → Configure → Wait for key.</p></div></div>
+    <div class="pagination">
+      <button class="pagination-btn" onclick="goToPage('overview')">← Overview</button>
+      <div class="pagination-info">How It Works</div>
+      <button class="pagination-btn" onclick="goToPage('template')">Template →</button>
+    </div>
+  </div>
+
+  <div id="page-template" class="page">
+    <div class="hero"><h1>Template</h1><p>Basic setup code.</p></div>
+    <div class="content">
+      <div class="codeblock">
+        <div class="cb-header"><div class="cb-lang">LUA</div><button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy"></i> Copy</button></div>
+        <pre>local system = loadstring(game:HttpGet("URL"))()
+local Config = { }
+local hub = system.new(Config)
+hub:Init()
+while not getgenv().LOAD do task.wait(1) end</pre>
+      </div>
+    </div>
+    <div class="pagination">
+      <button class="pagination-btn" onclick="goToPage('how-it-works')">← How It Works</button>
+      <div class="pagination-info">Template</div>
+      <button class="pagination-btn" onclick="goToPage('junkie')">Junkie →</button>
+    </div>
+  </div>
+
+  <div id="page-junkie" class="page">
+    <div class="hero"><h1>Junkie Config</h1><p>Core configuration settings.</p></div>
+    <div class="content">
+      <div class="section">
+        <table class="table">
+          <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>UseJunkie</td><td>boolean</td><td>Enable Junkie SDK</td></tr>
+            <tr><td>Service</td><td>string</td><td>Service name</td></tr>
+            <tr><td>MaxKeyAttempts</td><td>number</td><td>Max retry attempts</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="pagination">
+      <button class="pagination-btn" onclick="goToPage('template')">← Template</button>
+      <div class="pagination-info">Junkie Config</div>
+      <button class="pagination-btn" onclick="goToPage('providers')">Providers →</button>
+    </div>
+  </div>
+
+  <div id="page-providers" class="page">
+    <div class="hero"><h1>Providers</h1><p>Configure key providers.</p></div>
+    <div class="content"><p>Setup your key provider buttons here.</p></div>
+    <div class="pagination">
+      <button class="pagination-btn" onclick="goToPage('junkie')">← Junkie</button>
+      <div class="pagination-info">Providers</div>
+      <button class="pagination-btn" onclick="goToPage('gamesupport')">GameSupport →</button>
+    </div>
+  </div>
+
+  <div id="page-gamesupport" class="page">
+    <div class="hero"><h1>GameSupport</h1><p>Map games to scripts.</p></div>
+    <div class="content"><p>Configure which script loads for each game.</p></div>
+    <div class="pagination">
+      <button class="pagination-btn" onclick="goToPage('providers')">← Providers</button>
+      <div class="pagination-info">GameSupport</div>
+      <button class="pagination-btn" onclick="goToPage('ui')">UI Config →</button>
+    </div>
+  </div>
+
+  <div id="page-ui" class="page">
+    <div class="hero"><h1>UI Config</h1><p>Customize the UI appearance.</p></div>
+    <div class="content"><p>Control colors, animations, and more.</p></div>
+    <div class="pagination">
+      <button class="pagination-btn" onclick="goToPage('gamesupport')">← GameSupport</button>
+      <div class="pagination-info">UI Config</div>
+      <button class="pagination-btn" onclick="goToPage('general')">General →</button>
+    </div>
+  </div>
+
+  <div id="page-general" class="page">
+    <div class="hero"><h1>General Settings</h1><p>Basic UI settings.</p></div>
+    <div class="content"><p>Configure name, version, color, and more.</p></div>
+    <div class="pagination">
+      <button class="pagination-btn" onclick="goToPage('ui')">← UI Config</button>
+      <div class="pagination-info">General</div>
+      <button class="pagination-btn" onclick="goToPage('background')">Background →</button>
+    </div>
+  </div>
+
+  <div id="page-background" class="page">
+    <div class="hero"><h1>Background</h1><p>Background and overlay settings.</p></div>
+    <div class="content"><p>Control gradients, transparency, and effects.</p></div>
+    <div class="pagination">
+      <button class="pagination-btn" onclick="goToPage('general')">← General</button>
+      <div class="pagination-info">Background</div>
+      <button class="pagination-btn" onclick="goToPage('snow')">Snow →</button>
+    </div>
+  </div>
+
+  <div id="page-snow" class="page">
+    <div class="hero"><h1>Snow Effects</h1><p>Falling snow animation.</p></div>
+    <div class="content"><p>Enable and customize snow particles.</p></div>
+    <div class="pagination">
+      <button class="pagination-btn" onclick="goToPage('background')">← Background</button>
+      <div class="pagination-info">Snow</div>
+      <button class="pagination-btn" disabled>End →</button>
+    </div>
+  </div>
+</main>
+
+<div id="modal">
+  <button class="modal-close" onclick="closeModal()">✕</button>
+  <div id="modal-content"></div>
 </div>
 
 <script>
-  lucide.createIcons();
+lucide.createIcons();
 
-  function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    sidebar.classList.toggle('collapsed');
-    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-  }
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
 
-  function goToPage(pageId) {
-    // Hide all pages
-    document.querySelectorAll('.page').forEach(page => {
-      page.classList.remove('active');
-    });
-    
-    // Show selected page
-    document.getElementById('page-' + pageId).classList.add('active');
-    
-    // Update nav items
-    document.querySelectorAll('.nav-item').forEach(item => {
-      item.classList.remove('active');
-    });
-    
-    // Scroll to top
-    window.scrollTo(0, 0);
-    
-    // Close sidebar on mobile
-    if (window.innerWidth < 768) {
-      document.getElementById('sidebar').classList.add('collapsed');
-    }
-  }
+function goToPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+  event.target.closest('.nav-item').classList.add('active');
+  window.scrollTo(0, 0);
+}
 
-  function searchTabs() {
-    const input = document.getElementById('searchInput').value.toLowerCase();
-    const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(item => {
-      const text = item.textContent.toLowerCase();
-      item.classList.toggle('hidden', !text.includes(input));
-    });
-  }
+function searchTabs() {
+  const query = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.toggle('hidden', !item.textContent.toLowerCase().includes(query));
+  });
+}
 
-  function tilt3d(event) {
-    const item = event.currentTarget;
-    const rect = item.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const rotateX = (event.clientY - centerY) / 10;
-    const rotateY = -(event.clientX - centerX) / 10;
-    item.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+function openModal(src) {
+  const modal = document.getElementById('modal');
+  const content = document.getElementById('modal-content');
+  if (src.includes('mp4')) {
+    content.innerHTML = `<video controls style="max-width:90vw;max-height:90vh;"><source src="${src}" type="video/mp4"></video>`;
+  } else {
+    content.innerHTML = `<img src="${src}" style="max-width:90vw;max-height:90vh;border-radius:12px;">`;
   }
+  modal.classList.add('active');
+}
 
-  function reset3d(event) {
-    event.currentTarget.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)';
-  }
+function closeModal() {
+  document.getElementById('modal').classList.remove('active');
+}
 
-  function openModal(src) {
-    const modal = document.getElementById('modal');
-    const modalImg = document.getElementById('modalImg');
-    const modalVid = document.getElementById('modalVid');
-    
-    if (src.endsWith('.mp4')) {
-      modalVid.src = src;
-      modalVid.style.display = 'block';
-      modalImg.style.display = 'none';
-    } else {
-      modalImg.src = src;
-      modalImg.style.display = 'block';
-      modalVid.style.display = 'none';
-    }
-    modal.style.display = 'flex';
-  }
+function tilt3d(event) {
+  const item = event.currentTarget;
+  const rect = item.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  const rotateX = (y - rect.height / 2) / 10;
+  const rotateY = (rect.width / 2 - x) / 10;
+  item.style.transform = `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+}
 
-  function closeModal(event) {
-    if (event.target.id === 'modal') {
-      document.getElementById('modal').style.display = 'none';
-    }
-  }
+function reset3d(event) {
+  event.currentTarget.style.transform = 'perspective(1200px) rotateX(0) rotateY(0) scale(1)';
+}
 
-  function copyCode(btn) {
-    const pre = btn.closest('.codeblock').querySelector('pre');
-    navigator.clipboard.writeText(pre.innerText).then(() => {
-      btn.innerHTML = '<i data-lucide="check"></i> Done';
-      btn.style.color = 'var(--green)';
-      btn.style.borderColor = 'var(--green)';
-      lucide.createIcons();
-      setTimeout(() => {
-        btn.innerHTML = '<i data-lucide="copy"></i> Copy';
-        btn.style.color = '';
-        btn.style.borderColor = '';
-        lucide.createIcons();
-      }, 2000);
-    });
-  }
-
-  // Load sidebar state
-  if (localStorage.getItem('sidebarCollapsed') === 'true') {
-    document.getElementById('sidebar').classList.add('collapsed');
-  }
+function copyCode(btn) {
+  const pre = btn.closest('.codeblock').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText);
+  btn.innerHTML = '✓ Copied';
+  setTimeout(() => {
+    btn.innerHTML = '<i data-lucide="copy"></i> Copy';
+    lucide.createIcons();
+  }, 2000);
+}
 </script>
 </body>
 </html>
