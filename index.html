@@ -39,7 +39,6 @@ body {
   font-family: var(--body);
   font-size: 15px;
   line-height: 1.65;
-  display: flex;
   min-height: 100vh;
 }
 
@@ -55,14 +54,25 @@ body::after {
   z-index: 9999;
 }
 
+/* CONTAINER */
+.container {
+  display: flex;
+  min-height: 100vh;
+}
+
 /* SIDEBAR */
 #sidebar {
-  position: fixed; top: 0; left: 0;
-  width: var(--sidebar); height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar);
+  height: 100vh;
   background: var(--bg1);
   border-right: 1px solid var(--line);
-  display: flex; flex-direction: column;
-  overflow-y: auto; z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  z-index: 100;
   transition: transform 0.3s ease;
 }
 
@@ -73,6 +83,7 @@ body::after {
 #sidebar::-webkit-scrollbar { width: 3px; }
 #sidebar::-webkit-scrollbar-thumb { background: var(--line2); }
 
+/* TOGGLE BUTTON */
 .toggle-btn {
   position: fixed;
   top: 20px;
@@ -81,167 +92,706 @@ body::after {
   background: var(--yellow);
   border: none;
   color: #000;
-  padding: 10px 15px;
+  padding: 12px 14px;
   cursor: pointer;
   font-weight: bold;
-  border-radius: 4px;
-  transition: all 0.3s;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 .toggle-btn:hover {
   background: #fff;
+  transform: scale(1.05);
 }
 
-#sidebar.collapsed ~ #main .toggle-btn {
-  left: 20px;
+.toggle-btn:active {
+  transform: scale(0.95);
 }
 
 .sb-header {
   padding: 20px 18px 16px;
   border-bottom: 1px solid var(--line);
-  display: flex; flex-direction: column; gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.sb-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-.sb-logo-icon {
-  width: 32px; height: 32px; background: var(--yellow);
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+.sb-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
 }
-.sb-logo-icon svg { width: 18px; height: 18px; color: #000; }
-.sb-logo-text { display: flex; flex-direction: column; }
+
+.sb-logo-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--yellow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
+.sb-logo-icon svg {
+  width: 18px;
+  height: 18px;
+  color: #000;
+}
+
+.sb-logo-text {
+  display: flex;
+  flex-direction: column;
+}
+
 .sb-name {
-  font-family: var(--display); font-size: 18px; font-weight: 800;
-  letter-spacing: 0.5px; color: var(--ink); line-height: 1; text-transform: uppercase;
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--ink);
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .sb-status {
-  display: flex; align-items: center; gap: 7px;
-  font-family: var(--mono); font-size: 10px; color: var(--ink3); letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--ink3);
+  letter-spacing: 0.5px;
 }
+
 .status-dot {
-  width: 6px; height: 6px; background: var(--green);
-  border-radius: 50%; animation: blink 2.5s ease-in-out infinite;
+  width: 6px;
+  height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: blink 2.5s ease-in-out infinite;
 }
+
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-nav { flex: 1; padding: 10px 0; }
-.nav-group { margin-bottom: 2px; }
-.nav-group-label {
-  font-family: var(--mono); font-size: 9px; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 2px; color: var(--ink3);
-  padding: 10px 18px 4px; display: flex; align-items: center; gap: 8px;
+nav {
+  flex: 1;
+  padding: 10px 0;
 }
-.nav-group-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+.nav-group {
+  margin-bottom: 2px;
+}
+
+.nav-group-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--ink3);
+  padding: 10px 18px 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-group-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
 
 .search-bar {
-  padding: 10px 18px;
+  padding: 10px 12px;
   margin: 10px 10px;
   background: var(--bg2);
   border: 1px solid var(--line2);
   color: var(--ink);
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 11px;
   border-radius: 4px;
 }
 
 .nav-item {
-  display: flex; align-items: center; gap: 9px;
-  padding: 7px 18px; text-decoration: none; color: var(--ink3);
-  font-size: 13px; font-weight: 500; font-family: var(--body);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 18px;
+  text-decoration: none;
+  color: var(--ink3);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--body);
   transition: color 0.1s, background 0.1s;
   border-left: 2px solid transparent;
+  cursor: pointer;
 }
-.nav-item svg { width: 14px; height: 14px; flex-shrink: 0; }
-.nav-item:hover { color: var(--ink); background: rgba(255,255,255,0.03); }
-.nav-item.active { color: var(--yellow); border-left-color: var(--yellow); background: rgba(245,200,66,0.05); }
-.nav-item.hidden { display: none; }
-.nav-sub { padding-left: 40px; font-size: 12px; }
+
+.nav-item svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.nav-item:hover {
+  color: var(--ink);
+  background: rgba(255,255,255,0.03);
+}
+
+.nav-item.active {
+  color: var(--yellow);
+  border-left-color: var(--yellow);
+  background: rgba(245,200,66,0.05);
+}
+
+.nav-item.hidden {
+  display: none;
+}
+
+.nav-sub {
+  padding-left: 40px;
+  font-size: 11px;
+}
 
 .sb-footer {
-  padding: 14px 18px; border-top: 1px solid var(--line);
-  display: flex; align-items: center; justify-content: space-between;
-}
-.sb-footer-tag { font-family: var(--mono); font-size: 10px; color: var(--ink3); }
-.sb-footer-tag span { color: var(--yellow); font-weight: 600; }
-
-/* MAIN */
-#main { margin-left: var(--sidebar); flex: 1; min-height: 100vh; transition: margin-left 0.3s ease; }
-#main.sidebar-collapsed { margin-left: 0; }
-
-#bar {
-  position: fixed; top: 0; left: var(--sidebar); right: 0; height: 2px;
-  background: var(--yellow); transform-origin: left; transform: scaleX(0); z-index: 200;
-  transition: left 0.3s ease;
+  padding: 14px 18px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-#main.sidebar-collapsed #bar {
-  left: 0;
+.sb-footer-tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--ink3);
+}
+
+.sb-footer-tag span {
+  color: var(--yellow);
+  font-weight: 600;
+}
+
+/* MAIN CONTENT */
+#main {
+  margin-left: var(--sidebar);
+  flex: 1;
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+
+#main.sidebar-collapsed {
+  margin-left: 0;
+}
+
+.page {
+  display: none;
+  min-height: 100vh;
+  padding-bottom: 100px;
+}
+
+.page.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* HERO */
 #hero {
-  padding: 56px 56px 44px; border-bottom: 1px solid var(--line);
-  position: relative; overflow: hidden;
+  padding: 40px 20px;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
 }
+
+@media (min-width: 768px) {
+  #hero {
+    padding: 56px 56px 44px;
+  }
+}
+
 .hero-grid-bg {
-  position: absolute; inset: 0;
+  position: absolute;
+  inset: 0;
   background-image: linear-gradient(var(--line) 1px, transparent 1px),
     linear-gradient(90deg, var(--line) 1px, transparent 1px);
-  background-size: 40px 40px; opacity: 0.4;
+  background-size: 40px 40px;
+  opacity: 0.4;
   mask-image: linear-gradient(to bottom, transparent, rgba(0,0,0,0.5) 40%, transparent);
 }
-.hero-inner { position: relative; z-index: 1; }
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+}
+
 .hero-tag {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: var(--bg2); border: 1px solid var(--line2);
-  padding: 5px 12px; font-family: var(--mono); font-size: 11px;
-  color: var(--yellow); letter-spacing: 0.5px; margin-bottom: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  padding: 5px 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--yellow);
+  letter-spacing: 0.5px;
+  margin-bottom: 18px;
+  border-radius: 4px;
 }
-.hero-tag svg { width: 12px; height: 12px; }
+
+.hero-tag svg {
+  width: 12px;
+  height: 12px;
+}
+
 .hero-title {
-  font-family: var(--display); font-size: clamp(48px, 6vw, 76px);
-  font-weight: 900; line-height: 0.95; letter-spacing: -1px;
-  text-transform: uppercase; color: var(--ink); margin-bottom: 20px;
+  font-family: var(--display);
+  font-size: clamp(32px, 6vw, 76px);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -1px;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-bottom: 20px;
 }
-.hero-title em { color: var(--yellow); font-style: normal; }
-.hero-desc { font-size: 15px; color: var(--ink2); max-width: 520px; margin-bottom: 28px; }
-.hero-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.hero-title em {
+  color: var(--yellow);
+  font-style: normal;
+}
+
+.hero-desc {
+  font-size: 14px;
+  color: var(--ink2);
+  max-width: 520px;
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+.hero-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 5px 11px; border: 1px solid var(--line2);
-  font-family: var(--mono); font-size: 11px; background: var(--bg2);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border: 1px solid var(--line2);
+  font-family: var(--mono);
+  font-size: 10px;
+  background: var(--bg2);
+  border-radius: 4px;
 }
-.badge svg { width: 12px; height: 12px; }
+
+.badge svg {
+  width: 12px;
+  height: 12px;
+}
+
 .badge.y { color: var(--yellow); }
 .badge.g { color: var(--green); }
 .badge.b { color: var(--blue); }
 
-/* GALLERY */
-.gallery-section {
-  padding: 56px;
+/* CONTENT */
+#content {
+  padding: 20px;
+  max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  #content {
+    padding: 0 56px 100px;
+    max-width: 880px;
+  }
+}
+
+.doc-section {
+  padding-top: 40px;
+}
+
+.sec-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--ink3);
+  margin-bottom: 12px;
+}
+
+.sec-eyebrow svg {
+  width: 12px;
+  height: 12px;
+  color: var(--yellow);
+}
+
+.sec-eyebrow::after {
+  content: '';
+  flex: 1;
+  max-width: 32px;
+  height: 1px;
+  background: var(--line2);
+}
+
+.sec-title {
+  font-family: var(--display);
+  font-size: clamp(24px, 5vw, 38px);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+
+.sec-desc {
+  font-size: 13px;
+  color: var(--ink2);
+  max-width: 620px;
+  line-height: 1.65;
+  margin-bottom: 28px;
+}
+
+h3 {
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--ink);
+  margin: 28px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+h3 svg {
+  width: 16px;
+  height: 16px;
+  color: var(--yellow);
+  flex-shrink: 0;
+}
+
+p {
+  font-size: 13px;
+  color: var(--ink2);
+  margin-bottom: 14px;
+  line-height: 1.7;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  padding: 1px 6px;
+  color: var(--orange);
+  border-radius: 3px;
+}
+
+.prop-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0 28px;
+  font-size: 12px;
+  overflow-x: auto;
+}
+
+.prop-table thead tr {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--line2);
+}
+
+.prop-table th {
+  font-family: var(--mono);
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--ink3);
+  font-weight: 600;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.prop-table tbody tr {
   border-bottom: 1px solid var(--line);
+  transition: background 0.1s;
+}
+
+.prop-table tbody tr:hover {
+  background: rgba(255,255,255,0.02);
+}
+
+.prop-table td {
+  padding: 8px 10px;
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.pname {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--yellow);
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.ptype {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--purple);
+  white-space: nowrap;
+}
+
+.pdesc {
+  color: var(--ink2);
+  font-size: 12px;
+}
+
+.codeblock {
+  background: var(--bg1);
+  border: 1px solid var(--line);
+  margin: 18px 0;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.cb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg2);
+}
+
+.cb-lang {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--ink3);
+}
+
+.cb-lang .dot {
+  width: 8px;
+  height: 8px;
+  background: var(--yellow);
+  border-radius: 50%;
+}
+
+.copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid var(--line2);
+  padding: 3px 10px;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--ink3);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.5px;
+  border-radius: 3px;
+}
+
+.copy-btn svg {
+  width: 11px;
+  height: 11px;
+}
+
+.copy-btn:hover {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+pre {
+  padding: 12px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: #c5c3bc;
+}
+
+pre::-webkit-scrollbar {
+  height: 3px;
+}
+
+pre::-webkit-scrollbar-thumb {
+  background: var(--line2);
+}
+
+.kw { color: #ff7b72; }
+.str { color: #a8d8a8; }
+.num { color: #79c0ff; }
+.fn { color: #e8c96d; }
+.cm { color: #5a5a54; font-style: italic; }
+.key { color: #e8a87c; }
+.bool { color: #ff7b72; }
+
+.callout {
+  display: flex;
+  gap: 14px;
+  padding: 12px 14px;
+  border-left: 3px solid;
+  margin: 18px 0;
+  background: var(--bg2);
+  font-size: 12px;
+  line-height: 1.6;
+  border-radius: 4px;
+}
+
+.callout-ico {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.callout-ico svg {
+  width: 14px;
+  height: 14px;
+}
+
+.callout.tip { border-color: var(--green); color: #a3d9b0; }
+.callout.tip svg { color: var(--green); }
+.callout.warn { border-color: var(--red); color: #e8a0a0; }
+.callout.warn svg { color: var(--red); }
+.callout.info { border-color: var(--blue); color: #a0c8e8; }
+.callout.info svg { color: var(--blue); }
+.callout strong { font-weight: 700; }
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  margin: 20px 0 28px;
+  position: relative;
+}
+
+.steps::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 32px;
+  bottom: 32px;
+  width: 1px;
+  background: linear-gradient(to bottom, var(--yellow), var(--line));
+}
+
+.step {
+  display: flex;
+  gap: 20px;
+  padding: 14px 0;
+  position: relative;
+}
+
+.step-n {
+  width: 30px;
+  height: 30px;
+  background: var(--yellow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: #000;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  border-radius: 50%;
+}
+
+.step-body {
+  padding-top: 4px;
+}
+
+.step-title {
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.step-desc {
+  font-size: 12px;
+  color: var(--ink2);
+}
+
+.gallery-section {
+  padding: 20px;
+}
+
+@media (min-width: 768px) {
+  .gallery-section {
+    padding: 56px;
+    border-bottom: 1px solid var(--line);
+  }
 }
 
 .gallery-title {
-  font-family: var(--display); font-size: 28px; font-weight: 800;
-  text-transform: uppercase; color: var(--ink); margin-bottom: 28px;
+  font-family: var(--display);
+  font-size: clamp(20px, 5vw, 28px);
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-bottom: 20px;
 }
 
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .gallery-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
 }
 
 .gallery-item {
   position: relative;
   width: 100%;
-  height: 250px;
+  height: 200px;
   overflow: hidden;
   border: 1px solid var(--line2);
   cursor: pointer;
   transform-style: preserve-3d;
   transition: transform 0.1s linear;
+  border-radius: 6px;
+}
+
+@media (min-width: 768px) {
+  .gallery-item {
+    height: 250px;
+  }
 }
 
 .gallery-item img,
@@ -252,518 +802,426 @@ nav { flex: 1; padding: 10px 0; }
   display: block;
 }
 
-/* CONTENT */
-#content { padding: 0 56px 100px; max-width: 880px; }
-.doc-section { padding-top: 60px; }
-.sec-eyebrow {
-  display: flex; align-items: center; gap: 10px;
-  font-family: var(--mono); font-size: 10px; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 2px; color: var(--ink3); margin-bottom: 12px;
-}
-.sec-eyebrow svg { width: 12px; height: 12px; color: var(--yellow); }
-.sec-eyebrow::after { content: ''; flex: 1; max-width: 32px; height: 1px; background: var(--line2); }
-.sec-title {
-  font-family: var(--display); font-size: 38px; font-weight: 800;
-  text-transform: uppercase; letter-spacing: -0.5px; line-height: 1;
-  color: var(--ink); margin-bottom: 14px;
-}
-.sec-desc { font-size: 14.5px; color: var(--ink2); max-width: 620px; line-height: 1.65; margin-bottom: 28px; }
-
-h3 {
-  font-family: var(--display); font-size: 22px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.3px; color: var(--ink);
-  margin: 36px 0 14px; display: flex; align-items: center; gap: 10px;
-}
-h3 svg { width: 18px; height: 18px; color: var(--yellow); flex-shrink: 0; }
-p { font-size: 14.5px; color: var(--ink2); margin-bottom: 14px; line-height: 1.7; }
-code {
-  font-family: var(--mono); font-size: 12px;
-  background: var(--bg2); border: 1px solid var(--line2);
-  padding: 1px 6px; color: var(--orange);
-}
-
-.prop-table { width: 100%; border-collapse: collapse; margin: 16px 0 28px; font-size: 13px; }
-.prop-table thead tr { background: var(--bg2); border-bottom: 1px solid var(--line2); }
-.prop-table th {
-  font-family: var(--mono); font-size: 9px; text-transform: uppercase;
-  letter-spacing: 1.5px; color: var(--ink3); font-weight: 600;
-  padding: 8px 14px; text-align: left;
-}
-.prop-table tbody tr { border-bottom: 1px solid var(--line); transition: background 0.1s; }
-.prop-table tbody tr:hover { background: rgba(255,255,255,0.02); }
-.prop-table td { padding: 10px 14px; vertical-align: top; line-height: 1.5; }
-.pname { font-family: var(--mono); font-size: 12px; color: var(--yellow); white-space: nowrap; font-weight: 600; }
-.ptype { font-family: var(--mono); font-size: 11px; color: var(--purple); white-space: nowrap; }
-.pdesc { color: var(--ink2); font-size: 13px; }
-
-.codeblock { background: var(--bg1); border: 1px solid var(--line); margin: 18px 0; overflow: hidden; }
-.cb-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 14px; border-bottom: 1px solid var(--line); background: var(--bg2);
-}
-.cb-lang {
-  display: flex; align-items: center; gap: 7px;
-  font-family: var(--mono); font-size: 10px; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 1px; color: var(--ink3);
-}
-.cb-lang .dot { width: 8px; height: 8px; background: var(--yellow); }
-.copy-btn {
-  display: flex; align-items: center; gap: 5px;
-  background: transparent; border: 1px solid var(--line2);
-  padding: 3px 10px; font-family: var(--mono); font-size: 10px;
-  color: var(--ink3); cursor: pointer; transition: all 0.15s; letter-spacing: 0.5px;
-}
-.copy-btn svg { width: 11px; height: 11px; }
-.copy-btn:hover { border-color: var(--yellow); color: var(--yellow); }
-pre {
-  padding: 18px 20px; overflow-x: auto;
-  font-family: var(--mono); font-size: 12.5px; line-height: 1.65; color: #c5c3bc;
-}
-pre::-webkit-scrollbar { height: 3px; }
-pre::-webkit-scrollbar-thumb { background: var(--line2); }
-.kw { color: #ff7b72; } .str { color: #a8d8a8; } .num { color: #79c0ff; }
-.fn { color: #e8c96d; } .cm { color: #5a5a54; font-style: italic; }
-.key { color: #e8a87c; } .bool { color: #ff7b72; }
-
-.callout {
-  display: flex; gap: 14px; padding: 13px 16px;
-  border-left: 3px solid; margin: 18px 0;
-  background: var(--bg2); font-size: 13.5px; line-height: 1.6;
-}
-.callout-ico { flex-shrink: 0; margin-top: 2px; }
-.callout-ico svg { width: 16px; height: 16px; }
-.callout.tip { border-color: var(--green); color: #a3d9b0; }
-.callout.tip svg { color: var(--green); }
-.callout.warn { border-color: var(--red); color: #e8a0a0; }
-.callout.warn svg { color: var(--red); }
-.callout.info { border-color: var(--blue); color: #a0c8e8; }
-.callout.info svg { color: var(--blue); }
-.callout strong { font-weight: 700; }
-
-.steps { display: flex; flex-direction: column; margin: 20px 0 28px; position: relative; }
-.steps::before {
-  content: ''; position: absolute; left: 15px; top: 32px; bottom: 32px;
-  width: 1px; background: linear-gradient(to bottom, var(--yellow), var(--line));
-}
-.step { display: flex; gap: 20px; padding: 14px 0; position: relative; }
-.step-n {
-  width: 30px; height: 30px; background: var(--yellow);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 12px; font-weight: 700;
-  color: #000; flex-shrink: 0; position: relative; z-index: 1;
-}
-.step-body { padding-top: 4px; }
-.step-title {
-  font-family: var(--display); font-size: 16px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.3px; color: var(--ink); margin-bottom: 4px;
-}
-.step-desc { font-size: 13.5px; color: var(--ink2); }
-
-.tags-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
-.tags-table tr { border-bottom: 1px solid var(--line); }
-.tags-table tr:hover { background: rgba(255,255,255,0.02); }
-.tags-table td { padding: 10px 14px; }
-.tag {
-  display: inline-block; font-family: var(--mono); font-size: 10px;
-  font-weight: 700; letter-spacing: 1px; padding: 3px 9px;
-  text-transform: uppercase; border: 1px solid;
-}
-.tag-new  { color: var(--green);  border-color: var(--green);  background: rgba(62,207,110,0.1); }
-.tag-fix  { color: var(--red);    border-color: var(--red);    background: rgba(232,64,64,0.1); }
-.tag-imp  { color: var(--blue);   border-color: var(--blue);   background: rgba(77,166,255,0.1); }
-.tag-rem  { color: var(--orange); border-color: var(--orange); background: rgba(255,112,67,0.1); }
-.tag-sec  { color: #e3c84a;       border-color: #e3c84a;       background: rgba(227,200,74,0.1); }
-
 .inline-rule {
   height: 1px;
   background: linear-gradient(to right, var(--yellow), var(--line), transparent);
-  opacity: 0.6; margin-top: 48px;
+  opacity: 0.6;
+  margin-top: 28px;
 }
 
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--line2); }
-
-/* MODAL */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.8);
+/* PAGINATION */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-top: 1px solid var(--line);
+  margin-top: 40px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.modal.active {
+@media (min-width: 768px) {
+  .pagination {
+    padding: 20px 56px;
+  }
+}
+
+.pagination-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: var(--body);
+  font-size: 12px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  text-decoration: none;
 }
 
-.modal-content {
-  max-width: 90%;
-  max-height: 90vh;
+.pagination-btn:hover:not(:disabled) {
+  background: var(--yellow);
+  color: #000;
+  border-color: var(--yellow);
 }
 
-.modal-content img,
-.modal-content video {
-  width: 100%;
-  height: auto;
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.pagination-info {
+  text-align: center;
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--line2);
+}
+
+/* MOBILE ADJUSTMENTS */
+@media (max-width: 767px) {
+  .toggle-btn {
+    top: 15px;
+    left: 15px;
+    padding: 10px 12px;
+  }
+
+  #sidebar {
+    width: 80vw;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  }
+
+  #main {
+    margin-left: 0;
+  }
+
+  .page {
+    overflow: hidden;
+  }
 }
 </style>
 </head>
 <body>
 
-<button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+<button class="toggle-btn" onclick="toggleSidebar()"><i data-lucide="menu"></i></button>
 
-<div id="bar"></div>
-
-<aside id="sidebar">
-  <div class="sb-header">
-    <a href="#" class="sb-logo">
-      <div class="sb-logo-icon"><i data-lucide="key-round"></i></div>
-      <div class="sb-logo-text">
-        <span class="sb-name">Config Docs</span>
+<div class="container">
+  <aside id="sidebar">
+    <div class="sb-header">
+      <a href="#" class="sb-logo">
+        <div class="sb-logo-icon"><i data-lucide="key-round"></i></div>
+        <div class="sb-logo-text">
+          <span class="sb-name">Docs</span>
+        </div>
+      </a>
+      <div class="sb-status"><div class="status-dot"></div><span>Live</span></div>
+    </div>
+    <input type="text" class="search-bar" id="searchInput" placeholder="Search..." onkeyup="searchTabs()">
+    <nav>
+      <div class="nav-group">
+        <div class="nav-group-label">Start</div>
+        <a class="nav-item active" onclick="goToPage('gallery')"><i data-lucide="image"></i> Gallery</a>
+        <a class="nav-item" onclick="goToPage('overview')"><i data-lucide="book-open"></i> Overview</a>
+        <a class="nav-item" onclick="goToPage('how-it-works')"><i data-lucide="git-branch"></i> How It Works</a>
+        <a class="nav-item" onclick="goToPage('template')"><i data-lucide="file-code"></i> Template</a>
       </div>
-    </a>
-    <div class="sb-status"><div class="status-dot"></div><span>Docs — Live</span></div>
-  </div>
-  <input type="text" class="search-bar" id="searchInput" placeholder="Search tabs..." onkeyup="searchTabs()">
-  <nav>
-    <div class="nav-group">
-      <div class="nav-group-label">Start</div>
-      <a class="nav-item active" href="#overview"><i data-lucide="book-open"></i> Overview</a>
-      <a class="nav-item" href="#how-it-works"><i data-lucide="git-branch"></i> How It Works</a>
-      <a class="nav-item" href="#template"><i data-lucide="file-code"></i> Minimal Template</a>
-    </div>
-    <div class="nav-group">
-      <div class="nav-group-label">Configuration</div>
-      <a class="nav-item" href="#junkie-configs"><i data-lucide="settings-2"></i> Junkie Configs</a>
-      <a class="nav-item nav-sub" href="#providers"><i data-lucide="link-2"></i> Providers</a>
-      <a class="nav-item nav-sub" href="#gamesupport"><i data-lucide="gamepad-2"></i> GameSupport</a>
-      <a class="nav-item" href="#ui-configs"><i data-lucide="palette"></i> UI Configs</a>
-      <a class="nav-item nav-sub" href="#general"><i data-lucide="sliders-horizontal"></i> General</a>
-      <a class="nav-item nav-sub" href="#background"><i data-lucide="layers"></i> Background</a>
-      <a class="nav-item nav-sub" href="#snow"><i data-lucide="snowflake"></i> Snow</a>
-      <a class="nav-item nav-sub" href="#key-system"><i data-lucide="keyboard"></i> Key System</a>
-      <a class="nav-item nav-sub" href="#discord"><i data-lucide="message-square"></i> Discord</a>
-      <a class="nav-item nav-sub" href="#socials"><i data-lucide="share-2"></i> Socials</a>
-      <a class="nav-item nav-sub" href="#instructions"><i data-lucide="list-ordered"></i> Instructions</a>
-      <a class="nav-item nav-sub" href="#changelog"><i data-lucide="history"></i> Changelog</a>
-    </div>
-    <div class="nav-group">
-      <div class="nav-group-label">Reference</div>
-      <a class="nav-item" href="#tags"><i data-lucide="tag"></i> Changelog Tags</a>
-      <a class="nav-item" href="#full-example"><i data-lucide="code-2"></i> Full Example</a>
-      <a class="nav-item" href="#gallery"><i data-lucide="image"></i> Gallery</a>
-    </div>
-  </nav>
-  <div class="sb-footer">
-    <span class="sb-footer-tag">Made by <span>Havoc</span></span>
-    <span class="sb-footer-tag">v1.0</span>
-  </div>
-</aside>
-
-<main id="main">
-  <section id="hero">
-    <div class="hero-grid-bg"></div>
-    <div class="hero-inner">
-      <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Havoc Key System</div>
-      <h1 class="hero-title">Config<br><em>Docs</em></h1>
-      <p class="hero-desc">Complete reference for the UI library — key validation, visuals, providers, game support, and everything in between.</p>
-      <div class="hero-badges">
-        <span class="badge y"><i data-lucide="zap"></i> loadstring delivery</span>
-        <span class="badge g"><i data-lucide="shield-check"></i> Junkie SDK</span>
-        <span class="badge b"><i data-lucide="monitor"></i> Roblox UI</span>
+      <div class="nav-group">
+        <div class="nav-group-label">Config</div>
+        <a class="nav-item" onclick="goToPage('junkie-configs')"><i data-lucide="settings-2"></i> Junkie Config</a>
+        <a class="nav-item" onclick="goToPage('ui-configs')"><i data-lucide="palette"></i> UI Config</a>
+        <a class="nav-item" onclick="goToPage('tags')"><i data-lucide="tag"></i> Tags</a>
+        <a class="nav-item" onclick="goToPage('example')"><i data-lucide="code-2"></i> Example</a>
       </div>
+    </nav>
+    <div class="sb-footer">
+      <span class="sb-footer-tag">v1.0</span>
     </div>
-  </section>
+  </aside>
 
-  <section class="gallery-section" id="gallery">
-    <h2 class="gallery-title">Gallery</h2>
-    <div class="gallery-grid">
-      <div class="gallery-item" onmousemove="tilt3d(event)" onmouseout="reset3d(event)">
-        <img src="https://raw.githubusercontent.com/1NFERNO-HUB/Junkie/refs/heads/main/Screenshot_20260223_154320_Roblox.jpg" onclick="openModal(this.src)" alt="UI Screenshot">
+  <main id="main">
+    <!-- GALLERY PAGE -->
+    <div id="page-gallery" class="page active">
+      <section id="hero">
+        <div class="hero-grid-bg"></div>
+        <div class="hero-inner">
+          <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Havoc Key System</div>
+          <h1 class="hero-title">Gallery</h1>
+          <p class="hero-desc">Preview of the user interface and video demo.</p>
+        </div>
+      </section>
+      <div id="content">
+        <section class="gallery-section">
+          <div class="gallery-grid">
+            <div class="gallery-item" onmousemove="tilt3d(event)" onmouseout="reset3d(event)">
+              <img src="https://raw.githubusercontent.com/1NFERNO-HUB/Junkie/refs/heads/main/Screenshot_20260223_154320_Roblox.jpg" onclick="openModal(this.src)" alt="UI Screenshot">
+            </div>
+            <div class="gallery-item" onmousemove="tilt3d(event)" onmouseout="reset3d(event)">
+              <video controls onclick="openModal(this.src)">
+                <source src="https://github.com/1NFERNO-HUB/Junkie/raw/refs/heads/main/XRecorder_20260223_02.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+        </section>
       </div>
-      <div class="gallery-item" onmousemove="tilt3d(event)" onmouseout="reset3d(event)">
-        <video controls onclick="openModal(this.src)">
-          <source src="https://github.com/1NFERNO-HUB/Junkie/raw/refs/heads/main/XRecorder_20260223_02.mp4" type="video/mp4">
-        </video>
+      <div class="pagination">
+        <button class="pagination-btn" disabled><i data-lucide="arrow-left"></i> Previous</button>
+        <div class="pagination-info">Gallery</div>
+        <button class="pagination-btn" onclick="goToPage('overview')">Next <i data-lucide="arrow-right"></i></button>
       </div>
     </div>
-  </section>
 
-  <div id="content">
-    <div class="doc-section" id="overview">
-      <div class="inline-rule"></div>
-      <div style="padding-top:36px">
-        <div class="sec-eyebrow"><i data-lucide="circle-dot"></i> 01 — Overview</div>
-        <h2 class="sec-title">What is it?</h2>
-        <p class="sec-desc">This is a Roblox key system UI library. Loaded externally via <code>loadstring</code> and configured entirely from your own script — no modifying the library. When a valid key is redeemed, it sets <code>getgenv().LOAD = true</code> and your game script continues.</p>
-        <div class="callout tip">
-          <div class="callout-ico"><i data-lucide="check-circle-2"></i></div>
-          <div><strong>TIP —</strong> The library is CDN-hosted and loaded remotely. You only write a loader script with your config.</div>
+    <!-- OVERVIEW PAGE -->
+    <div id="page-overview" class="page">
+      <section id="hero">
+        <div class="hero-grid-bg"></div>
+        <div class="hero-inner">
+          <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Getting Started</div>
+          <h1 class="hero-title">Overview</h1>
+          <p class="hero-desc">What is this library and how it works.</p>
+        </div>
+      </section>
+      <div id="content">
+        <div class="doc-section">
+          <div class="inline-rule"></div>
+          <div style="padding-top:36px">
+            <div class="sec-eyebrow"><i data-lucide="circle-dot"></i> Overview</div>
+            <h2 class="sec-title">What is it?</h2>
+            <p class="sec-desc">This is a Roblox key system UI library. Loaded externally via <code>loadstring</code> and configured entirely from your own script — no modifying the library. When a valid key is redeemed, it sets <code>getgenv().LOAD = true</code> and your game script continues.</p>
+            <div class="callout tip">
+              <div class="callout-ico"><i data-lucide="check-circle-2"></i></div>
+              <div><strong>TIP —</strong> The library is CDN-hosted and loaded remotely. You only write a loader script with your config.</div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-
-    <div class="doc-section" id="how-it-works">
-      <div class="inline-rule"></div>
-      <div style="padding-top:36px">
-        <div class="sec-eyebrow"><i data-lucide="circle-dot"></i> 02 — Flow</div>
-        <h2 class="sec-title">How It Works</h2>
-        <div class="steps">
-          <div class="step"><div class="step-n">1</div><div class="step-body"><div class="step-title">Load the Library</div><div class="step-desc">Your script calls <code>loadstring(game:HttpGet(LIBRARY_URL))()</code> — fetches the library from CDN and returns a <code>Hub</code> object.</div></div></div>
-          <div class="step"><div class="step-n">2</div><div class="step-body"><div class="step-title">Configure &amp; Init</div><div class="step-desc">Pass your <code>Config</code> to <code>Hub.new(Config)</code> then call <code>hub:Init()</code> to render the key system UI.</div></div></div>
-          <div class="step"><div class="step-n">3</div><div class="step-body"><div class="step-title">Wait for Redemption</div><div class="step-desc"><code>while not getgenv().LOAD do task.wait(1) end</code> blocks until a valid key is entered, then execution continues.</div></div></div>
-        </div>
+      <div class="pagination">
+        <button class="pagination-btn" onclick="goToPage('gallery')"><i data-lucide="arrow-left"></i> Gallery</button>
+        <div class="pagination-info">Overview</div>
+        <button class="pagination-btn" onclick="goToPage('how-it-works')">How It Works <i data-lucide="arrow-right"></i></button>
       </div>
     </div>
 
-    <div class="doc-section" id="template">
-      <div class="inline-rule"></div>
-      <div style="padding-top:36px">
-        <div class="sec-eyebrow"><i data-lucide="circle-dot"></i> 03 — Template</div>
-        <h2 class="sec-title">Minimal Template</h2>
-        <div class="codeblock">
-          <div class="cb-header"><div class="cb-lang"><div class="dot"></div> Lua</div><button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy"></i> Copy</button></div>
+    <!-- HOW IT WORKS PAGE -->
+    <div id="page-how-it-works" class="page">
+      <section id="hero">
+        <div class="hero-grid-bg"></div>
+        <div class="hero-inner">
+          <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Getting Started</div>
+          <h1 class="hero-title">How It Works</h1>
+          <p class="hero-desc">The flow of the key system.</p>
+        </div>
+      </section>
+      <div id="content">
+        <div class="doc-section">
+          <div class="inline-rule"></div>
+          <div style="padding-top:36px">
+            <h2 class="sec-title">Flow</h2>
+            <div class="steps">
+              <div class="step"><div class="step-n">1</div><div class="step-body"><div class="step-title">Load</div><div class="step-desc">Your script calls <code>loadstring(game:HttpGet(URL))()</code> — fetches library from CDN.</div></div></div>
+              <div class="step"><div class="step-n">2</div><div class="step-body"><div class="step-title">Configure</div><div class="step-desc">Pass your <code>Config</code> to <code>Hub.new(Config)</code> then call <code>hub:Init()</code>.</div></div></div>
+              <div class="step"><div class="step-n">3</div><div class="step-body"><div class="step-title">Wait</div><div class="step-desc"><code>while not getgenv().LOAD do task.wait(1) end</code> blocks until valid key entered.</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pagination">
+        <button class="pagination-btn" onclick="goToPage('overview')"><i data-lucide="arrow-left"></i> Overview</button>
+        <div class="pagination-info">How It Works</div>
+        <button class="pagination-btn" onclick="goToPage('template')">Template <i data-lucide="arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- TEMPLATE PAGE -->
+    <div id="page-template" class="page">
+      <section id="hero">
+        <div class="hero-grid-bg"></div>
+        <div class="hero-inner">
+          <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Getting Started</div>
+          <h1 class="hero-title">Minimal Template</h1>
+          <p class="hero-desc">Copy and use this basic template.</p>
+        </div>
+      </section>
+      <div id="content">
+        <div class="doc-section">
+          <div class="inline-rule"></div>
+          <div style="padding-top:36px">
+            <h2 class="sec-title">Template</h2>
+            <div class="codeblock">
+              <div class="cb-header"><div class="cb-lang"><div class="dot"></div> Lua</div><button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy"></i> Copy</button></div>
 <pre><span class="kw">local</span> system = <span class="fn">loadstring</span>(<span class="fn">game</span>:<span class="fn">HttpGet</span>(<span class="str">"LIBRARY_URL"</span>))()
-<span class="kw">local</span> Config = { <span class="cm">-- your config here</span> }
+<span class="kw">local</span> Config = { <span class="cm">-- config here</span> }
 <span class="kw">local</span> hub = system.<span class="fn">new</span>(Config)
 hub:<span class="fn">Init</span>()
 <span class="kw">while</span> <span class="kw">not</span> <span class="fn">getgenv</span>().<span class="key">LOAD</span> <span class="kw">do</span>
   task.<span class="fn">wait</span>(<span class="num">1</span>)
-<span class="kw">end</span>
-<span class="cm">-- game script runs here</span></pre>
+<span class="kw">end</span></pre>
+            </div>
+          </div>
         </div>
+      </div>
+      <div class="pagination">
+        <button class="pagination-btn" onclick="goToPage('how-it-works')"><i data-lucide="arrow-left"></i> How It Works</button>
+        <div class="pagination-info">Template</div>
+        <button class="pagination-btn" onclick="goToPage('junkie-configs')">Junkie Config <i data-lucide="arrow-right"></i></button>
       </div>
     </div>
 
-    <div class="doc-section" id="junkie-configs">
-      <div class="inline-rule"></div>
-      <div style="padding-top:36px">
-        <div class="sec-eyebrow"><i data-lucide="circle-dot"></i> 04 — Core</div>
-        <h2 class="sec-title">Junkie_Configs</h2>
-        <p class="sec-desc">Controls Junkie SDK integration — key validation, webhook relay, and provider setup.</p>
-        <table class="prop-table">
-          <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td class="pname">UseJunkie</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> loads the Junkie SDK for real-time key validation. <code>false</code> accepts any key (testing mode).</td></tr>
-            <tr><td class="pname">Junkie_Webhook</td><td class="ptype">string</td><td class="pdesc">Your Junkie relay webhook URL. Notifies you on key redemption. Leave <code>""</code> to disable.</td></tr>
-            <tr><td class="pname">Service</td><td class="ptype">string</td><td class="pdesc">Your service name from the Junkie dashboard. Must match exactly.</td></tr>
-            <tr><td class="pname">Identifier</td><td class="ptype">string</td><td class="pdesc">Your user/dashboard identifier from Junkie.</td></tr>
-            <tr><td class="pname">Provider</td><td class="ptype">string</td><td class="pdesc">The provider name configured in your Junkie dashboard.</td></tr>
-            <tr><td class="pname">MaxKeyAttempts</td><td class="ptype">number</td><td class="pdesc">Failed attempts before UI force-closes. Recommended: <code>5</code>.</td></tr>
-            <tr><td class="pname">Premium</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> loads the Premium script URL from GameSupport instead of Free.</td></tr>
-          </tbody>
-        </table>
-
-        <h3 id="providers"><i data-lucide="link-2"></i> Providers</h3>
-        <p>Array of key provider buttons shown in the UI. Each can be shown, hidden, or pinned.</p>
-        <table class="prop-table">
-          <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td class="pname">Name</td><td class="ptype">string</td><td class="pdesc">Display name on the provider button.</td></tr>
-            <tr><td class="pname">Icon</td><td class="ptype">string</td><td class="pdesc">rbxassetid for the icon. Use <code>"rbxassetid://0"</code> for the built-in default.</td></tr>
-            <tr><td class="pname">Url</td><td class="ptype">string</td><td class="pdesc">URL opened on click. Fallback if <code>get_key_link()</code> returns nil.</td></tr>
-            <tr><td class="pname">Show</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = visible. <code>false</code> = hidden.</td></tr>
-            <tr><td class="pname">IsJunkie</td><td class="ptype">boolean</td><td class="pdesc">Exactly ONE provider should have this. Enables SDK's <code>get_key_link()</code> flow.</td></tr>
-            <tr><td class="pname">Pinned</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = rendered first with a highlight border.</td></tr>
-          </tbody>
-        </table>
-        <div class="callout warn">
-          <div class="callout-ico"><i data-lucide="alert-triangle"></i></div>
-          <div><strong>WARNING —</strong> Only one provider should have <code>IsJunkie = true</code>. If none, all providers render as regular URL buttons.</div>
+    <!-- JUNKIE CONFIG PAGE -->
+    <div id="page-junkie-configs" class="page">
+      <section id="hero">
+        <div class="hero-grid-bg"></div>
+        <div class="hero-inner">
+          <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Configuration</div>
+          <h1 class="hero-title">Junkie Configs</h1>
+          <p class="hero-desc">Core configuration for the key system.</p>
         </div>
-
-        <h3 id="gamesupport"><i data-lucide="gamepad-2"></i> GameSupport</h3>
-        <p>Maps Roblox Place IDs to script URLs. After key acceptance the matching script loads. <code>Universal</code> is required as a fallback.</p>
-        <div class="codeblock">
-          <div class="cb-header"><div class="cb-lang"><div class="dot"></div> Lua</div><button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy"></i> Copy</button></div>
-<pre><span class="key">GameSupport</span> = {
-  [<span class="num">2788229376</span>] = {
-    <span class="key">Name</span>    = <span class="str">"Da Hood"</span>,
-    <span class="key">Free</span>    = <span class="str">"https://api.jnkie.com/.../DAHOOD_FREE_HASH/download"</span>,
-    <span class="key">Premium</span> = <span class="str">"https://api.jnkie.com/.../DAHOOD_PREMIUM_HASH/download"</span>,
-  },
-  <span class="key">Universal</span> = {
-    <span class="key">Name</span>    = <span class="str">"Universal"</span>,
-    <span class="key">Free</span>    = <span class="str">"https://api.jnkie.com/.../UNIVERSAL_FREE_HASH/download"</span>,
-    <span class="key">Premium</span> = <span class="str">"https://api.jnkie.com/.../UNIVERSAL_PREMIUM_HASH/download"</span>,
-  },
-}</pre>
+      </section>
+      <div id="content">
+        <div class="doc-section">
+          <div class="inline-rule"></div>
+          <div style="padding-top:36px">
+            <h2 class="sec-title">Junkie_Configs</h2>
+            <p class="sec-desc">Controls Junkie SDK integration — key validation, webhook relay, and provider setup.</p>
+            <table class="prop-table">
+              <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td class="pname">UseJunkie</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> for real-time validation.</td></tr>
+                <tr><td class="pname">Service</td><td class="ptype">string</td><td class="pdesc">Your service name from dashboard.</td></tr>
+                <tr><td class="pname">MaxKeyAttempts</td><td class="ptype">number</td><td class="pdesc">Failed attempts before closing. Recommended: <code>5</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div class="callout warn">
-          <div class="callout-ico"><i data-lucide="alert-triangle"></i></div>
-          <div><strong>WARNING —</strong> Replace all <code>HASH</code> placeholders with your actual Junkie script hashes. The <code>Universal</code> entry is required.</div>
-        </div>
+      </div>
+      <div class="pagination">
+        <button class="pagination-btn" onclick="goToPage('template')"><i data-lucide="arrow-left"></i> Template</button>
+        <div class="pagination-info">Junkie Config</div>
+        <button class="pagination-btn" onclick="goToPage('ui-configs')">UI Config <i data-lucide="arrow-right"></i></button>
       </div>
     </div>
 
-    <div class="doc-section" id="ui-configs">
-      <div class="inline-rule"></div>
-      <div style="padding-top:36px">
-        <div class="sec-eyebrow"><i data-lucide="circle-dot"></i> 05 — Visual</div>
-        <h2 class="sec-title">UI_Configs</h2>
-        <p class="sec-desc">Controls the visual appearance and behaviour of the key system UI.</p>
-
-        <h3 id="general"><i data-lucide="sliders-horizontal"></i> General</h3>
-        <table class="prop-table">
-          <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td class="pname">Name</td><td class="ptype">string</td><td class="pdesc">Hub display name in the title section.</td></tr>
-            <tr><td class="pname">Version</td><td class="ptype">string</td><td class="pdesc">Version pill under the hub name. e.g. <code>"1.0"</code></td></tr>
-            <tr><td class="pname">Color</td><td class="ptype">Color3</td><td class="pdesc">Primary accent colour — buttons, borders, glows, badges. e.g. <code>Color3.fromRGB(138, 43, 226)</code></td></tr>
-            <tr><td class="pname">Text_Color</td><td class="ptype">Color3 / ""</td><td class="pdesc">Text on coloured buttons. Leave <code>""</code> to auto-pick black/white from Color brightness.</td></tr>
-            <tr><td class="pname">Icon</td><td class="ptype">string</td><td class="pdesc">rbxassetid for your hub logo in the title bar.</td></tr>
-            <tr><td class="pname">BadgeText</td><td class="ptype">string</td><td class="pdesc">Badge label next to the icon. e.g. <code>"KEY SYSTEM"</code></td></tr>
-            <tr><td class="pname">CustomFont</td><td class="ptype">string</td><td class="pdesc">rbxassetid of a custom font. Leave <code>""</code> for built-in Gotham.</td></tr>
-            <tr><td class="pname">ShowOutline</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = accent-coloured border around the main panel.</td></tr>
-          </tbody>
-        </table>
-
-        <h3 id="background"><i data-lucide="layers"></i> Background &amp; Overlay</h3>
-        <table class="prop-table">
-          <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td class="pname">GradientAnimated</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = background gradient slowly rotates.</td></tr>
-            <tr><td class="pname">GradientAnimationSpeed</td><td class="ptype">number</td><td class="pdesc">Seconds per full gradient rotation. Lower = faster.</td></tr>
-            <tr><td class="pname">GlassOpacity</td><td class="ptype">number</td><td class="pdesc">Panel transparency. <code>0</code> = opaque, <code>1</code> = invisible. <code>0.18</code> = frosted glass.</td></tr>
-            <tr><td class="pname">SlideInEnabled</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = panel slides up on open. <code>false</code> = instant appear.</td></tr>
-            <tr><td class="pname">BlurEnabled</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = applies BlurEffect to Lighting while UI is open.</td></tr>
-            <tr><td class="pname">BlurSize</td><td class="ptype">number</td><td class="pdesc">Blur strength 0–56. Higher = more blur.</td></tr>
-            <tr><td class="pname">OverlayOpacity</td><td class="ptype">number</td><td class="pdesc">Background overlay darkness. <code>0</code> = none, <code>1</code> = black. <code>0.65</code> = dimmed.</td></tr>
-          </tbody>
-        </table>
-
-        <h3 id="snow"><i data-lucide="snowflake"></i> Snow</h3>
-        <table class="prop-table">
-          <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td class="pname">SnowEnabled</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = falling snowflake particles over the background.</td></tr>
-            <tr><td class="pname">SnowDensity</td><td class="ptype">number</td><td class="pdesc">Snowflake count multiplier. <code>0.5</code> = half, <code>2.0</code> = double. Default: <code>1.0</code></td></tr>
-            <tr><td class="pname">SnowColor</td><td class="ptype">Color3</td><td class="pdesc">Snowflake colour. Default: <code>Color3.fromRGB(220, 235, 255)</code></td></tr>
-            <tr><td class="pname">SnowSize</td><td class="ptype">{Min, Max}</td><td class="pdesc">Pixel diameter range. e.g. <code>{Min=3, Max=7}</code></td></tr>
-          </tbody>
-        </table>
-
-        <h3 id="key-system"><i data-lucide="keyboard"></i> Key System</h3>
-        <table class="prop-table">
-          <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td class="pname">KeySystemLabel</td><td class="ptype">string</td><td class="pdesc">Label text above the key input box.</td></tr>
-            <tr><td class="pname">KeySystemPlaceholder</td><td class="ptype">string</td><td class="pdesc">Animated placeholder that types itself when the box is empty.</td></tr>
-            <tr><td class="pname">KeyFile</td><td class="ptype">string</td><td class="pdesc">Filename to save/load the verified key locally. Change per-hub to isolate keys.</td></tr>
-            <tr><td class="pname">CloseOnSuccess</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = UI auto-closes after successful redeem.</td></tr>
-            <tr><td class="pname">SuccessMessage</td><td class="ptype">string</td><td class="pdesc">Toast shown on success. e.g. <code>"✓ Access Granted!"</code></td></tr>
-          </tbody>
-        </table>
-
-        <h3 id="discord"><i data-lucide="message-square"></i> Discord</h3>
-        <table class="prop-table">
-          <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td class="pname">Discord</td><td class="ptype">string</td><td class="pdesc">Your invite code (part after <code>discord.gg/</code>). Powers the Join button and live member count.</td></tr>
-            <tr><td class="pname">ShowMemberCount</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = fetches and shows live Discord member + online count.</td></tr>
-          </tbody>
-        </table>
-
-        <h3 id="socials"><i data-lucide="share-2"></i> Socials &amp; AppLinks</h3>
-        <p>Socials appear in the side panel and footer strip. AppLinks are pill-shaped chips below the socials grid. Both share the same structure.</p>
-        <table class="prop-table">
-          <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td class="pname">Name</td><td class="ptype">string</td><td class="pdesc">Display name. Also used to auto-resolve icon if <code>Icon</code> is <code>"rbxassetid://0"</code>.</td></tr>
-            <tr><td class="pname">Icon</td><td class="ptype">string</td><td class="pdesc">rbxassetid for the icon image.</td></tr>
-            <tr><td class="pname">Link</td><td class="ptype">string</td><td class="pdesc">URL copied to clipboard on click.</td></tr>
-            <tr><td class="pname">Show</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = visible.</td></tr>
-            <tr><td class="pname">Pinned</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = rendered first with a highlight border.</td></tr>
-          </tbody>
-        </table>
-
-        <h3 id="instructions"><i data-lucide="list-ordered"></i> Instructions</h3>
-        <p>Step cards on the How-To page. Each card has a title and body description.</p>
-        <div class="codeblock">
-          <div class="cb-header"><div class="cb-lang"><div class="dot"></div> Lua</div><button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy"></i> Copy</button></div>
-<pre><span class="key">Instructions</span> = {
-  { <span class="key">Title</span> = <span class="str">"Open Key Link"</span>,      <span class="key">Body</span> = <span class="str">"Click the button to open your key link."</span> },
-  { <span class="key">Title</span> = <span class="str">"Complete Steps"</span>,   <span class="key">Body</span> = <span class="str">"Finish all checkpoints on the key page."</span> },
-  { <span class="key">Title</span> = <span class="str">"Paste &amp; Redeem"</span>,   <span class="key">Body</span> = <span class="str">"Paste your key above and hit Redeem."</span> },
-}</pre>
+    <!-- UI CONFIG PAGE -->
+    <div id="page-ui-configs" class="page">
+      <section id="hero">
+        <div class="hero-grid-bg"></div>
+        <div class="hero-inner">
+          <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Configuration</div>
+          <h1 class="hero-title">UI Configs</h1>
+          <p class="hero-desc">Visual appearance and behaviour settings.</p>
         </div>
-
-        <h3 id="changelog"><i data-lucide="history"></i> Changelog</h3>
-        <p>Controls tag pill colours and bullet points per version.</p>
-        <table class="prop-table">
-          <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td class="pname">Show</td><td class="ptype">boolean</td><td class="pdesc"><code>true</code> = shows the changelog button.</td></tr>
-            <tr><td class="pname">Title</td><td class="ptype">string</td><td class="pdesc">Header text on the changelog page.</td></tr>
-            <tr><td class="pname">Versions</td><td class="ptype">array</td><td class="pdesc">Array of version entries. Each has Version, Date, Tag, Notes.</td></tr>
-          </tbody>
-        </table>
+      </section>
+      <div id="content">
+        <div class="doc-section">
+          <div class="inline-rule"></div>
+          <div style="padding-top:36px">
+            <h2 class="sec-title">UI_Configs</h2>
+            <table class="prop-table">
+              <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td class="pname">Name</td><td class="ptype">string</td><td class="pdesc">Hub display name.</td></tr>
+                <tr><td class="pname">Color</td><td class="ptype">Color3</td><td class="pdesc">Primary accent color.</td></tr>
+                <tr><td class="pname">SnowEnabled</td><td class="ptype">boolean</td><td class="pdesc">Enable falling snow effect.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="pagination">
+        <button class="pagination-btn" onclick="goToPage('junkie-configs')"><i data-lucide="arrow-left"></i> Junkie Config</button>
+        <div class="pagination-info">UI Config</div>
+        <button class="pagination-btn" onclick="goToPage('tags')">Tags <i data-lucide="arrow-right"></i></button>
       </div>
     </div>
 
-    <div class="doc-section" id="tags">
-      <div class="inline-rule"></div>
-      <div style="padding-top:36px">
-        <div class="sec-eyebrow"><i data-lucide="circle-dot"></i> 06 — Reference</div>
-        <h2 class="sec-title">Changelog Tags</h2>
-        <table class="tags-table">
-          <tbody>
-            <tr><td><span class="tag tag-new">NEW</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--ink3)">New feature or addition</td></tr>
-            <tr><td><span class="tag tag-fix">FIX</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--ink3)">Bug fix or correction</td></tr>
-            <tr><td><span class="tag tag-imp">IMPROVED</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--ink3)">Enhancement to existing feature</td></tr>
-            <tr><td><span class="tag tag-rem">REMOVED</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--ink3)">Feature removed</td></tr>
-            <tr><td><span class="tag tag-sec">SECURITY</span></td><td style="font-family:var(--mono);font-size:11px;color:var(--ink3)">Security-related change</td></tr>
-          </tbody>
-        </table>
+    <!-- TAGS PAGE -->
+    <div id="page-tags" class="page">
+      <section id="hero">
+        <div class="hero-grid-bg"></div>
+        <div class="hero-inner">
+          <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Reference</div>
+          <h1 class="hero-title">Changelog Tags</h1>
+          <p class="hero-desc">Available tags for changelog versions.</p>
+        </div>
+      </section>
+      <div id="content">
+        <div class="doc-section">
+          <div class="inline-rule"></div>
+          <div style="padding-top:36px">
+            <h2 class="sec-title">Tags</h2>
+            <div style="overflow-x: auto;">
+              <table class="prop-table">
+                <tbody>
+                  <tr><td><span style="background: rgba(62,207,110,0.2); padding: 2px 8px; border-radius: 3px; color: #3ecf6e; font-size: 11px; font-weight: bold;">NEW</span></td><td>New feature</td></tr>
+                  <tr><td><span style="background: rgba(232,64,64,0.2); padding: 2px 8px; border-radius: 3px; color: #e84040; font-size: 11px; font-weight: bold;">FIX</span></td><td>Bug fix</td></tr>
+                  <tr><td><span style="background: rgba(77,166,255,0.2); padding: 2px 8px; border-radius: 3px; color: #4da6ff; font-size: 11px; font-weight: bold;">IMPROVED</span></td><td>Enhancement</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pagination">
+        <button class="pagination-btn" onclick="goToPage('ui-configs')"><i data-lucide="arrow-left"></i> UI Config</button>
+        <div class="pagination-info">Tags</div>
+        <button class="pagination-btn" onclick="goToPage('example')">Example <i data-lucide="arrow-right"></i></button>
       </div>
     </div>
 
-    <div class="doc-section" id="full-example">
-      <div class="inline-rule"></div>
-      <div style="padding-top:36px">
-        <div class="sec-eyebrow"><i data-lucide="circle-dot"></i> 07 — Example</div>
-        <h2 class="sec-title">Full Config Example</h2>
-        <p class="sec-desc">A complete, working config you can copy and customise.</p>
-        <div class="codeblock">
-          <div class="cb-header"><div class="cb-lang"><div class="dot"></div> Lua — Full Config</div><button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy"></i> Copy</button></div>
+    <!-- EXAMPLE PAGE -->
+    <div id="page-example" class="page">
+      <section id="hero">
+        <div class="hero-grid-bg"></div>
+        <div class="hero-inner">
+          <div class="hero-tag"><i data-lucide="lock-keyhole"></i> Reference</div>
+          <h1 class="hero-title">Full Example</h1>
+          <p class="hero-desc">Complete configuration example.</p>
+        </div>
+      </section>
+      <div id="content">
+        <div class="doc-section">
+          <div class="inline-rule"></div>
+          <div style="padding-top:36px">
+            <h2 class="sec-title">Complete Config</h2>
+            <div class="codeblock">
+              <div class="cb-header"><div class="cb-lang"><div class="dot"></div> Lua</div><button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy"></i> Copy</button></div>
 <pre><span class="fn">getgenv</span>().<span class="key">LOAD</span> = <span class="bool">nil</span>
 
-<span class="kw">local</span> Junkie_Configs = {
+<span class="kw">local</span> Config = {
   <span class="key">UseJunkie</span> = <span class="bool">true</span>,
   <span class="key">Service</span> = <span class="str">"My Hub"</span>,
-  <span class="key">MaxKeyAttempts</span> = <span class="num">5</span>,
-  <span class="key">Providers</span> = {
-    { <span class="key">Name</span>=<span class="str">"Get Key"</span>, <span class="key">Url</span>=<span class="str">"https://example.com"</span>, <span class="key">Show</span>=<span class="bool">true</span> },
-  },
-}
-
-<span class="kw">local</span> UI_Configs = {
   <span class="key">Name</span> = <span class="str">"My Hub"</span>,
   <span class="key">Color</span> = <span class="fn">Color3</span>.<span class="fn">fromRGB</span>(<span class="num">138</span>, <span class="num">43</span>, <span class="num">226</span>),
   <span class="key">SnowEnabled</span> = <span class="bool">true</span>,
 }
 
-<span class="kw">local</span> system = <span class="fn">loadstring</span>(<span class="fn">game</span>:<span class="fn">HttpGet</span>(<span class="str">"LIBRARY_URL"</span>))()
-<span class="kw">local</span> hub = system.<span class="fn">new</span>(Junkie_Configs, UI_Configs)
+<span class="kw">local</span> system = <span class="fn">loadstring</span>(<span class="fn">game</span>:<span class="fn">HttpGet</span>(<span class="str">"URL"</span>))()
+<span class="kw">local</span> hub = system.<span class="fn">new</span>(Config)
 hub:<span class="fn">Init</span>()
-<span class="kw">while</span> <span class="kw">not</span> <span class="fn">getgenv</span>().<span class="key">LOAD</span> <span class="kw">do</span> task.<span class="fn">wait</span>(<span class="num">1</span>) <span class="kw">end</span></pre>
+<span class="kw">while</span> <span class="kw">not</span> <span class="fn">getgenv</span>().<span class="key">LOAD</span> <span class="kw">do</span>
+  task.<span class="fn">wait</span>(<span class="num">1</span>)
+<span class="kw">end</span></pre>
+            </div>
+          </div>
         </div>
+      </div>
+      <div class="pagination">
+        <button class="pagination-btn" onclick="goToPage('tags')"><i data-lucide="arrow-left"></i> Tags</button>
+        <div class="pagination-info">Example</div>
+        <button class="pagination-btn" disabled>Next</button>
       </div>
     </div>
 
-  </div>
-</main>
+  </main>
+</div>
 
-<div id="modal" class="modal" onclick="closeModal(event)">
-  <div class="modal-content">
-    <img id="modalImg" style="display:none">
-    <video id="modalVid" controls style="display:none"></video>
+<!-- MODAL -->
+<div id="modal" onclick="closeModal(event)" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center;">
+  <div style="max-width: 90%; max-height: 90vh; display: flex; align-items: center; justify-content: center;">
+    <img id="modalImg" style="display:none; max-width: 100%; max-height: 100%;">
+    <video id="modalVid" controls style="display:none; max-width: 100%; max-height: 100%;"></video>
   </div>
 </div>
 
@@ -772,10 +1230,31 @@ hub:<span class="fn">Init</span>()
 
   function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
-    const main = document.getElementById('main');
     sidebar.classList.toggle('collapsed');
-    main.classList.toggle('sidebar-collapsed');
     localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+  }
+
+  function goToPage(pageId) {
+    // Hide all pages
+    document.querySelectorAll('.page').forEach(page => {
+      page.classList.remove('active');
+    });
+    
+    // Show selected page
+    document.getElementById('page-' + pageId).classList.add('active');
+    
+    // Update nav items
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.classList.remove('active');
+    });
+    
+    // Scroll to top
+    window.scrollTo(0, 0);
+    
+    // Close sidebar on mobile
+    if (window.innerWidth < 768) {
+      document.getElementById('sidebar').classList.add('collapsed');
+    }
   }
 
   function searchTabs() {
@@ -815,33 +1294,14 @@ hub:<span class="fn">Init</span>()
       modalImg.style.display = 'block';
       modalVid.style.display = 'none';
     }
-    modal.classList.add('active');
+    modal.style.display = 'flex';
   }
 
   function closeModal(event) {
     if (event.target.id === 'modal') {
-      document.getElementById('modal').classList.remove('active');
+      document.getElementById('modal').style.display = 'none';
     }
   }
-
-  const bar = document.getElementById('bar');
-  window.addEventListener('scroll', () => {
-    const max = document.documentElement.scrollHeight - window.innerHeight;
-    bar.style.transform = `scaleX(${Math.min(window.scrollY / max, 1)})`;
-  });
-
-  const allSections = document.querySelectorAll('.doc-section[id], h3[id]');
-  const navItems = document.querySelectorAll('.nav-item');
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        navItems.forEach(n => n.classList.remove('active'));
-        const m = document.querySelector(`.nav-item[href="#${e.target.id}"]`);
-        if (m) m.classList.add('active');
-      }
-    });
-  }, { rootMargin: '-15% 0px -75% 0px' });
-  allSections.forEach(s => io.observe(s));
 
   function copyCode(btn) {
     const pre = btn.closest('.codeblock').querySelector('pre');
@@ -862,7 +1322,6 @@ hub:<span class="fn">Init</span>()
   // Load sidebar state
   if (localStorage.getItem('sidebarCollapsed') === 'true') {
     document.getElementById('sidebar').classList.add('collapsed');
-    document.getElementById('main').classList.add('sidebar-collapsed');
   }
 </script>
 </body>
