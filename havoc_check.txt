@@ -1,0 +1,1021 @@
+local _svc=setmetatable({},{__index=function(_,k) return game:GetService(k) end})
+local _pl=_svc.Players
+local _cg=_svc.CoreGui
+local _hs=_svc.HttpService
+local _lp=_pl.LocalPlayer
+local _rs=_svc.RunService
+local _unpack=table.unpack or unpack
+
+local _fn={
+	pcall=pcall,xpcall=xpcall,pairs=pairs,ipairs=ipairs,
+	next=next,select=select,type=type,
+	tostring=tostring,tonumber=tonumber,
+	rawget=rawget,rawset=rawset,rawequal=rawequal,rawlen=rawlen,
+	getfenv=getfenv,setfenv=setfenv,
+	error=error,assert=assert,
+	require=require,
+	osclock=os.clock,tick=tick,
+	tspawn=task.spawn,twait=task.wait,tdefer=task.defer,tdelay=task.delay,
+	crun=coroutine.running,ccreate=coroutine.create,
+	cresume=coroutine.resume,cyield=coroutine.yield,
+	cwrap=coroutine.wrap,cclose=coroutine.close,cstatus=coroutine.status,
+	mfloor=math.floor,mceil=math.ceil,mrand=math.random,
+	msqrt=math.sqrt,mabs=math.abs,mmax=math.max,mmin=math.min,
+	slen=string.len,sfind=string.find,sfmt=string.format,
+	ssub=string.sub,srep=string.rep,sbyte=string.byte,
+	sup=string.upper,slow=string.lower,srev=string.reverse,
+	tins=table.insert,trem=table.remove,tsort=table.sort,
+	tcat=table.concat,tunpack=_unpack,
+	debug=debug,
+}
+
+local _env=_fn.getfenv()
+local _dead=false
+local _mt=coroutine.running()
+
+local _log={}
+do
+	local ok,name=pcall(function()
+		if identifyexecutor then return identifyexecutor()
+		elseif getexecutorname then return getexecutorname() end
+		return "unknown"
+	end)
+	_fn.tins(_log,"executor="..(_fn.tostring(ok and name or "unknown")))
+	_fn.tins(_log,"placeid=".._fn.tostring(game.PlaceId))
+	_fn.tins(_log,"userid=".._fn.tostring(_lp and _lp.UserId or "?"))
+	_fn.tins(_log,"jobid=".._fn.tostring(game.JobId))
+end
+
+local _badPaths={
+	"YetAnotherBot","unveilr","genv","envlogger","env_logger","scriptlogger",
+	"hookop","hookOp","25ms","crypta","threaded","logscript","logenv",
+	"roblox_logger","executor_log","obfuscator_log",
+	"Users\\","AppData\\","Discord","bot\\","bots\\","logger\\",
+	"C:\\","D:\\","E:\\","F:\\","G:\\",
+	"/home/","/root/","/tmp/","/proc/","/dev/","/sys/","/var/","/run/",
+	"YAB","xlum","getgold","wYnFuscate","wynfuscate","unveil","unvielr",
+	"deobf","deobfuscate","reconstruct","dumper",
+	"dump_env","envdump","env_dump","luadump","luaenv",
+	"getenv","capture_env","setenv","hookenv","tapenv",
+	"script_logger","envrecon","getgold.cc","goldtm",
+	"Program Files","ProgramData","Temp\\","temp\\",
+	"log.txt","dump.txt","output.txt","env.txt",
+	"hooklogger","traceback_hook","callhook","callspy",
+	"newhook","oldhook","rawenv","rawgetenv",
+}
+
+local _spyGuiExact={
+	SimpleSpy2=1,SimpleSpy3=1,ScreenguiS=1,ErrorStoarge=1,Ketamine=1,
+	ExoToolV3=1,hxsexlrdxues=1,HttpSpyGui=1,HttpSpy=1,ToopSpy=1,
+	SimpleSpyV2=1,SynSpy=1,OhHook=1,RemoteSpy=1,IceHub=1,
+	HttpLogger=1,ExoTool=1,SpyV3=1,reqspy=1,ReqSpy=1,
+	NetworkSpy=1,NetSpy=1,Hydroxide=1,HydroxideGui=1,HydroxideMain=1,
+}
+
+local _spyTextExact={
+	SimpleSpy=1,SimpleSpy2=1,SimpleSpy3=1,ToopSpy=1,
+	HttpSpy=1,HTTPSpy=1,ExoTool=1,HttpLogger=1,SynSpy=1,
+	OhHook=1,RemoteSpy=1,NetSpy=1,Hydroxide=1,Ketamine=1,NetworkSpy=1,
+}
+
+local _spyGlobals={
+	"HttpSpy","HTTPSpy","httpspy","http_spy","HttpSpyAPI",
+	"HttpLogger","httplogger","ExoTool","ExoToolAPI",
+	"SpyAPI","spyapi","SimpleSpy","simplespy",
+	"SimpleSpyExecuted","SimpleSpyShutdown","SIMPLESPYCONFIG_MaxRemotes",
+	"SynSpy","synspy","OhHook","ohhook","RemoteSpy","remotespy",
+	"NetSpy","netspy","ReqSpy","reqspy","NetworkSpy","networkspy",
+	"Hydroxide","hydroxide","oh","Ketamine","ketamine",
+}
+
+local _spyDomains={
+	"getgold","goldtm","hydroxide","reqspy","hooklogger","scriptlogger",
+	"envlogger","25ms","xlum","unveilr","httpspy","httplogger",
+	"synspy","ohhook","remotespy","netspy","ketamine","networkspy","simplespyapi",
+}
+
+local _spyNameSubs={
+	"spy","hook","hydroxide","exotool","reqspy","netspy","ketamine",
+}
+
+local _guiWl={
+	RobloxGui=1,PlayerMenuScreen=1,TopBarApp=1,ChatGui=1,BubbleChat=1,
+	RobloxPromptGui=1,InspectAndBuyGui=1,AvatarEditorInGame=1,
+	VoiceChatSpeakerGui=1,EmotesMenuGui=1,BackpackGui=1,GamepadMenu=1,
+	HealthGui=1,LeaderboardGui=1,TouchGui=1,CoreGui=1,
+	AvatarContextMenuGui=1,VRGui=1,ScreenGui=1,
+	Fluent=1,FluentRenewed=1,FluentUI=1,FluentScreenGui=1,FluentWindow=1,
+	SaveManager=1,InterfaceManager=1,FluentScriptHub=1,
+	ScriptHub=1,MysteryHub=1,Hub=1,NotificationsGui=1,
+	Main=1,Window=1,Dialog=1,Notifications=1,
+}
+
+local _knownGuis={}
+
+local function _hasBadPath(s)
+	if not s then return false end
+	local sl=_fn.tostring(s):lower()
+	for _,p in _fn.ipairs(_badPaths) do
+		if sl:find(p:lower(),1,true) then return true end
+	end
+	return false
+end
+
+local function _flag(reason)
+	if _dead then return end
+	_dead=true
+	_fn.tins(_log,"flag="..(_fn.tostring(reason)))
+	_fn.tins(_log,"clock=".._fn.tostring(_fn.osclock()))
+	_fn.tins(_log,"thread=".._fn.tostring(_fn.crun()))
+	_fn.pcall(_fn.cclose,_mt)
+	coroutine.yield()
+end
+
+local function _try(f,label)
+	local ok,err=_fn.pcall(f)
+	if not ok then
+		if _hasBadPath(err) then _flag(label.."|errpath") end
+	end
+end
+
+local function _stackProbe(err,label)
+	if _hasBadPath(err) then
+		_flag(label.."|errpath") return
+	end
+	for i=0,20 do
+		local ok,fe=_fn.pcall(_fn.getfenv,i)
+		if ok and fe and fe~=_env then
+			local keys={}
+			for k in _fn.pairs(fe) do _fn.tins(keys,_fn.tostring(k)) end
+			if #keys>0 then
+				_flag(label.."|stackleak@"..i..":"..(_fn.tcat(keys,",")))
+			end
+		end
+	end
+end
+
+local function _guiDestroy(g)
+	_fn.pcall(function() g:Destroy() end)
+end
+
+local function _isSpyName(name)
+	local nl=name:lower()
+	for _,s in _fn.ipairs(_spyNameSubs) do
+		if nl:find(s,1,true) then return true end
+	end
+	return false
+end
+
+local function _isSpyUrl(url)
+	if _fn.type(url)~="string" then return false end
+	local ul=url:lower()
+	for _,d in _fn.ipairs(_spyDomains) do
+		if ul:find(d,1,true) then return true end
+	end
+	return false
+end
+
+local function _scanLabels(root)
+	_fn.pcall(function()
+		for _,d in _fn.ipairs(root:GetDescendants()) do
+			_fn.pcall(function()
+				if d:IsA("TextLabel") and _spyTextExact[d.Text] then
+					local t=d
+					while t and not t:IsA("ScreenGui") do t=t.Parent end
+					if t and t:IsA("ScreenGui") then _guiDestroy(t) end
+				end
+			end)
+		end
+	end)
+end
+
+local function _killNamedIn(parent)
+	if not parent then return end
+	_fn.pcall(function()
+		for _,c in _fn.ipairs(parent:GetChildren()) do
+			_fn.pcall(function()
+				if (c:IsA("ScreenGui") or c:IsA("Frame")) and _spyGuiExact[c.Name] then
+					_guiDestroy(c)
+				end
+			end)
+		end
+	end)
+end
+
+local function _heuristic(gui)
+	_fn.pcall(function()
+		if _knownGuis[gui] then return end
+		if _guiWl[gui.Name] then return end
+		if not _isSpyName(gui.Name) then return end
+		local tl,sb=0,0
+		for _,d in _fn.ipairs(gui:GetDescendants()) do
+			if d:IsA("TextLabel") then tl=tl+1 end
+			if d:IsA("ScrollingFrame") then sb=sb+1 end
+		end
+		if sb>=3 and tl>=50 then _guiDestroy(gui) end
+	end)
+end
+
+local function _killWindUI()
+	_fn.pcall(function()
+		local re=_cg["54b3b10efc668b8054b210e563c00f41c67160da77a903ea2a16c3276824be7a"]
+		if not re then return end
+		local rn=re:FindFirstChild("WindUI")
+		if not rn then return end
+		local r0=rn:FindFirstChild("Window")
+		if not r0 then return end
+		local ch=r0:GetChildren()
+		if ch[2] then _scanLabels(ch[2]) end
+	end)
+end
+
+local function _wipeSpyGlobals()
+	local rg=getgenv and getgenv()
+	for _,k in _fn.ipairs(_spyGlobals) do
+		if rg then _fn.pcall(function()
+			if _fn.rawget(rg,k)~=nil then _fn.rawset(rg,k,nil) end
+		end) end
+		_fn.pcall(function()
+			if _fn.rawget(_G,k)~=nil then _fn.rawset(_G,k,nil) end
+		end)
+	end
+end
+
+local function _scanParent(parent,heuristic)
+	if not parent then return end
+	_fn.pcall(function()
+		for _,c in _fn.ipairs(parent:GetChildren()) do
+			_fn.pcall(function()
+				if c:IsA("ScreenGui") and not _knownGuis[c] then
+					task.delay(0.05,function()
+						if c and c.Parent then
+							if heuristic then _heuristic(c) end
+							_scanLabels(c)
+						end
+					end)
+				end
+			end)
+		end
+	end)
+end
+
+local function _snapshot()
+	_fn.pcall(function()
+		for _,c in _fn.ipairs(_cg:GetChildren()) do _knownGuis[c]=true end
+	end)
+	_fn.pcall(function()
+		if _lp then
+			local pg=_lp:FindFirstChildOfClass("PlayerGui")
+			if pg then for _,c in _fn.ipairs(pg:GetChildren()) do _knownGuis[c]=true end end
+		end
+	end)
+	_fn.pcall(function()
+		local hui=gethui and gethui()
+		if hui then for _,c in _fn.ipairs(hui:GetChildren()) do _knownGuis[c]=true end end
+	end)
+end
+
+local function _sweep()
+	_fn.pcall(function()
+		if _lp then
+			local pg=_lp:FindFirstChildOfClass("PlayerGui")
+			if pg then _killNamedIn(pg); _scanParent(pg,false) end
+		end
+	end)
+	_fn.pcall(function() _killNamedIn(_cg); _scanParent(_cg,true) end)
+	_fn.pcall(function()
+		local hui=gethui and gethui()
+		if hui then _killNamedIn(hui); _scanParent(hui,true) end
+	end)
+	_killWindUI()
+	_wipeSpyGlobals()
+end
+
+local function _onPlayerGui(c)
+	task.defer(function()
+		if not c or not c.Parent then return end
+		if _spyGuiExact[c.Name] then _guiDestroy(c); return end
+		_fn.pcall(function() _scanLabels(c) end)
+	end)
+end
+
+local function _onCoreGui(c)
+	task.defer(function()
+		if not c or not c.Parent then return end
+		if _spyGuiExact[c.Name] then _guiDestroy(c); return end
+		_fn.pcall(function() _scanLabels(c) end)
+		_fn.pcall(function()
+			task.delay(0.15,function()
+				if c and c.Parent then _heuristic(c) end
+			end)
+		end)
+	end)
+end
+
+local function _hookHttp()
+	_fn.pcall(function()
+		local mt=getrawmetatable and getrawmetatable(_hs)
+		if not mt then return end
+		local orig=mt.__index
+		setreadonly(mt,false)
+		mt.__index=newcclosure(function(self,key)
+			local fn=orig(self,key)
+			if key=="RequestAsync" or key=="GetAsync" or key=="PostAsync" then
+				return newcclosure(function(...)
+					local args={...}
+					local url=args[1]
+					if _fn.type(url)=="table" then url=url.Url end
+					if _isSpyUrl(url) then
+						return {Success=false,StatusCode=403,Body="",Headers={}}
+					end
+					return fn(self,_unpack(args))
+				end)
+			end
+			return fn
+		end)
+		setreadonly(mt,true)
+	end)
+end
+
+local function _hookExecutorHttp()
+	_fn.pcall(function()
+		if syn and syn.request then
+			local o=syn.request
+			syn.request=newcclosure(function(opts)
+				if _isSpyUrl(opts and opts.Url) then return {StatusCode=403,Body=""} end
+				return o(opts)
+			end)
+		end
+	end)
+	_fn.pcall(function()
+		if http and http.request then
+			local o=http.request
+			http.request=newcclosure(function(opts)
+				if _isSpyUrl(opts and opts.Url) then return {StatusCode=403,Body=""} end
+				return o(opts)
+			end)
+		end
+	end)
+	_fn.pcall(function()
+		if _fn.type(request)=="function" then
+			local o=request
+			request=newcclosure(function(opts)
+				if _isSpyUrl(opts and opts.Url) then return {StatusCode=403,Body=""} end
+				return o(opts)
+			end)
+		end
+	end)
+end
+
+local function _hookRequire()
+	_fn.pcall(function()
+		local orig=_fn.require
+		local h=newcclosure(function(mod)
+			local ok,res=_fn.pcall(orig,mod)
+			if not ok then return nil end
+			if _fn.type(res)=="table" then
+				for k in _fn.pairs(res) do
+					local ks=_fn.tostring(k):lower()
+					if ks:find("spy",1,true) or ks:find("hydroxide",1,true)
+						or ks:find("exotool",1,true) then
+						return nil
+					end
+				end
+			end
+			return res
+		end)
+		require=h
+		_fn.require=h
+	end)
+end
+
+local function _hookConsole()
+	_fn.pcall(function()
+		local pat="https?://[%w%.%-_~:/%?#%[%]@!%$&'%(%)%*%+,;=]+"
+		local op,ow=_fn.pcall,_fn.pcall
+		local rp,rw=print,warn
+		local hp=newcclosure(function(...)
+			local a={...}
+			for i,v in _fn.ipairs(a) do
+				if _fn.type(v)=="string" then a[i]=v:gsub(pat,"[url]") end
+			end
+			rp(_unpack(a))
+		end)
+		local hw=newcclosure(function(...)
+			local a={...}
+			for i,v in _fn.ipairs(a) do
+				if _fn.type(v)=="string" then a[i]=v:gsub(pat,"[url]") end
+			end
+			rw(_unpack(a))
+		end)
+		print=hp; warn=hw
+		_fn.tins(_log,"print=hooked")
+		_fn.tins(_log,"warn=hooked")
+	end)
+end
+
+local _p1,_p2=newproxy(true),newproxy(true)
+
+local _probes={
+	{function() return workspace:__zvx9q() end,"nc:zvx"},
+	{function() return workspace.__zvx9q end,"idx:zvx"},
+	{function() workspace.__zvx9q=true end,"nidx:zvx"},
+	{function() return _p1+_p2 end,"mm:add"},
+	{function() return _p1-_p2 end,"mm:sub"},
+	{function() return _p1*_p2 end,"mm:mul"},
+	{function() return _p1/_p2 end,"mm:div"},
+	{function() return _p1%_p2 end,"mm:mod"},
+	{function() return _p1^_p2 end,"mm:pow"},
+	{function() return -_p1 end,"mm:unm"},
+	{function() return _p1.._p2 end,"mm:concat"},
+	{function() return #_p1 end,"mm:len"},
+	{function() return _p1<_p2 end,"mm:lt"},
+	{function() return _p1<=_p2 end,"mm:le"},
+	{function() return _p1() end,"mm:call"},
+	{function() return _fn.tostring(_p1) end,"mm:tostring"},
+	{function() for _ in _p1 do break end end,"mm:iter"},
+	{function() table.remove("x") end,"err:trem"},
+	{function() math.sqrt("x") end,"err:msqrt"},
+	{function() math.abs(nil) end,"err:mabs"},
+	{function() string.len(nil) end,"err:slen"},
+	{function() table.insert(nil,1) end,"err:tins"},
+	{function() table.sort(nil) end,"err:tsort"},
+	{function() string.upper(nil) end,"err:sup"},
+	{function() table.unpack(nil) end,"err:tunpack"},
+	{function() math.max(nil) end,"err:mmax"},
+	{function() tonumber({},"x") end,"err:tonum"},
+}
+
+task.spawn(function()
+	while _fn.twait(0.1) do
+		for _,p in _fn.ipairs(_probes) do
+			_fn.xpcall(p[1],function(e) _stackProbe(e,"probe:"..p[2]) end)
+		end
+	end
+end)
+
+local _ncRef,_ncCaller
+_fn.xpcall(function() game:IsA() end,function(e)
+	if _hasBadPath(e) then _flag("nc:errpath") end
+	_ncRef=_fn.debug.info(2,"f")
+	_ncCaller=_fn.debug.info(3,"f")
+end)
+
+task.spawn(function()
+	local strikes=0
+	while _fn.twait(0.2) do
+		local t0=_fn.tick()
+		for i=1,1e4 do _ncRef(game,"Model") end
+		local t1=_fn.tick()
+		for i=1,1e4 do end
+		local t2=_fn.tick()
+		local denom=t2-t1
+		if denom<1e-9 then denom=1e-9 end
+		local ratio=(t1-t0)/denom
+		local cn,cc
+		_fn.xpcall(function() game:IsA() end,function(e)
+			cn=_fn.debug.info(2,"f"); cc=_fn.debug.info(3,"f")
+		end)
+		if cn~=_ncRef then _flag("nc:fn-swapped") end
+		if cc~=_ncCaller then _flag("nc:caller-swapped") end
+		if ratio<13 or ratio>80 then
+			strikes=strikes+1
+			if strikes>=8 then _flag("nc:timing|ratio="..ratio) end
+		else
+			strikes=0
+		end
+	end
+end)
+
+task.spawn(function()
+	while _fn.twait(0.3) do
+		if _fn.osclock~=_fn.osclock then end
+		if os.clock~=_fn.osclock then _flag("hook:os.clock") end
+		if tick~=_fn.tick then _flag("hook:tick") end
+		if task.wait~=_fn.twait then _flag("hook:task.wait") end
+		if task.spawn~=_fn.tspawn then _flag("hook:task.spawn") end
+		if task.defer~=_fn.tdefer then _flag("hook:task.defer") end
+		if task.delay~=_fn.tdelay then _flag("hook:task.delay") end
+		if rawget~=_fn.rawget then _flag("hook:rawget") end
+		if rawset~=_fn.rawset then _flag("hook:rawset") end
+		if rawequal~=_fn.rawequal then _flag("hook:rawequal") end
+		if ipairs~=_fn.ipairs then _flag("hook:ipairs") end
+		if pairs~=_fn.pairs then _flag("hook:pairs") end
+		if pcall~=_fn.pcall then _flag("hook:pcall") end
+		if xpcall~=_fn.xpcall then _flag("hook:xpcall") end
+		if tostring~=_fn.tostring then _flag("hook:tostring") end
+		if tonumber~=_fn.tonumber then _flag("hook:tonumber") end
+		if type~=_fn.type then _flag("hook:type") end
+		if next~=_fn.next then _flag("hook:next") end
+		if coroutine.running~=_fn.crun then _flag("hook:coroutine.running") end
+		if coroutine.create~=_fn.ccreate then _flag("hook:coroutine.create") end
+		if coroutine.resume~=_fn.cresume then _flag("hook:coroutine.resume") end
+		if coroutine.yield~=_fn.cyield then _flag("hook:coroutine.yield") end
+		if coroutine.wrap~=_fn.cwrap then _flag("hook:coroutine.wrap") end
+		if coroutine.status~=_fn.cstatus then _flag("hook:coroutine.status") end
+		if math.floor~=_fn.mfloor then _flag("hook:math.floor") end
+		if math.ceil~=_fn.mceil then _flag("hook:math.ceil") end
+		if math.random~=_fn.mrand then _flag("hook:math.random") end
+		if math.sqrt~=_fn.msqrt then _flag("hook:math.sqrt") end
+		if math.abs~=_fn.mabs then _flag("hook:math.abs") end
+		if string.len~=_fn.slen then _flag("hook:string.len") end
+		if string.find~=_fn.sfind then _flag("hook:string.find") end
+		if string.format~=_fn.sfmt then _flag("hook:string.format") end
+		if string.sub~=_fn.ssub then _flag("hook:string.sub") end
+		if table.insert~=_fn.tins then _flag("hook:table.insert") end
+		if table.remove~=_fn.trem then _flag("hook:table.remove") end
+		if table.sort~=_fn.tsort then _flag("hook:table.sort") end
+		if table.concat~=_fn.tcat then _flag("hook:table.concat") end
+		if _fn.debug and _fn.debug.info then
+			local di=_fn.rawget(_fn.debug,"info")
+			if di~=_fn.debug.info then _flag("hook:debug.info|rawget-mismatch") end
+			local _C="[C]"
+			if di(task.wait,"s")~=_C then _flag("hook:debug|task.wait~=C") end
+			if di(task.spawn,"s")~=_C then _flag("hook:debug|task.spawn~=C") end
+			if di(tick,"s")~=_C then _flag("hook:debug|tick~=C") end
+			if di(os.clock,"s")~=_C then _flag("hook:debug|os.clock~=C") end
+			if di(rawget,"s")~=_C then _flag("hook:debug|rawget~=C") end
+			if di(rawset,"s")~=_C then _flag("hook:debug|rawset~=C") end
+			if di(pairs,"s")~=_C then _flag("hook:debug|pairs~=C") end
+			if di(ipairs,"s")~=_C then _flag("hook:debug|ipairs~=C") end
+			if di(pcall,"s")~=_C then _flag("hook:debug|pcall~=C") end
+			if di(xpcall,"s")~=_C then _flag("hook:debug|xpcall~=C") end
+			if di(tostring,"s")~=_C then _flag("hook:debug|tostring~=C") end
+			if di(tonumber,"s")~=_C then _flag("hook:debug|tonumber~=C") end
+			if di(type,"s")~=_C then _flag("hook:debug|type~=C") end
+			if di(next,"s")~=_C then _flag("hook:debug|next~=C") end
+			if di(coroutine.running,"s")~=_C then _flag("hook:debug|crun~=C") end
+			if di(coroutine.create,"s")~=_C then _flag("hook:debug|ccreate~=C") end
+			if di(coroutine.resume,"s")~=_C then _flag("hook:debug|cresume~=C") end
+			if di(coroutine.yield,"s")~=_C then _flag("hook:debug|cyield~=C") end
+			if di(math.sqrt,"s")~=_C then _flag("hook:debug|msqrt~=C") end
+			if di(math.abs,"s")~=_C then _flag("hook:debug|mabs~=C") end
+			if di(string.len,"s")~=_C then _flag("hook:debug|slen~=C") end
+			if di(string.find,"s")~=_C then _flag("hook:debug|sfind~=C") end
+			if di(table.insert,"s")~=_C then _flag("hook:debug|tins~=C") end
+			if di(table.remove,"s")~=_C then _flag("hook:debug|trem~=C") end
+		end
+	end
+end)
+
+do
+	local passed=false
+	local tok=tostring((_fn.mrand()*1e9+_fn.mrand()*1e7)%1e15)
+	local cn
+	cn=_svc.LogService.MessageOut:Connect(function(m,mt)
+		if m==tok and mt==Enum.MessageType.MessageOutput then
+			passed=true
+			_fn.pcall(function() cn:Disconnect() end)
+		end
+	end)
+	_fn.pcall(print,tok)
+	task.delay(2,function()
+		if not passed then _flag("logservice:msgcheck-failed") end
+	end)
+end
+
+do
+	local hbn=0
+	local hbc
+	hbc=_rs.Heartbeat:Connect(function()
+		hbn=hbn+1
+		if hbn>=2 then _fn.pcall(function() hbc:Disconnect() end) end
+	end)
+	task.delay(2,function()
+		if hbn<2 then _flag("heartbeat:count="..hbn) end
+	end)
+end
+
+do
+	local t0=_fn.osclock()
+	task.wait(0.3)
+	local el=_fn.osclock()-t0
+	if _fn.type(el)~="number" then _flag("timing:elapsed-not-number") end
+	if el<0.2 then _flag("timing:too-fast|el="..el) end
+end
+
+do
+	local t0=_fn.osclock()
+	task.wait(0.05)
+	if not(_fn.osclock()>t0) then _flag("timing:clock-frozen") end
+end
+
+_try(function()
+	local ok=_fn.pcall(function()
+		local p=Instance.new("Part"); p:InvalidMethod("x"); p:Destroy()
+	end)
+	if ok then _flag("instance:invalid-method-no-error") end
+end,"instance:invalid-method")
+
+_try(function()
+	local ok=_fn.pcall(function() task.spawn() end)
+	if ok then _flag("task.spawn:no-args-no-error") end
+end,"task.spawn:no-args")
+
+_try(function()
+	local ok=_fn.pcall(function()
+		buffer.writei8(buffer.fromstring("a"),1,2)
+	end)
+	if ok then _flag("buffer:oob-write-no-error") end
+end,"buffer:oob")
+
+do
+	local gc=game:GetChildren()
+	if _fn.type(gc)~="table" then _flag("game:GetChildren-not-table") end
+	if #gc<=4 then _flag("game:GetChildren-count="..#gc) end
+end
+
+_try(function()
+	local ok,res=_fn.pcall(function()
+		return _hs:JSONDecode('[68,"getgold.cc",true,123,false,[321,null,"goldtm"],null,["a"]]')
+	end)
+	if not ok then _flag("json:decode-failed") end
+	if not res or not res[6] or res[6][2]~=nil then _flag("json:result-mismatch") end
+end,"json:decode")
+
+do
+	local _,e=_fn.pcall(function() game() end)
+	if _hasBadPath(e) then _flag("game():errpath") end
+	if not e or not e:find("attempt to call a Instance value") then
+		_flag("game():wrong-error|"..(_fn.tostring(e)))
+	end
+end
+
+do
+	if not getmetatable then _flag("stdlib:getmetatable-nil") end
+	if not setmetatable then _flag("stdlib:setmetatable-nil") end
+	local ok,mt=_fn.pcall(getmetatable,setmetatable({},{__index=function() end}))
+	if not ok then _flag("stdlib:getmetatable-failed") end
+	if _fn.type(mt)~="table" then _flag("stdlib:getmetatable-not-table") end
+	if _fn.type(mt.__index)~="function" then _flag("stdlib:getmetatable-index-not-fn") end
+	for _,f in _fn.ipairs({rawget,rawset,pairs,ipairs,pcall,xpcall,tostring,tonumber,type}) do
+		if getmetatable(f) then _flag("stdlib:fn-has-mt") end
+	end
+end
+
+do
+	local di=_fn.rawget(_fn.debug,"info")
+	if not di then _flag("debug.info:nil") end
+	local ok,err=_fn.pcall(function()
+		if di(rawget,"s")~="[C]" then _flag("debug.info:rawget-not-C") end
+		if di(require,"s")~="[C]" then _flag("debug.info:require-not-C") end
+		if di(function() end,"s")=="[C]" then _flag("debug.info:lua-fn-reports-C") end
+		if not getfenv then _flag("getfenv:nil") end
+		if _fn.pcall(getfenv,69)==true then _flag("getfenv:stack-69-succeeded") end
+		local gn=di(getfenv,"n")
+		if _fn.type(gn)=="string" and #gn<=1 then _flag("debug.info:getfenv-name-short") end
+	end)
+	if not ok then
+		if _hasBadPath(err) then _flag("debug.info:block|errpath") end
+		_flag("debug.info:block|"..(_fn.tostring(err)))
+	end
+end
+
+do
+	local t=task
+	if _fn.type(t)~="table" then _flag("task:not-table") end
+	if _fn.type(t.spawn)~="function" then _flag("task.spawn:not-fn") end
+	if _fn.type(t.wait)~="function" then _flag("task.wait:not-fn") end
+	local ck=_fn.osclock()
+	task.wait(0.5)
+	if _fn.osclock()-ck<0.4 then _flag("task.wait:too-fast|"..(_fn.osclock()-ck)) end
+	local ran=false
+	local co=t.spawn(function() ran=true end)
+	if _fn.type(co)~="thread" then _flag("task.spawn:not-thread") end
+	if not ran then _flag("task.spawn:cb-not-ran") end
+	local y=false
+	t.spawn(function() t.wait(0); y=true end)
+	t.wait(0)
+	if not y then _flag("task.spawn:yield-cb-not-ran") end
+	local nx=false
+	t.spawn(function()
+		local c2=coroutine.create(function() nx=true end)
+		t.spawn(c2)
+	end)
+	t.wait(0)
+	if not nx then _flag("task.spawn:coroutine-not-ran") end
+end
+
+do
+	local orig=task.wait
+	local done=false; local b=true
+	local function chk(f)
+		task.spawn(function()
+			while not done do
+				if task.wait~=orig then _flag("task.wait:replaced-in-loop") end
+				local ok,e=_fn.xpcall(f,function(e) return e end)
+				if not ok then
+					if _hasBadPath(e) then _flag("task.wait:loop-errpath") end
+					break
+				end
+			end
+		end)
+	end
+	chk(function() b=true; orig(0.9+_fn.mrand()*0.3) end)
+	chk(function() orig(1.8+_fn.mrand()*0.4); if not b then error() end; b=false end)
+	chk(function()
+		if _fn.debug and _fn.debug.info and _fn.debug.info(orig,"s")~="[C]" then
+			_flag("task.wait:source-not-C")
+		end
+		orig(2.5); done=true
+	end)
+end
+
+do
+	local rk=_fn.tostring(_fn.mrand(1e9,9e9)).._fn.tostring(_fn.mrand(1e9,9e9))
+	_G[rk]="__probe"
+	local ok,err=_fn.pcall(function()
+		if getfenv()[rk]~=nil then _flag("getfenv:_G-leaked-into-fenv") end
+	end)
+	_G[rk]=nil
+	if not ok then
+		if _hasBadPath(err) then _flag("getfenv:isolation-errpath") end
+		_flag("getfenv:isolation-err|"..(_fn.tostring(err)))
+	end
+end
+
+if _fn.pcall(function() for _ in game do end end) then _flag("game:iterable") end
+if typeof(game)~="Instance" then _flag("typeof:game-not-Instance") end
+if _fn.type(spawn)~="function" then _flag("spawn:not-function") end
+
+_try(function()
+	assert(game.ClassName=="DataModel","DataModel")
+	assert(workspace.ClassName=="Workspace","Workspace")
+	assert(typeof(Enum.Material.Plastic)=="EnumItem","EnumItem")
+	assert(_fn.type(Enum.Material.Plastic.Value)=="number","PlasticValue")
+	assert(typeof(game.Changed)=="RBXScriptSignal","game.Changed")
+	assert(typeof(workspace.Changed)=="RBXScriptSignal","ws.Changed")
+	assert(_rs.ClassName=="RunService","RunService")
+	assert(typeof(_rs.Heartbeat)=="RBXScriptSignal","Heartbeat")
+	assert(_rs:IsClient()~=_rs:IsServer(),"IsClient~=IsServer")
+	local pt=Instance.new("Part")
+	assert(typeof(pt)=="Instance" and pt.ClassName=="Part","Part")
+	pt:Destroy()
+	assert(workspace:GetFullName()=="Workspace","GetFullName")
+	local cf=CFrame.new(1,2,3)
+	assert(cf.X==1 and cf.Y==2 and cf.Z==3,"CFrame")
+	local t1=workspace.DistributedGameTime
+	task.wait(0.1)
+	assert((workspace.DistributedGameTime-t1)>0,"DistributedGameTime")
+	local gok,guid=_fn.pcall(function() return _hs:GenerateGUID(false) end)
+	assert(gok and #guid==36 and guid:sub(9,9)=="-","GUID")
+	assert(typeof(Vector3.new(1,2,3))=="Vector3","Vector3")
+	assert(typeof(Color3.new(1,0,0))=="Color3","Color3")
+	assert(typeof(UDim2.new(0,0,0,0))=="UDim2","UDim2")
+	assert(typeof(TweenInfo.new())=="TweenInfo","TweenInfo")
+	assert(typeof(BrickColor.new("Bright red"))=="BrickColor","BrickColor")
+	local fr=Instance.new("Frame"); assert(typeof(fr)=="Instance","Frame"); fr:Destroy()
+end,"sanity:core")
+
+_try(function()
+	assert(Enum.KeyCode.A~=nil,"KeyCode.A")
+	assert(Enum.UserInputType.MouseButton1~=nil,"MouseButton1")
+	assert(Enum.Font.Gotham~=nil,"Font.Gotham")
+	assert(Enum.EasingStyle.Quad~=nil,"EasingStyle.Quad")
+	assert(Enum.EasingDirection.Out~=nil,"EasingDirection.Out")
+	assert(Enum.NormalId.Top~=nil,"NormalId.Top")
+	assert(Enum.HorizontalAlignment.Center~=nil,"HAlign.Center")
+	assert(Enum.VerticalAlignment.Center~=nil,"VAlign.Center")
+end,"sanity:enums")
+
+do
+	local tv={}
+	for i=1,500 do tv[i]=i end
+	table.sort(tv,function(a,b) return a>b end)
+	if tv[1]~=500 or tv[500]~=1 then _flag("stdlib:table.sort-integrity") end
+end
+
+_try(function()
+	local co=coroutine.create(function()
+		coroutine.yield(1); coroutine.yield(2)
+	end)
+	local _,v1=coroutine.resume(co)
+	local _,v2=coroutine.resume(co)
+	if v1~=1 or v2~=2 then _flag("coroutine:yield-values-wrong") end
+	if coroutine.status(co)~="suspended" then _flag("coroutine:status-not-suspended") end
+	coroutine.resume(co)
+	if coroutine.status(co)~="dead" then _flag("coroutine:status-not-dead") end
+end,"coroutine:integrity")
+
+_try(function()
+	assert(_pl~=nil,"Players-nil")
+	assert(_pl.ClassName=="Players","Players-classname")
+	assert(_lp~=nil,"LocalPlayer-nil")
+	assert(typeof(_lp)=="Instance","LocalPlayer-not-instance")
+	assert(_lp.ClassName=="Player","LocalPlayer-classname")
+	assert(_fn.type(_lp.UserId)=="number" and _lp.UserId>0,"UserId-invalid")
+	assert(_fn.type(_lp.Name)=="string" and #_lp.Name>0,"Name-empty")
+	assert(_fn.type(_lp.DisplayName)=="string" and #_lp.DisplayName>0,"DisplayName-empty")
+	assert(_fn.type(_lp.AccountAge)=="number" and _lp.AccountAge>=0,"AccountAge-invalid")
+	local char=_lp.Character
+	if char then
+		assert(typeof(char)=="Instance","Character-not-instance")
+		assert(char.ClassName=="Model","Character-classname")
+	end
+	assert(_lp:FindFirstChildOfClass("PlayerGui")~=nil,"PlayerGui-missing")
+	assert(_lp:FindFirstChildOfClass("Backpack")~=nil,"Backpack-missing")
+	assert(_fn.type(_lp:GetJoinData())=="table","GetJoinData-not-table")
+	assert(typeof(_pl.PlayerAdded)=="RBXScriptSignal","PlayerAdded-not-signal")
+	assert(typeof(_pl.PlayerRemoving)=="RBXScriptSignal","PlayerRemoving-not-signal")
+end,"player:integrity")
+
+_try(function()
+	local list=_pl:GetPlayers()
+	assert(_fn.type(list)=="table","GetPlayers-not-table")
+	assert(#list>=1,"GetPlayers-empty")
+	for _,p in _fn.ipairs(list) do
+		assert(typeof(p)=="Instance" and p.ClassName=="Player","player-entry-invalid")
+		assert(_fn.type(p.UserId)=="number" and p.UserId>0,"player-userid-invalid")
+	end
+	assert(_fn.type(_pl.MaxPlayers)=="number","MaxPlayers-not-number")
+	assert(_pl.MaxPlayers>=1 and _pl.MaxPlayers<=700,"MaxPlayers-out-of-range")
+	local found=false
+	for _,p in _fn.ipairs(list) do if p==_lp then found=true; break end end
+	assert(found,"LocalPlayer-not-in-list")
+end,"player:list")
+
+_try(function()
+	assert(_fn.type(game.PlaceId)=="number" and game.PlaceId>0,"PlaceId-invalid")
+	assert(_fn.type(game.GameId)=="number" and game.GameId>=0,"GameId-invalid")
+	assert(_fn.type(game.JobId)=="string" and #game.JobId>0,"JobId-invalid")
+	assert(_fn.type(game.PlaceVersion)=="number" and game.PlaceVersion>=0,"PlaceVersion-invalid")
+	assert(_fn.type(game.CreatorId)=="number","CreatorId-not-number")
+end,"game:identity")
+
+_try(function()
+	assert(workspace~=nil,"workspace-nil")
+	assert(typeof(workspace)=="Instance","workspace-not-instance")
+	assert(workspace.ClassName=="Workspace","workspace-classname")
+	assert(_fn.type(workspace.Gravity)=="number" and workspace.Gravity>0,"Gravity-invalid")
+	assert(_fn.type(workspace.DistributedGameTime)=="number" and workspace.DistributedGameTime>0,"DGT-invalid")
+	local cam=workspace.CurrentCamera
+	assert(cam~=nil,"Camera-nil")
+	assert(cam.ClassName=="Camera","Camera-classname")
+	assert(typeof(cam.CFrame)=="CFrame","Camera-cframe")
+	assert(typeof(cam.ViewportSize)=="Vector2","Camera-viewportsize")
+	assert(cam.ViewportSize.X>0 and cam.ViewportSize.Y>0,"Camera-viewport-zero")
+end,"workspace:integrity")
+
+_try(function()
+	assert(_rs:IsClient()==true,"not-client")
+	assert(_rs:IsServer()==false,"reports-server")
+	assert(_rs:IsRunning()==true,"not-running")
+	assert(typeof(_rs.RenderStepped)=="RBXScriptSignal","RenderStepped-not-signal")
+	assert(typeof(_rs.Stepped)=="RBXScriptSignal","Stepped-not-signal")
+	assert(typeof(_rs.Heartbeat)=="RBXScriptSignal","Heartbeat-not-signal")
+end,"runservice:integrity")
+
+_try(function()
+	local L=_svc.Lighting
+	assert(L~=nil,"Lighting-nil")
+	assert(_fn.type(L.Brightness)=="number","Brightness-not-number")
+	assert(_fn.type(L.ClockTime)=="number","ClockTime-not-number")
+	assert(L.ClockTime>=0 and L.ClockTime<24,"ClockTime-out-of-range")
+end,"lighting:integrity")
+
+_try(function()
+	local UIS=_svc.UserInputService
+	assert(UIS~=nil,"UIS-nil")
+	assert(typeof(UIS.InputBegan)=="RBXScriptSignal","InputBegan-not-signal")
+	assert(typeof(UIS.InputEnded)=="RBXScriptSignal","InputEnded-not-signal")
+	assert(_fn.type(UIS.MouseEnabled)=="boolean","MouseEnabled-not-bool")
+	assert(_fn.type(UIS.KeyboardEnabled)=="boolean","KeyboardEnabled-not-bool")
+end,"uis:integrity")
+
+_try(function()
+	local TS=_svc.TweenService
+	assert(TS~=nil,"TweenService-nil")
+	local pt=Instance.new("Part")
+	pt.Anchored=true
+	pt.CanCollide=false
+	pt.Transparency=0
+	pt.Parent=workspace
+	local tw=TS:Create(pt,TweenInfo.new(0.05),{Transparency=1})
+	assert(tw~=nil,"Tween-nil")
+	assert(tw.ClassName=="Tween","Tween-classname")
+	assert(typeof(tw.Completed)=="RBXScriptSignal","Tween.Completed-not-signal")
+	tw:Destroy(); pt:Destroy()
+end,"tweenservice:integrity")
+
+_try(function()
+	local CP=_svc.ContentProvider
+	assert(CP~=nil,"ContentProvider-nil")
+	assert(CP.ClassName=="ContentProvider","ContentProvider-classname")
+	assert(_fn.type(CP.RequestQueueSize)=="number" and CP.RequestQueueSize>=0,"RequestQueueSize-invalid")
+end,"contentprovider:integrity")
+
+_try(function()
+	local gs=_svc.GuiService
+	assert(gs~=nil,"GuiService-nil")
+	local tl,br=gs:GetGuiInset()
+	assert(typeof(tl)=="Vector2","GuiInset-topLeft-not-v2")
+	assert(typeof(br)=="Vector2","GuiInset-bottomRight-not-v2")
+end,"guiservice:integrity")
+
+_try(function()
+	local RS=_svc.ReplicatedStorage
+	assert(RS~=nil,"ReplicatedStorage-nil")
+	assert(RS.ClassName=="ReplicatedStorage","ReplicatedStorage-classname")
+end,"replicatedstorage:integrity")
+
+_try(function()
+	local SS=_svc.SoundService
+	assert(SS~=nil,"SoundService-nil")
+	assert(SS.ClassName=="SoundService","SoundService-classname")
+	assert(typeof(SS.AmbientReverb)=="EnumItem","AmbientReverb-not-enumitem")
+	assert(_fn.type(SS.RespectFilteringEnabled)=="boolean","RFE-not-bool")
+end,"soundservice:integrity")
+
+_try(function()
+	assert(_svc.StarterGui~=nil,"StarterGui-nil")
+	assert(_svc.StarterPlayer~=nil,"StarterPlayer-nil")
+	assert(_svc.StarterPack~=nil,"StarterPack-nil")
+end,"starter:integrity")
+
+_try(function()
+	local TCS=_svc.TextChatService
+	assert(TCS~=nil,"TextChatService-nil")
+	assert(TCS.ClassName=="TextChatService","TextChatService-classname")
+	assert(typeof(TCS.ChatVersion)=="EnumItem","ChatVersion-not-enumitem")
+end,"textchat:integrity")
+
+_try(function()
+	local TPS=_svc.TeleportService
+	assert(TPS~=nil,"TeleportService-nil")
+	assert(_fn.type(TPS.TeleportAsync)=="function","TeleportAsync-not-fn")
+	assert(typeof(TPS.TeleportInitFailed)=="RBXScriptSignal","TeleportInitFailed-not-signal")
+end,"teleport:integrity")
+
+_try(function()
+	assert(_svc.DataStoreService~=nil,"DataStoreService-nil")
+end,"datastoreservice:presence")
+
+_try(function()
+	local t0=workspace.DistributedGameTime
+	task.wait(0.1)
+	local t1=workspace.DistributedGameTime
+	assert(t1>t0,"DGT-not-advancing")
+	assert((t1-t0)<5,"DGT-advancing-too-fast")
+end,"gametime:advance")
+
+_snapshot()
+_hookHttp()
+_hookExecutorHttp()
+_hookRequire()
+_hookConsole()
+_sweep()
+
+_fn.pcall(function()
+	if _lp then
+		local pg=_lp:FindFirstChildOfClass("PlayerGui")
+		if pg then pg.ChildAdded:Connect(_onPlayerGui) end
+	end
+end)
+
+_fn.pcall(function()
+	_cg.ChildAdded:Connect(_onCoreGui)
+end)
+
+task.defer(function()
+	while true do
+		task.wait(1)
+		task.spawn(_sweep)
+		task.spawn(_wipeSpyGlobals)
+		task.spawn(_hookExecutorHttp)
+	end
+end)
+
+task.spawn(function()
+	while _fn.twait(2) do
+		if rawget~=_fn.rawget then _flag("persist:rawget") end
+		if rawset~=_fn.rawset then _flag("persist:rawset") end
+		if pairs~=_fn.pairs then _flag("persist:pairs") end
+		if ipairs~=_fn.ipairs then _flag("persist:ipairs") end
+		if pcall~=_fn.pcall then _flag("persist:pcall") end
+		if xpcall~=_fn.xpcall then _flag("persist:xpcall") end
+		if tostring~=_fn.tostring then _flag("persist:tostring") end
+		if tonumber~=_fn.tonumber then _flag("persist:tonumber") end
+		if type~=_fn.type then _flag("persist:type") end
+		if next~=_fn.next then _flag("persist:next") end
+		if os.clock~=_fn.osclock then _flag("persist:os.clock") end
+		if tick~=_fn.tick then _flag("persist:tick") end
+		if task.wait~=_fn.twait then _flag("persist:task.wait") end
+		if task.spawn~=_fn.tspawn then _flag("persist:task.spawn") end
+		if task.defer~=_fn.tdefer then _flag("persist:task.defer") end
+		if task.delay~=_fn.tdelay then _flag("persist:task.delay") end
+		if coroutine.running~=_fn.crun then _flag("persist:coroutine.running") end
+		if coroutine.create~=_fn.ccreate then _flag("persist:coroutine.create") end
+		if coroutine.resume~=_fn.cresume then _flag("persist:coroutine.resume") end
+		if coroutine.yield~=_fn.cyield then _flag("persist:coroutine.yield") end
+		if coroutine.wrap~=_fn.cwrap then _flag("persist:coroutine.wrap") end
+		if coroutine.status~=_fn.cstatus then _flag("persist:coroutine.status") end
+		if math.sqrt~=_fn.msqrt then _flag("persist:math.sqrt") end
+		if math.abs~=_fn.mabs then _flag("persist:math.abs") end
+		if string.len~=_fn.slen then _flag("persist:string.len") end
+		if string.find~=_fn.sfind then _flag("persist:string.find") end
+		if table.insert~=_fn.tins then _flag("persist:table.insert") end
+		if table.remove~=_fn.trem then _flag("persist:table.remove") end
+		if table.sort~=_fn.tsort then _flag("persist:table.sort") end
+		if table.concat~=_fn.tcat then _flag("persist:table.concat") end
+	end
+end)
