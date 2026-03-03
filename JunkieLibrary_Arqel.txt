@@ -1,0 +1,3467 @@
+local DefaultIcons = {
+	["Junkie Development"] = "rbxassetid://135475048973669",
+	["Junkie"]             = "rbxassetid://135475048973669",
+	["Discord"]            = "rbxassetid://124569550333033",
+	["Linkvertise"]        = "rbxassetid://122637139040192",
+	["LootLabs"]           = "rbxassetid://81598390322167",
+	["Work.ink"]           = "rbxassetid://137084367454843",
+	["AdFly"]              = "rbxassetid://0",
+	["Shrtfly"]            = "rbxassetid://97780154564910",
+	["Short-Jambo"]        = "rbxassetid://89541242615678",
+	["Cuty"]               = "rbxassetid://84998267162454",
+	["ShrinkEarn"]         = "rbxassetid://88684203985262",
+	["Lockr"]              = "rbxassetid://71747327764154",
+	["Rinku"]              = "rbxassetid://107106330956313",
+	["Twitter"]            = "rbxassetid://109973626472548",
+	["YouTube"]            = "rbxassetid://127161245916650",
+	["TikTok"]             = "rbxassetid://104709330704441",
+	["Instagram"]          = "rbxassetid://125560586243942",
+	["Telegram"]           = "rbxassetid://103666565087375",
+	["Reddit"]             = "rbxassetid://116113713008550",
+	["GitHub"]             = "rbxassetid://82005505285811",
+	["Guilded"]            = "rbxassetid://90800592251672",
+	["Patreon"]            = "rbxassetid://111058338249202",
+	["Ko-fi"]              = "rbxassetid://117795089880308",
+	["Twitch"]             = "rbxassetid://88799126886971",
+	["V3rm"]               = "rbxassetid://135908787183979",
+	["Website"]            = "rbxassetid://70402301072503",
+	["Discord App"]        = "rbxassetid://124569550333033",
+}
+
+local TweenService     = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local Players          = game:GetService("Players")
+local RunService       = game:GetService("RunService")
+
+local Config
+
+local function SS()     return workspace.CurrentCamera.ViewportSize end
+local function Mobile() return SS().X < 850 end
+local function UIW()    return Mobile() and math.min(SS().X - 42, 268) or 342 end
+
+local function ResolveIcon(name, icon)
+	if icon == "rbxassetid://0" or icon == "" or icon == nil then
+		return DefaultIcons[name] or "rbxassetid://0"
+	end
+	return icon
+end
+
+local function ResolveFont(base)
+	if Config.CustomFont and Config.CustomFont ~= "" then
+		local ok, f = pcall(function()
+			return Font.new(Config.CustomFont, Enum.FontWeight.Regular)
+		end)
+		if ok and f then return f end
+	end
+	return base
+end
+
+local function RF(base)  return ResolveFont(base) end
+local function RFB(base) return ResolveFont(base) end
+
+local function ResolveTextColor()
+	if type(Config.Text_Color) == "userdata" then return Config.Text_Color end
+	local r, g, b   = Config.Color.R, Config.Color.G, Config.Color.B
+	local luminance  = 0.2126 * r + 0.7152 * g + 0.0722 * b
+	return luminance > 0.55 and Color3.fromRGB(0, 0, 0) or Color3.fromRGB(255, 255, 255)
+end
+
+local function GetFont(weight)
+	if Config.CustomFont and Config.CustomFont ~= "" then
+		local w = weight == "bold"  and Enum.FontWeight.Bold
+		       or weight == "black" and Enum.FontWeight.ExtraBold
+		       or Enum.FontWeight.Regular
+		local ok, f = pcall(Font.new, Config.CustomFont, w)
+		if ok then return f end
+	end
+	if weight == "bold"  then return Enum.Font.GothamBold  end
+	if weight == "black" then return Enum.Font.GothamBlack end
+	return Enum.Font.Gotham
+end
+
+local function ApplyFont(lbl, weight)
+	local f = GetFont(weight)
+	if typeof(f) == "Font" then
+		lbl.FontFace = f
+	else
+		lbl.Font = f
+	end
+end
+
+local function GetVisibleProviders()
+	if Config.UseJunkie then
+		for _, p in ipairs(Config.Providers) do
+			if p.IsJunkie and p.Show ~= false then
+				return { p }
+			end
+		end
+	end
+	local pinned, rest = {}, {}
+	for _, p in ipairs(Config.Providers) do
+		if p.Show ~= false and not p.IsJunkie then
+			if p.Pinned then
+				table.insert(pinned, p)
+			else
+				table.insert(rest, p)
+			end
+		end
+	end
+	local out = {}
+	for _, p in ipairs(pinned) do table.insert(out, p) end
+	for _, p in ipairs(rest)   do table.insert(out, p) end
+	return out
+end
+
+local function GetVisibleSocials()
+	local pinned, rest = {}, {}
+	for _, s in ipairs(Config.Socials) do
+		if s.Show ~= false then
+			local copy = {}
+			for k, v in pairs(s) do copy[k] = v end
+			copy.Icon = ResolveIcon(s.Name, s.Icon)
+			if s.Pinned then
+				table.insert(pinned, copy)
+			else
+				table.insert(rest, copy)
+			end
+		end
+	end
+	local out = {}
+	for _, s in ipairs(pinned) do table.insert(out, s) end
+	for _, s in ipairs(rest)   do table.insert(out, s) end
+	return out
+end
+
+local function GetVisibleApps()
+	local pinned, rest = {}, {}
+	for _, a in ipairs(Config.AppLinks or {}) do
+		if a.Show ~= false then
+			local copy = {}
+			for k, v in pairs(a) do copy[k] = v end
+			copy.Icon = ResolveIcon(a.Name, a.Icon)
+			if a.Pinned then
+				table.insert(pinned, copy)
+			else
+				table.insert(rest, copy)
+			end
+		end
+	end
+	local out = {}
+	for _, a in ipairs(pinned) do table.insert(out, a) end
+	for _, a in ipairs(rest)   do table.insert(out, a) end
+	return out
+end
+
+local function GetBestParent()
+	if gethui then
+		local ok, h = pcall(gethui)
+		if ok and h then return h end
+	end
+	local ok, cg = pcall(function() return game:GetService("CoreGui") end)
+	if ok and cg then return cg end
+	return Players.LocalPlayer:WaitForChild("PlayerGui")
+end
+
+local function FmtNum(n)
+	local s = tostring(math.floor(n))
+	local r, l = "", #s
+	for i = 1, l do
+		if i > 1 and (l - i + 1) % 3 == 0 then r = r .. "," end
+		r = r .. s:sub(i, i)
+	end
+	return r
+end
+
+local function MkCorner(p, r)
+	local c = Instance.new("UICorner", p)
+	c.CornerRadius = UDim.new(0, r or 10)
+	return c
+end
+
+local function MkStroke(p, col, thick, trans)
+	local s = Instance.new("UIStroke", p)
+	s.Color        = col
+	s.Thickness    = thick or 1.5
+	s.Transparency = trans or 0.5
+	return s
+end
+
+local function MkGlow(frame, color)
+	local g = Instance.new("ImageLabel", frame)
+	g.Name               = "Glow"
+	g.Size               = UDim2.new(1, 44, 1, 44)
+	g.Position           = UDim2.new(0, -22, 0, -22)
+	g.BackgroundTransparency = 1
+	g.Image              = "rbxassetid://5028857084"
+	g.ImageColor3        = color
+	g.ImageTransparency  = 0.62
+	g.ScaleType          = Enum.ScaleType.Slice
+	g.SliceCenter        = Rect.new(24, 24, 276, 276)
+	g.ZIndex             = 0
+end
+
+local function MakeDraggable(frame, hitbox)
+	frame.AnchorPoint = Vector2.new(0, 0)
+	local dragging, dragConn    = false, nil
+	local startMouse, startPos  = Vector2.new(), Vector2.new()
+
+	local function getInputPos(inp)
+		return Vector2.new(inp.Position.X, inp.Position.Y)
+	end
+
+	hitbox.InputBegan:Connect(function(inp)
+		if inp.UserInputType ~= Enum.UserInputType.MouseButton1
+		and inp.UserInputType ~= Enum.UserInputType.Touch then return end
+		dragging   = true
+		startMouse = getInputPos(inp)
+		startPos   = Vector2.new(frame.AbsolutePosition.X, frame.AbsolutePosition.Y)
+		if dragConn then dragConn:Disconnect() end
+		dragConn = RunService.RenderStepped:Connect(function()
+			if not dragging then dragConn:Disconnect(); return end
+			local cur = UserInputService:GetMouseLocation()
+			local s   = SS()
+			local fw  = frame.AbsoluteSize.X
+			local fh  = frame.AbsoluteSize.Y
+			local nx  = math.clamp(startPos.X + (cur.X - startMouse.X), 0, math.max(0, s.X - fw))
+			local ny  = math.clamp(startPos.Y + (cur.Y - startMouse.Y), 0, math.max(0, s.Y - fh))
+			frame.Position = UDim2.fromOffset(nx, ny)
+		end)
+	end)
+
+	UserInputService.InputEnded:Connect(function(inp)
+		if inp.UserInputType == Enum.UserInputType.MouseButton1
+		or inp.UserInputType == Enum.UserInputType.Touch then
+			dragging = false
+		end
+	end)
+end
+
+local function GenerateToken()
+	if crypt and crypt.hash then
+		return crypt.hash(tick() .. tostring(math.random()), "sha256")
+	end
+	return tostring(tick()) .. tostring(math.random()) .. tostring(math.random())
+end
+
+local Hub = {}
+Hub.__index = Hub
+
+function Hub.new(cfg)
+	Config = cfg
+	local vp = GetVisibleProviders()
+	return setmetatable({
+		cfg           = Config,
+		gui           = nil,
+		bg            = nil,
+		inner         = nil,
+		iconFrame     = nil,
+		sidePanel     = nil,
+		memberLbl     = nil,
+		textBox       = nil,
+		blurFx        = nil,
+		panelOpen     = false,
+		currentTab    = vp[1] and vp[1].Name:lower() or "",
+		keyInput      = "",
+		introView     = nil,
+		keyView       = nil,
+		changelogView = nil,
+		activeMainTab = "key",
+		overlay       = nil,
+		keyAttempts   = 0,
+		junkie        = nil,
+		keyFile       = cfg.KeyFile or "inferno_key.txt",
+		attemptsLbl   = nil,
+		authToken     = GenerateToken(),
+		validatedToken = nil,
+	}, Hub)
+end
+
+function Hub:Toast(msg, kind)
+	local col = kind == "success" and Color3.fromRGB(30, 190, 100)
+	         or kind == "error"   and Color3.fromRGB(220, 55, 55)
+	         or kind == "info"    and Color3.fromRGB(55, 130, 220)
+	         or self.cfg.Color
+
+	local pg = GetBestParent()
+	local ex = pg:FindFirstChild("InfernoToast")
+	if ex then ex:Destroy() end
+
+	local sg = Instance.new("ScreenGui")
+	sg.Name           = "InfernoToast"
+	sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	sg.ResetOnSpawn   = false
+	sg.IgnoreGuiInset = true
+	sg.Parent         = pg
+
+	local f = Instance.new("Frame", sg)
+	f.Size             = UDim2.new(0, 240, 0, 36)
+	f.Position         = UDim2.new(0.5, 0, 0, -44)
+	f.AnchorPoint      = Vector2.new(0.5, 0)
+	f.BackgroundColor3 = Color3.fromRGB(13, 15, 23)
+	f.BorderSizePixel  = 0
+	MkCorner(f, 10)
+	MkStroke(f, col, 1.2, 0.2)
+
+	local ac = Instance.new("Frame", f)
+	ac.Size            = UDim2.new(0, 3, 1, -10)
+	ac.Position        = UDim2.new(0, 7, 0.5, 0)
+	ac.AnchorPoint     = Vector2.new(0, 0.5)
+	ac.BackgroundColor3 = col
+	ac.BorderSizePixel = 0
+	MkCorner(ac, 4)
+
+	local tl = Instance.new("TextLabel", f)
+	tl.Size             = UDim2.new(1, -20, 1, 0)
+	tl.Position         = UDim2.new(0, 17, 0, 0)
+	tl.BackgroundTransparency = 1
+	tl.Text             = msg
+	tl.TextColor3       = Color3.fromRGB(255, 255, 255)
+	tl.TextSize         = 12
+	tl.TextXAlignment   = Enum.TextXAlignment.Left
+	ApplyFont(tl, "bold")
+
+	TweenService:Create(f, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Position = UDim2.new(0.5, 0, 0, 14)
+	}):Play()
+
+	task.delay(2.2, function()
+		if not f.Parent then return end
+		TweenService:Create(f, TweenInfo.new(0.22), {
+			Position = UDim2.new(0.5, 0, 0, -44)
+		}):Play()
+		task.delay(0.25, function()
+			if sg.Parent then sg:Destroy() end
+		end)
+	end)
+end
+
+function Hub:FetchDiscord()
+	if not self.cfg.ShowMemberCount then
+		if self.memberLbl then self.memberLbl.Parent.Visible = false end
+		return
+	end
+	task.spawn(function()
+		local HS  = game:GetService("HttpService")
+		local req = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
+		if not req then
+			if self.memberLbl then self.memberLbl.Text = "" end
+			return
+		end
+		local ok, res = pcall(req, {
+			Url     = "https://discord.com/api/v10/invites/" .. self.cfg.Discord .. "?with_counts=true",
+			Method  = "GET",
+			Headers = { ["Content-Type"] = "application/json" },
+		})
+		if ok and res and res.StatusCode == 200 then
+			local d = HS:JSONDecode(res.Body)
+			if d and d.approximate_member_count and self.memberLbl then
+				local r = math.floor(self.cfg.Color.R * 255)
+				local g = math.floor(self.cfg.Color.G * 255)
+				local b = math.floor(self.cfg.Color.B * 255)
+				self.memberLbl.Text = string.format(
+					"<font color='rgb(%d,%d,%d)'>%s</font> members  •  <font color='rgb(70,200,70)'>%s online</font>",
+					r, g, b,
+					FmtNum(d.approximate_member_count),
+					FmtNum(d.approximate_presence_count or 0)
+				)
+			end
+		else
+			if self.memberLbl then self.memberLbl.Text = "" end
+		end
+	end)
+end
+
+function Hub:SendWebhook(key)
+	local wh = self.cfg.Junkie_Webhook
+	if not wh or wh == "" then return end
+	task.spawn(function()
+		local req = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
+		if not req then return end
+		pcall(req, {
+			Url     = wh,
+			Method  = "POST",
+			Headers = { ["Content-Type"] = "application/json" },
+		})
+	end)
+end
+
+function Hub:LoadJunkie()
+	if not self.cfg.UseJunkie then return end
+	task.spawn(function()
+		local ok, lib = pcall(function()
+			return loadstring(game:HttpGet("https://jnkie.com/sdk/library.lua"))()
+		end)
+		if ok and lib then
+			lib.service    = self.cfg.Junkie.Service
+			lib.identifier = self.cfg.Junkie.Identifier
+			lib.provider   = self.cfg.Junkie.Provider
+			self.junkie    = lib
+		end
+	end)
+end
+
+function Hub:SpawnSnowflake(sg, ov)
+	local s        = SS()
+	local snowSz   = self.cfg.SnowSize or { Min = 3, Max = 7 }
+	local sz       = math.random(snowSz.Min, snowSz.Max)
+	local x        = math.random(0, s.X)
+	local spd      = math.random(60, 140)
+	local drift    = math.random(-18, 18)
+	local rot      = math.random(0, 360)
+	local rotSpd   = math.random(-90, 90)
+	local opacity  = math.random(55, 90) / 100
+	local flakeColor = self.cfg.SnowColor or Color3.fromRGB(220, 235, 255)
+
+	local flake = Instance.new("Frame", ov)
+	flake.Size                  = UDim2.fromOffset(sz, sz)
+	flake.Position              = UDim2.fromOffset(x, -sz)
+	flake.BackgroundColor3      = flakeColor
+	flake.BackgroundTransparency = 1 - opacity
+	flake.BorderSizePixel       = 0
+	flake.ZIndex                = 2
+	flake.Rotation              = rot
+	Instance.new("UICorner", flake).CornerRadius = UDim.new(0.5, 0)
+
+	local startTime = tick()
+	local startX    = x
+	local conn
+	conn = RunService.RenderStepped:Connect(function()
+		if not flake or not flake.Parent then
+			conn:Disconnect(); return
+		end
+		local elapsed = tick() - startTime
+		local ny      = -sz + elapsed * spd
+		local nx      = startX + math.sin(elapsed * 0.9) * drift
+		flake.Position = UDim2.fromOffset(nx, ny)
+		flake.Rotation = rot + elapsed * rotSpd
+		if ny > s.Y + sz then
+			conn:Disconnect()
+			flake:Destroy()
+		end
+	end)
+end
+
+function Hub:StartSnow(sg, ov)
+	if not self.cfg.SnowEnabled then return end
+	local density      = math.max(0.1, self.cfg.SnowDensity or 1.0)
+	local spawnInterval = 0.13 / density
+
+	local function spawnBatch()
+		local count = math.max(1, math.floor(3 * density))
+		for _ = 1, count do
+			self:SpawnSnowflake(sg, ov)
+		end
+	end
+
+	spawnBatch()
+	task.spawn(function()
+		while sg and sg.Parent do
+			task.wait(math.random(math.floor(spawnInterval * 60), math.floor(spawnInterval * 140)) / 100)
+			if sg and sg.Parent then
+				self:SpawnSnowflake(sg, ov)
+			end
+		end
+	end)
+end
+
+function Hub:Init()
+	local Lighting = game:GetService("Lighting")
+	local pg       = GetBestParent()
+
+	local function cleanParent(p)
+		if not p then return end
+		for _, g in pairs(p:GetChildren()) do
+			if g.Name == "InfernoKeyGui" or g.Name == "InfernoToast" then
+				g:Destroy()
+			end
+		end
+	end
+
+	cleanParent(Players.LocalPlayer:FindFirstChild("PlayerGui"))
+	local ok2, cg2 = pcall(function() return game:GetService("CoreGui") end)
+	if ok2 and cg2 then cleanParent(cg2) end
+	if gethui then
+		local ok3, h3 = pcall(gethui)
+		if ok3 and h3 then cleanParent(h3) end
+	end
+
+	if self.cfg.BlurEnabled then
+		local blur = Instance.new("BlurEffect")
+		blur.Size   = 0
+		blur.Parent = Lighting
+		self.blurFx = blur
+		TweenService:Create(blur, TweenInfo.new(0.5), { Size = self.cfg.BlurSize }):Play()
+	end
+
+	local sg = Instance.new("ScreenGui")
+	sg.Name           = "InfernoKeyGui"
+	sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	sg.ResetOnSpawn   = false
+	sg.IgnoreGuiInset = true
+	sg.DisplayOrder   = 999
+	sg.Parent         = pg
+	self.gui          = sg
+
+	local ov = Instance.new("Frame", sg)
+	ov.Name                  = "Overlay"
+	ov.Size                  = UDim2.new(1, 0, 1, 0)
+	ov.Position              = UDim2.new(0, 0, 0, 0)
+	ov.BackgroundColor3      = Color3.fromRGB(0, 0, 8)
+	ov.BackgroundTransparency = 1 - self.cfg.OverlayOpacity
+	ov.BorderSizePixel       = 0
+	ov.ZIndex                = 1
+	ov.ClipsDescendants      = true
+	self.overlay             = ov
+
+	self:StartSnow(sg, ov)
+
+	local w  = self.cfg.TriPanel and (Mobile() and math.min(SS().X - 20, 680) or 720) or UIW()
+	local sw = SS().X
+	local sh = SS().Y
+
+	local bg = Instance.new("Frame", sg)
+	bg.Name                  = "BG"
+	bg.Size                  = UDim2.fromOffset(w, 0)
+	bg.Position              = UDim2.fromOffset(math.floor(sw / 2 - w / 2), sh + 200)
+	bg.AnchorPoint           = Vector2.new(0, 0)
+	bg.BackgroundColor3      = Color3.fromRGB(11, 13, 21)
+	bg.BackgroundTransparency = self.cfg.GlassOpacity
+	bg.BorderSizePixel       = 0
+	bg.AutomaticSize         = self.cfg.TriPanel and Enum.AutomaticSize.None or Enum.AutomaticSize.Y
+	bg.ZIndex                = 10
+	self.bg                  = bg
+	MkCorner(bg, 14)
+
+	local glassShine = Instance.new("Frame", bg)
+	glassShine.Name                  = "GlassShine"
+	glassShine.Size                  = UDim2.new(1, -4, 0, 1)
+	glassShine.Position              = UDim2.new(0, 2, 0, 2)
+	glassShine.BackgroundColor3      = Color3.fromRGB(255, 255, 255)
+	glassShine.BackgroundTransparency = 0.82
+	glassShine.BorderSizePixel       = 0
+	glassShine.ZIndex                = 11
+	MkCorner(glassShine, 14)
+
+	local glassNoise = Instance.new("ImageLabel", bg)
+	glassNoise.Name               = "GlassNoise"
+	glassNoise.Size               = UDim2.new(1, 0, 1, 0)
+	glassNoise.BackgroundTransparency = 1
+	glassNoise.Image              = "rbxassetid://9968344825"
+	glassNoise.ImageTransparency  = 0.97
+	glassNoise.ScaleType          = Enum.ScaleType.Tile
+	glassNoise.TileSize           = UDim2.fromOffset(64, 64)
+	glassNoise.ZIndex             = 11
+
+	if self.cfg.ShowOutline ~= false then
+		MkStroke(bg, Color3.fromRGB(255, 255, 255), 1, 0.72)
+		local accentStroke = Instance.new("UIStroke", bg)
+		accentStroke.Color        = self.cfg.Color
+		accentStroke.Thickness    = 1.5
+		accentStroke.Transparency = 0.45
+	end
+
+	MkGlow(bg, self.cfg.Color)
+
+	local targetY = math.floor(sh / 2 - (self.cfg.TriPanel and 210 or 180))
+	if self.cfg.SlideInEnabled then
+		task.spawn(function()
+			TweenService:Create(bg, TweenInfo.new(0.65, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+				Position = UDim2.fromOffset(math.floor(sw / 2 - w / 2), targetY)
+			}):Play()
+		end)
+	else
+		bg.Position = UDim2.fromOffset(math.floor(sw / 2 - w / 2), targetY)
+	end
+
+	local grad = Instance.new("UIGradient", bg)
+	grad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0,   Color3.fromRGB(7, 9, 17)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(15, 23, 19)),
+		ColorSequenceKeypoint.new(1,   Color3.fromRGB(7, 9, 17)),
+	})
+	if self.cfg.GradientAnimated then
+		TweenService:Create(grad, TweenInfo.new(
+			self.cfg.GradientAnimationSpeed,
+			Enum.EasingStyle.Linear,
+			Enum.EasingDirection.InOut,
+			-1, true
+		), { Rotation = 360 }):Play()
+	end
+
+	local inner = Instance.new("CanvasGroup", bg)
+	inner.Name                 = "Inner"
+	inner.Size                 = UDim2.new(1, 0, 1, 0)
+	inner.BackgroundTransparency = 1
+	self.inner                 = inner
+
+	local pad = Instance.new("UIPadding", inner)
+	pad.PaddingTop    = UDim.new(0, 8)
+	pad.PaddingBottom = UDim.new(0, 8)
+	pad.PaddingLeft   = UDim.new(0, 10)
+	pad.PaddingRight  = UDim.new(0, 10)
+
+	local lst = Instance.new("UIListLayout", inner)
+	lst.Padding              = UDim.new(0, 6)
+	lst.FillDirection        = Enum.FillDirection.Vertical
+	lst.HorizontalAlignment  = Enum.HorizontalAlignment.Left
+	lst.SortOrder            = Enum.SortOrder.LayoutOrder
+
+	if self.cfg.TriPanel then
+		self:BuildTriPanel()
+	else
+		self:BuildTitleBar()
+		self:BuildTitle()
+		self:BuildIntroView()
+		self:BuildKeyView()
+		self:BuildChangelog()
+		self:BuildSidePanel()
+	end
+	self:FetchDiscord()
+	self:LoadJunkie()
+
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+		if not self.cfg.TriPanel then
+			bg.Size = UDim2.fromOffset(UIW(), bg.AbsoluteSize.Y)
+		end
+	end)
+end
+
+function Hub:BuildTitleBar()
+	local tb = Instance.new("Frame", self.inner)
+	tb.Name                  = "TitleBar"
+	tb.Size                  = UDim2.new(1, 0, 0, 26)
+	tb.BackgroundTransparency = 1
+	tb.LayoutOrder           = -2
+
+	local left = Instance.new("Frame", tb)
+	left.Size                  = UDim2.new(0, 140, 1, 0)
+	left.BackgroundTransparency = 1
+	local ll = Instance.new("UIListLayout", left)
+	ll.FillDirection      = Enum.FillDirection.Horizontal
+	ll.VerticalAlignment  = Enum.VerticalAlignment.Center
+	ll.Padding            = UDim.new(0, 6)
+
+	local ico = Instance.new("ImageLabel", left)
+	ico.Size                  = UDim2.fromOffset(16, 16)
+	ico.BackgroundTransparency = 1
+	ico.Image                 = self.cfg.Icon
+	ico.ImageColor3           = self.cfg.Color
+	ico.ZIndex                = 2
+
+	local badge = Instance.new("TextLabel", left)
+	badge.Size                  = UDim2.new(0, 0, 0, 16)
+	badge.AutomaticSize         = Enum.AutomaticSize.X
+	badge.BackgroundTransparency = 1
+	badge.Text                  = self.cfg.BadgeText
+	badge.TextColor3            = self.cfg.Color
+	badge.TextSize              = 11
+	badge.TextXAlignment        = Enum.TextXAlignment.Left
+	badge.ZIndex                = 2
+	ApplyFont(badge, "bold")
+
+	local drag = Instance.new("TextButton", tb)
+	drag.Size                  = UDim2.new(1, -98, 1, 0)
+	drag.Position              = UDim2.new(0, 0, 0, 0)
+	drag.BackgroundTransparency = 1
+	drag.Text                  = ""
+	drag.ZIndex                = 3
+	MakeDraggable(self.bg, drag)
+
+	local bh = Instance.new("Frame", tb)
+	bh.Size                  = UDim2.fromOffset(93, 28)
+	bh.Position              = UDim2.new(1, 0, 0.5, 0)
+	bh.AnchorPoint           = Vector2.new(1, 0.5)
+	bh.BackgroundTransparency = 1
+	bh.ZIndex                = 4
+	local bl = Instance.new("UIListLayout", bh)
+	bl.FillDirection        = Enum.FillDirection.Horizontal
+	bl.HorizontalAlignment  = Enum.HorizontalAlignment.Right
+	bl.VerticalAlignment    = Enum.VerticalAlignment.Center
+	bl.Padding              = UDim.new(0, 5)
+
+	local function Btn(bgCol, lo, symbol, symSize, symColor)
+		local b = Instance.new("Frame", bh)
+		b.Size                  = UDim2.fromOffset(26, 26)
+		b.BackgroundColor3      = bgCol
+		b.BackgroundTransparency = 0.1
+		b.BorderSizePixel       = 0
+		b.LayoutOrder           = lo
+		b.ZIndex                = 5
+		MkCorner(b, 99)
+		MkStroke(b, bgCol, 1, 0.6)
+
+		local lbl = Instance.new("TextLabel", b)
+		lbl.Size                  = UDim2.new(1, 0, 1, 0)
+		lbl.BackgroundTransparency = 1
+		lbl.Text                  = symbol
+		lbl.TextColor3            = symColor or Color3.fromRGB(0, 0, 0)
+		lbl.TextSize              = symSize or 13
+		lbl.ZIndex                = 7
+		ApplyFont(lbl, "bold")
+
+		local c = Instance.new("TextButton", b)
+		c.Size                  = UDim2.new(1, 0, 1, 0)
+		c.BackgroundTransparency = 1
+		c.Text                  = ""
+		c.ZIndex                = 8
+		c.MouseEnter:Connect(function()
+			TweenService:Create(b, TweenInfo.new(0.12), { BackgroundTransparency = 0, Size = UDim2.fromOffset(28, 28) }):Play()
+		end)
+		c.MouseLeave:Connect(function()
+			TweenService:Create(b, TweenInfo.new(0.12), { BackgroundTransparency = 0.1, Size = UDim2.fromOffset(26, 26) }):Play()
+		end)
+		return b, c, lbl
+	end
+
+	local _, ic2, ic2Lbl = Btn(self.cfg.Color, 0, "?", 14, ResolveTextColor())
+	self.toggleBtnLbl = ic2Lbl
+	ic2.MouseButton1Click:Connect(function()
+		if self.activeMainTab == "intro" or self.activeMainTab == "changelog" then
+			self:SwitchMainTab("key")
+		else
+			self:SwitchMainTab("intro")
+		end
+	end)
+
+	if self.cfg.Changelog and self.cfg.Changelog.Show then
+		local clBg = Instance.new("Frame", bh)
+		clBg.Size                  = UDim2.fromOffset(26, 26)
+		clBg.BackgroundColor3      = Color3.fromRGB(50, 55, 80)
+		clBg.BackgroundTransparency = 0.1
+		clBg.BorderSizePixel       = 0
+		clBg.LayoutOrder           = 1
+		clBg.ZIndex                = 5
+		MkCorner(clBg, 99)
+		MkStroke(clBg, Color3.fromRGB(90, 95, 130), 1, 0.5)
+
+		local clLbl = Instance.new("TextLabel", clBg)
+		clLbl.Size                  = UDim2.new(1, 0, 1, 0)
+		clLbl.BackgroundTransparency = 1
+		clLbl.Text                  = "★"
+		clLbl.TextColor3            = Color3.fromRGB(210, 200, 255)
+		clLbl.TextSize              = 12
+		clLbl.ZIndex                = 7
+		ApplyFont(clLbl, "bold")
+
+		local clBtn = Instance.new("TextButton", clBg)
+		clBtn.Size                  = UDim2.new(1, 0, 1, 0)
+		clBtn.BackgroundTransparency = 1
+		clBtn.Text                  = ""
+		clBtn.ZIndex                = 8
+		clBtn.MouseEnter:Connect(function()
+			TweenService:Create(clBg, TweenInfo.new(0.12), { BackgroundTransparency = 0, Size = UDim2.fromOffset(28, 28) }):Play()
+		end)
+		clBtn.MouseLeave:Connect(function()
+			TweenService:Create(clBg, TweenInfo.new(0.12), { BackgroundTransparency = 0.1, Size = UDim2.fromOffset(26, 26) }):Play()
+		end)
+		clBtn.MouseButton1Click:Connect(function()
+			if self.activeMainTab == "changelog" then
+				self:SwitchMainTab("key")
+			else
+				self:SwitchMainTab("changelog")
+			end
+		end)
+	end
+
+	local _, cc2 = Btn(Color3.fromRGB(210, 45, 45), 2, "X", 12, Color3.fromRGB(255, 255, 255))
+	cc2.MouseButton1Click:Connect(function() self:Close() end)
+end
+
+function Hub:BuildTitle()
+	local isMob = Mobile()
+	local f = Instance.new("Frame", self.inner)
+	f.Name                  = "TitleSection"
+	f.Size                  = UDim2.new(1, 0, 0, 0)
+	f.BackgroundTransparency = 1
+	f.AutomaticSize         = Enum.AutomaticSize.Y
+	f.LayoutOrder           = 1
+
+	local lay = Instance.new("UIListLayout", f)
+	lay.Padding             = UDim.new(0, 2)
+	lay.FillDirection       = Enum.FillDirection.Vertical
+	lay.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	lay.SortOrder           = Enum.SortOrder.LayoutOrder
+
+	local sub = Instance.new("TextLabel", f)
+	sub.Size                  = UDim2.new(1, 0, 0, isMob and 10 or 12)
+	sub.BackgroundTransparency = 1
+	sub.LayoutOrder           = 0
+	sub.Text                  = "welcome to the"
+	sub.TextColor3            = Color3.fromRGB(160, 165, 180)
+	sub.TextSize              = isMob and 10 or 11
+	sub.TextXAlignment        = Enum.TextXAlignment.Left
+	ApplyFont(sub, "regular")
+
+	local nameF = Instance.new("Frame", f)
+	nameF.Size                  = UDim2.new(1, 0, 0, 0)
+	nameF.AutomaticSize         = Enum.AutomaticSize.Y
+	nameF.BackgroundTransparency = 1
+	nameF.LayoutOrder           = 1
+
+	local nameL = Instance.new("TextLabel", nameF)
+	nameL.Size                  = UDim2.new(1, 0, 0, 0)
+	nameL.AutomaticSize         = Enum.AutomaticSize.Y
+	nameL.BackgroundTransparency = 1
+	nameL.Text                  = self.cfg.Name
+	nameL.TextColor3            = self.cfg.Color
+	nameL.TextSize              = isMob and 20 or 24
+	nameL.TextWrapped           = true
+	nameL.TextXAlignment        = Enum.TextXAlignment.Left
+	ApplyFont(nameL, "black")
+	local ns = Instance.new("UIStroke", nameL)
+	ns.Color        = self.cfg.Color
+	ns.Thickness    = 0.5
+	ns.Transparency = 0.7
+
+	local verRow = Instance.new("Frame", f)
+	verRow.Size                  = UDim2.new(1, 0, 0, 12)
+	verRow.BackgroundTransparency = 1
+	verRow.LayoutOrder           = 2
+	local vlay = Instance.new("UIListLayout", verRow)
+	vlay.FillDirection       = Enum.FillDirection.Horizontal
+	vlay.VerticalAlignment   = Enum.VerticalAlignment.Center
+	vlay.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	vlay.Padding             = UDim.new(0, 5)
+
+	local vdot = Instance.new("Frame", verRow)
+	vdot.Size             = UDim2.fromOffset(4, 4)
+	vdot.BackgroundColor3 = self.cfg.Color
+	vdot.BorderSizePixel  = 0
+	MkCorner(vdot, 99)
+
+	local vl = Instance.new("TextLabel", verRow)
+	vl.Size                  = UDim2.new(0, 0, 1, 0)
+	vl.AutomaticSize         = Enum.AutomaticSize.X
+	vl.BackgroundTransparency = 1
+	vl.Text                  = "v" .. self.cfg.Version
+	vl.TextColor3            = Color3.fromRGB(120, 125, 140)
+	vl.TextSize              = 10
+	ApplyFont(vl, "regular")
+end
+
+function Hub:SwitchMainTab(tab)
+	self.activeMainTab = tab
+	local isIntro     = tab == "intro"
+	local isChangelog = tab == "changelog"
+	local isKey       = tab == "key"
+	if self.introView     then self.introView.Visible     = isIntro     end
+	if self.keyView       then self.keyView.Visible       = isKey       end
+	if self.changelogView then self.changelogView.Visible = isChangelog end
+	if self.toggleBtnLbl  then
+		self.toggleBtnLbl.Text = (isIntro or isChangelog) and "←" or "?"
+	end
+end
+
+function Hub:BuildIntroView()
+	local isMob = Mobile()
+	local clip  = Instance.new("Frame", self.inner)
+	clip.Name                  = "IntroView"
+	clip.Size                  = UDim2.new(1, 0, 0, 0)
+	clip.AutomaticSize         = Enum.AutomaticSize.Y
+	clip.BackgroundTransparency = 1
+	clip.BorderSizePixel       = 0
+	clip.LayoutOrder           = 2
+	clip.Visible               = false
+	self.introView             = clip
+
+	local outerList = Instance.new("UIListLayout", clip)
+	outerList.Padding             = UDim.new(0, 7)
+	outerList.FillDirection       = Enum.FillDirection.Vertical
+	outerList.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	outerList.SortOrder           = Enum.SortOrder.LayoutOrder
+
+	local hero = Instance.new("Frame", clip)
+	hero.Name             = "HeroBanner"
+	hero.Size             = UDim2.new(1, 0, 0, isMob and 52 or 58)
+	hero.BackgroundColor3 = Color3.fromRGB(14, 18, 30)
+	hero.BorderSizePixel  = 0
+	hero.LayoutOrder      = 0
+	MkCorner(hero, 12)
+	MkStroke(hero, self.cfg.Color, 1.5, 0.35)
+
+	local hg = Instance.new("UIGradient", hero)
+	hg.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0,   Color3.fromRGB(20, 28, 46)),
+		ColorSequenceKeypoint.new(0.5, self.cfg.Color:Lerp(Color3.fromRGB(10, 14, 24), 0.72)),
+		ColorSequenceKeypoint.new(1,   Color3.fromRGB(10, 14, 22)),
+	})
+	hg.Rotation = 135
+
+	local hico = Instance.new("ImageLabel", hero)
+	hico.Size                  = UDim2.fromOffset(isMob and 32 or 38, isMob and 32 or 38)
+	hico.Position              = UDim2.new(0, isMob and 14 or 18, 0.5, 0)
+	hico.AnchorPoint           = Vector2.new(0, 0.5)
+	hico.BackgroundTransparency = 1
+	hico.Image                 = self.cfg.Icon
+	hico.ImageColor3           = self.cfg.Color
+
+	local ring = Instance.new("Frame", hero)
+	ring.Size                  = UDim2.fromOffset(isMob and 46 or 54, isMob and 46 or 54)
+	ring.Position              = UDim2.new(0, isMob and 7 or 9, 0.5, 0)
+	ring.AnchorPoint           = Vector2.new(0, 0.5)
+	ring.BackgroundColor3      = self.cfg.Color
+	ring.BackgroundTransparency = 0.82
+	ring.BorderSizePixel       = 0
+	MkCorner(ring, 99)
+	ring.ZIndex  = 0
+	hico.ZIndex  = 1
+
+	local htxt = Instance.new("Frame", hero)
+	htxt.Size                  = UDim2.new(1, -(isMob and 68 or 82), 1, 0)
+	htxt.Position              = UDim2.new(0, isMob and 64 or 76, 0, 0)
+	htxt.BackgroundTransparency = 1
+	local hl = Instance.new("UIListLayout", htxt)
+	hl.FillDirection     = Enum.FillDirection.Vertical
+	hl.VerticalAlignment = Enum.VerticalAlignment.Center
+	hl.Padding           = UDim.new(0, 2)
+
+	local htitle = Instance.new("TextLabel", htxt)
+	htitle.Size                  = UDim2.new(1, 0, 0, 0)
+	htitle.AutomaticSize         = Enum.AutomaticSize.Y
+	htitle.BackgroundTransparency = 1
+	htitle.Text                  = "How to get your key"
+	htitle.TextColor3            = Color3.fromRGB(255, 255, 255)
+	htitle.TextSize              = isMob and 13 or 15
+	htitle.TextXAlignment        = Enum.TextXAlignment.Left
+	htitle.TextWrapped           = true
+	ApplyFont(htitle, "black")
+
+	local hsub = Instance.new("TextLabel", htxt)
+	hsub.Size                  = UDim2.new(1, 0, 0, 0)
+	hsub.AutomaticSize         = Enum.AutomaticSize.Y
+	hsub.BackgroundTransparency = 1
+	hsub.Text                  = "Follow the steps below to unlock access"
+	hsub.TextColor3            = Color3.fromRGB(160, 170, 195)
+	hsub.TextSize              = isMob and 10 or 11
+	hsub.TextXAlignment        = Enum.TextXAlignment.Left
+	hsub.TextWrapped           = true
+	ApplyFont(hsub, "regular")
+
+	local pill = Instance.new("Frame", hero)
+	pill.Size                  = UDim2.fromOffset(isMob and 34 or 38, isMob and 16 or 18)
+	pill.Position              = UDim2.new(1, -8, 0, 8)
+	pill.AnchorPoint           = Vector2.new(1, 0)
+	pill.BackgroundColor3      = self.cfg.Color
+	pill.BackgroundTransparency = 0.25
+	pill.BorderSizePixel       = 0
+	MkCorner(pill, 99)
+	local pillLbl = Instance.new("TextLabel", pill)
+	pillLbl.Size                  = UDim2.new(1, 0, 1, 0)
+	pillLbl.BackgroundTransparency = 1
+	pillLbl.Text                  = "FREE"
+	pillLbl.TextColor3            = Color3.fromRGB(255, 255, 255)
+	pillLbl.TextSize              = isMob and 8 or 9
+	pillLbl.TextXAlignment        = Enum.TextXAlignment.Center
+	ApplyFont(pillLbl, "black")
+
+	local stepsContainer = Instance.new("Frame", clip)
+	stepsContainer.Name                  = "Steps"
+	stepsContainer.Size                  = UDim2.new(1, 0, 0, 0)
+	stepsContainer.AutomaticSize         = Enum.AutomaticSize.Y
+	stepsContainer.BackgroundTransparency = 1
+	stepsContainer.LayoutOrder           = 1
+	local sc = Instance.new("UIListLayout", stepsContainer)
+	sc.Padding             = UDim.new(0, 5)
+	sc.FillDirection       = Enum.FillDirection.Vertical
+	sc.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	sc.SortOrder           = Enum.SortOrder.LayoutOrder
+
+	local stepColors = {
+		self.cfg.Color,
+		self.cfg.Color:Lerp(Color3.fromRGB(80, 160, 255), 0.35),
+		self.cfg.Color:Lerp(Color3.fromRGB(255, 80, 180), 0.25),
+	}
+
+	for i, step in ipairs(self.cfg.Instructions) do
+		local card = Instance.new("Frame", stepsContainer)
+		card.Name             = "StepCard" .. i
+		card.Size             = UDim2.new(1, 0, 0, isMob and 44 or 50)
+		card.BackgroundColor3 = Color3.fromRGB(16, 20, 34)
+		card.BorderSizePixel  = 0
+		card.LayoutOrder      = i
+		MkCorner(card, 10)
+
+		local accentBar = Instance.new("Frame", card)
+		accentBar.Size             = UDim2.fromOffset(3, isMob and 36 or 40)
+		accentBar.Position         = UDim2.new(0, 0, 0.5, 0)
+		accentBar.AnchorPoint      = Vector2.new(0, 0.5)
+		accentBar.BackgroundColor3 = stepColors[i] or self.cfg.Color
+		accentBar.BorderSizePixel  = 0
+		MkCorner(accentBar, 99)
+
+		local cg = Instance.new("UIGradient", card)
+		cg.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, (stepColors[i] or self.cfg.Color):Lerp(Color3.fromRGB(12, 15, 26), 0.88)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(12, 15, 26)),
+		})
+		cg.Rotation = 90
+
+		local numCircle = Instance.new("Frame", card)
+		numCircle.Size                  = UDim2.fromOffset(isMob and 26 or 30, isMob and 26 or 30)
+		numCircle.Position              = UDim2.new(0, isMob and 14 or 16, 0.5, 0)
+		numCircle.AnchorPoint           = Vector2.new(0, 0.5)
+		numCircle.BackgroundColor3      = stepColors[i] or self.cfg.Color
+		numCircle.BackgroundTransparency = 0.1
+		numCircle.BorderSizePixel       = 0
+		MkCorner(numCircle, 99)
+
+		local numLbl = Instance.new("TextLabel", numCircle)
+		numLbl.Size                  = UDim2.new(1, 0, 1, 0)
+		numLbl.BackgroundTransparency = 1
+		numLbl.Text                  = tostring(i)
+		numLbl.TextColor3            = Color3.fromRGB(0, 0, 0)
+		numLbl.TextSize              = isMob and 11 or 13
+		ApplyFont(numLbl, "black")
+
+		local textArea = Instance.new("Frame", card)
+		local leftOff  = isMob and 52 or 60
+		textArea.Size                  = UDim2.new(1, -(leftOff + 8), 1, 0)
+		textArea.Position              = UDim2.new(0, leftOff, 0, 0)
+		textArea.BackgroundTransparency = 1
+		local tal = Instance.new("UIListLayout", textArea)
+		tal.FillDirection     = Enum.FillDirection.Vertical
+		tal.VerticalAlignment = Enum.VerticalAlignment.Center
+		tal.Padding           = UDim.new(0, 2)
+
+		local stepTitle = Instance.new("TextLabel", textArea)
+		stepTitle.Size                  = UDim2.new(1, 0, 0, 0)
+		stepTitle.AutomaticSize         = Enum.AutomaticSize.Y
+		stepTitle.BackgroundTransparency = 1
+		stepTitle.Text                  = step.Title
+		stepTitle.TextColor3            = Color3.fromRGB(245, 248, 255)
+		stepTitle.TextSize              = isMob and 11 or 13
+		stepTitle.TextXAlignment        = Enum.TextXAlignment.Left
+		stepTitle.TextWrapped           = true
+		ApplyFont(stepTitle, "bold")
+
+		local stepBody = Instance.new("TextLabel", textArea)
+		stepBody.Size                  = UDim2.new(1, 0, 0, 0)
+		stepBody.AutomaticSize         = Enum.AutomaticSize.Y
+		stepBody.BackgroundTransparency = 1
+		stepBody.Text                  = step.Body
+		stepBody.TextColor3            = Color3.fromRGB(155, 165, 185)
+		stepBody.TextSize              = isMob and 9 or 10
+		stepBody.TextXAlignment        = Enum.TextXAlignment.Left
+		stepBody.TextWrapped           = true
+		ApplyFont(stepBody, "regular")
+	end
+
+	local cta = Instance.new("Frame", clip)
+	cta.Name                  = "CTA"
+	cta.Size                  = UDim2.new(1, 0, 0, isMob and 28 or 30)
+	cta.BackgroundTransparency = 1
+	cta.LayoutOrder           = 2
+	local ctl = Instance.new("UIListLayout", cta)
+	ctl.FillDirection       = Enum.FillDirection.Horizontal
+	ctl.VerticalAlignment   = Enum.VerticalAlignment.Center
+	ctl.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	ctl.Padding             = UDim.new(0, 8)
+
+	local getBtn = Instance.new("Frame", cta)
+	getBtn.Size             = UDim2.new(0.55, 0, 1, 0)
+	getBtn.BackgroundColor3 = self.cfg.Color
+	getBtn.BorderSizePixel  = 0
+	MkCorner(getBtn, 10)
+	local getGrad = Instance.new("UIGradient", getBtn)
+	getGrad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 180, 180)),
+	})
+	getGrad.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.15),
+		NumberSequenceKeypoint.new(1, 0.05),
+	})
+	getGrad.Rotation = 90
+
+	local getInner = Instance.new("Frame", getBtn)
+	getInner.Size                  = UDim2.new(1, 0, 1, 0)
+	getInner.BackgroundTransparency = 1
+	local getLL = Instance.new("UIListLayout", getInner)
+	getLL.FillDirection       = Enum.FillDirection.Horizontal
+	getLL.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	getLL.VerticalAlignment   = Enum.VerticalAlignment.Center
+	getLL.Padding             = UDim.new(0, 5)
+
+	local getL = Instance.new("TextLabel", getInner)
+	getL.Size                  = UDim2.new(0, 0, 1, 0)
+	getL.AutomaticSize         = Enum.AutomaticSize.X
+	getL.BackgroundTransparency = 1
+	getL.Text                  = "Get My Key"
+	getL.TextColor3            = ResolveTextColor()
+	getL.TextSize              = isMob and 11 or 12
+	getL.LayoutOrder           = 0
+	ApplyFont(getL, "bold")
+
+	local getArrow = Instance.new("TextLabel", getInner)
+	getArrow.Size                  = UDim2.new(0, 0, 1, 0)
+	getArrow.AutomaticSize         = Enum.AutomaticSize.X
+	getArrow.BackgroundTransparency = 1
+	getArrow.Text                  = "→"
+	getArrow.TextColor3            = ResolveTextColor()
+	getArrow.TextSize              = isMob and 12 or 14
+	getArrow.LayoutOrder           = 1
+	ApplyFont(getArrow, "bold")
+
+	local getClick = Instance.new("TextButton", getBtn)
+	getClick.Size                  = UDim2.new(1, 0, 1, 0)
+	getClick.BackgroundTransparency = 1
+	getClick.Text                  = ""
+	getClick.MouseButton1Click:Connect(function() self:SwitchMainTab("key") end)
+	getClick.MouseEnter:Connect(function()
+		TweenService:Create(getBtn, TweenInfo.new(0.1), { BackgroundColor3 = self.cfg.Color:Lerp(Color3.fromRGB(255, 255, 255), 0.18) }):Play()
+	end)
+	getClick.MouseLeave:Connect(function()
+		TweenService:Create(getBtn, TweenInfo.new(0.1), { BackgroundColor3 = self.cfg.Color }):Play()
+	end)
+
+	local discBtn = Instance.new("Frame", cta)
+	discBtn.Size                  = UDim2.new(0.4, 0, 1, 0)
+	discBtn.BackgroundColor3      = Color3.fromRGB(88, 101, 242)
+	discBtn.BackgroundTransparency = 0.15
+	discBtn.BorderSizePixel       = 0
+	MkCorner(discBtn, 10)
+	MkStroke(discBtn, Color3.fromRGB(88, 101, 242), 1, 0.35)
+
+	local discInner = Instance.new("Frame", discBtn)
+	discInner.Size                  = UDim2.new(1, 0, 1, 0)
+	discInner.BackgroundTransparency = 1
+	local discLL = Instance.new("UIListLayout", discInner)
+	discLL.FillDirection       = Enum.FillDirection.Horizontal
+	discLL.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	discLL.VerticalAlignment   = Enum.VerticalAlignment.Center
+	discLL.Padding             = UDim.new(0, 4)
+
+	local discL = Instance.new("TextLabel", discInner)
+	discL.Size                  = UDim2.new(0, 0, 1, 0)
+	discL.AutomaticSize         = Enum.AutomaticSize.X
+	discL.BackgroundTransparency = 1
+	discL.Text                  = "Discord"
+	discL.TextColor3            = Color3.fromRGB(255, 255, 255)
+	discL.TextSize              = isMob and 11 or 12
+	ApplyFont(discL, "bold")
+
+	local discClick = Instance.new("TextButton", discBtn)
+	discClick.Size                  = UDim2.new(1, 0, 1, 0)
+	discClick.BackgroundTransparency = 1
+	discClick.Text                  = ""
+	discClick.MouseButton1Click:Connect(function() self:JoinDiscord() end)
+	discClick.MouseEnter:Connect(function()
+		TweenService:Create(discBtn, TweenInfo.new(0.1), { BackgroundTransparency = 0 }):Play()
+	end)
+	discClick.MouseLeave:Connect(function()
+		TweenService:Create(discBtn, TweenInfo.new(0.1), { BackgroundTransparency = 0.15 }):Play()
+	end)
+end
+
+function Hub:BuildKeyView()
+	local kv = Instance.new("Frame", self.inner)
+	kv.Name                  = "KeyView"
+	kv.Size                  = UDim2.new(1, 0, 0, 0)
+	kv.AutomaticSize         = Enum.AutomaticSize.Y
+	kv.BackgroundTransparency = 1
+	kv.BorderSizePixel       = 0
+	kv.LayoutOrder           = 3
+	kv.Visible               = true
+	self.keyView             = kv
+
+	local lay = Instance.new("UIListLayout", kv)
+	lay.Padding             = UDim.new(0, 4)
+	lay.FillDirection       = Enum.FillDirection.Vertical
+	lay.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	lay.SortOrder           = Enum.SortOrder.LayoutOrder
+
+	self:BuildKeyInput(kv)
+	self:BuildRedeem(kv)
+	self:BuildProviderHint(kv)
+	self:BuildTabs(kv)
+end
+
+function Hub:BuildKeyInput(parentOverride)
+	local isMob = Mobile()
+	local kf    = Instance.new("Frame", parentOverride or self.inner)
+	kf.Size                  = UDim2.new(1, 0, 0, 0)
+	kf.BackgroundTransparency = 1
+	kf.AutomaticSize         = Enum.AutomaticSize.Y
+	kf.LayoutOrder           = 2
+	local kl = Instance.new("UIListLayout", kf)
+	kl.Padding        = UDim.new(0, 5)
+	kl.FillDirection  = Enum.FillDirection.Vertical
+
+	local lr = Instance.new("Frame", kf)
+	lr.Size                  = UDim2.new(1, 0, 0, 18)
+	lr.BackgroundTransparency = 1
+	lr.LayoutOrder           = 0
+
+	local ll = Instance.new("TextLabel", lr)
+	ll.Size                  = UDim2.new(1, 0, 1, 0)
+	ll.BackgroundTransparency = 1
+	ll.Text                  = self.cfg.KeySystemLabel
+	ll.TextColor3            = Color3.fromRGB(255, 255, 255)
+	ll.TextSize              = 11
+	ll.TextTransparency      = 0.2
+	ll.TextXAlignment        = Enum.TextXAlignment.Left
+	ApplyFont(ll, "regular")
+
+	local cf = Instance.new("Frame", lr)
+	cf.Size                  = UDim2.new(0, 18, 0, 18)
+	cf.Position              = UDim2.new(1, 0, 0.5, 0)
+	cf.AnchorPoint           = Vector2.new(1, 0.5)
+	cf.BackgroundColor3      = self.cfg.Color
+	cf.BackgroundTransparency = 0.55
+	MkCorner(cf, 99)
+
+	local ci = Instance.new("ImageLabel", cf)
+	ci.Size                  = UDim2.new(0, 10, 0, 10)
+	ci.Position              = UDim2.new(0.5, 0, 0.5, 0)
+	ci.AnchorPoint           = Vector2.new(0.5, 0.5)
+	ci.BackgroundTransparency = 1
+	ci.Image                 = "rbxassetid://13868333926"
+	ci.ImageColor3           = Color3.fromRGB(255, 255, 255)
+
+	local cb = Instance.new("TextButton", cf)
+	cb.Size                  = UDim2.new(1, 0, 1, 0)
+	cb.BackgroundTransparency = 1
+	cb.Text                  = ""
+	cb.MouseButton1Click:Connect(function() self:GetKey() end)
+
+	local kb = Instance.new("Frame", kf)
+	kb.Size             = UDim2.new(1, 0, 0, 32)
+	kb.BackgroundColor3 = self.cfg.Color
+	kb.BackgroundTransparency = 0.83
+	kb.LayoutOrder      = 1
+	MkCorner(kb, 8)
+	MkStroke(kb, self.cfg.Color, 1.2, 0.5)
+
+	local kp = Instance.new("UIPadding", kb)
+	kp.PaddingLeft  = UDim.new(0, 10)
+	kp.PaddingRight = UDim.new(0, 36)
+
+	local tb = Instance.new("TextBox", kb)
+	tb.Size                  = UDim2.new(1, 0, 1, 0)
+	tb.BackgroundTransparency = 1
+	tb.Text                  = ""
+	tb.PlaceholderText       = ""
+	tb.PlaceholderColor3     = Color3.fromRGB(80, 80, 80)
+	tb.TextColor3            = Color3.fromRGB(255, 255, 255)
+	tb.TextSize              = 12
+	tb.TextXAlignment        = Enum.TextXAlignment.Left
+	tb.ClearTextOnFocus      = false
+	ApplyFont(tb, "regular")
+	self.textBox = tb
+
+	local clrPill = Instance.new("Frame", kb)
+	clrPill.Name                  = "ClearPill"
+	clrPill.Size                  = UDim2.fromOffset(0, 22)
+	clrPill.Position              = UDim2.new(1, -2, 0.5, 0)
+	clrPill.AnchorPoint           = Vector2.new(1, 0.5)
+	clrPill.BackgroundColor3      = Color3.fromRGB(30, 30, 46)
+	clrPill.BackgroundTransparency = 0
+	clrPill.BorderSizePixel       = 0
+	clrPill.Visible               = false
+	clrPill.ZIndex                = 15
+	clrPill.ClipsDescendants      = true
+	MkCorner(clrPill, 99)
+	MkStroke(clrPill, Color3.fromRGB(255, 255, 255), 1, 0.88)
+
+	local clrInner = Instance.new("Frame", clrPill)
+	clrInner.Size                  = UDim2.new(1, 0, 1, 0)
+	clrInner.BackgroundTransparency = 1
+	local clrLL = Instance.new("UIListLayout", clrInner)
+	clrLL.FillDirection       = Enum.FillDirection.Horizontal
+	clrLL.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	clrLL.VerticalAlignment   = Enum.VerticalAlignment.Center
+	clrLL.Padding             = UDim.new(0, 3)
+	local clrPad = Instance.new("UIPadding", clrInner)
+	clrPad.PaddingLeft  = UDim.new(0, 6)
+	clrPad.PaddingRight = UDim.new(0, 6)
+
+	local clrIco = Instance.new("TextLabel", clrInner)
+	clrIco.Size                  = UDim2.fromOffset(12, 12)
+	clrIco.BackgroundTransparency = 1
+	clrIco.Text                  = "<-"
+	clrIco.TextColor3            = Color3.fromRGB(200, 200, 215)
+	clrIco.TextSize              = 11
+	clrIco.LayoutOrder           = 0
+	ApplyFont(clrIco, "bold")
+
+	local clrTxt = Instance.new("TextLabel", clrInner)
+	clrTxt.Size                  = UDim2.new(0, 0, 1, 0)
+	clrTxt.AutomaticSize         = Enum.AutomaticSize.X
+	clrTxt.BackgroundTransparency = 1
+	clrTxt.Text                  = "Clear"
+	clrTxt.TextColor3            = Color3.fromRGB(200, 200, 215)
+	clrTxt.TextSize              = 10
+	clrTxt.LayoutOrder           = 1
+	ApplyFont(clrTxt, "bold")
+
+	local clrBtn = Instance.new("TextButton", clrPill)
+	clrBtn.Size                  = UDim2.new(1, 0, 1, 0)
+	clrBtn.BackgroundTransparency = 1
+	clrBtn.Text                  = ""
+	clrBtn.ZIndex                = 16
+
+	clrBtn.MouseEnter:Connect(function()
+		TweenService:Create(clrPill, TweenInfo.new(0.12), { BackgroundColor3 = Color3.fromRGB(180, 40, 40) }):Play()
+		TweenService:Create(clrIco,  TweenInfo.new(0.12), { TextColor3 = Color3.fromRGB(255, 255, 255) }):Play()
+		TweenService:Create(clrTxt,  TweenInfo.new(0.12), { TextColor3 = Color3.fromRGB(255, 255, 255) }):Play()
+	end)
+	clrBtn.MouseLeave:Connect(function()
+		TweenService:Create(clrPill, TweenInfo.new(0.12), { BackgroundColor3 = Color3.fromRGB(30, 30, 46) }):Play()
+		TweenService:Create(clrIco,  TweenInfo.new(0.12), { TextColor3 = Color3.fromRGB(200, 200, 215) }):Play()
+		TweenService:Create(clrTxt,  TweenInfo.new(0.12), { TextColor3 = Color3.fromRGB(200, 200, 215) }):Play()
+	end)
+	clrBtn.MouseButton1Click:Connect(function()
+		tb.Text        = ""
+		self.keyInput  = ""
+		TweenService:Create(clrPill, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			Size = UDim2.fromOffset(0, 22)
+		}):Play()
+		task.delay(0.19, function() clrPill.Visible = false end)
+	end)
+
+	tb:GetPropertyChangedSignal("Text"):Connect(function()
+		self.keyInput = tb.Text
+		if tb.Text ~= "" then
+			clrPill.Visible = true
+			TweenService:Create(clrPill, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				Size = UDim2.fromOffset(54, 22)
+			}):Play()
+		else
+			TweenService:Create(clrPill, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				Size = UDim2.fromOffset(0, 22)
+			}):Play()
+			task.delay(0.16, function() clrPill.Visible = false end)
+		end
+	end)
+
+	local ph, idx, fwd = self.cfg.KeySystemPlaceholder, 0, true
+	task.spawn(function()
+		while tb and tb.Parent do
+			if tb.Text ~= "" then
+				task.wait(0.1)
+			elseif fwd then
+				idx = idx + 1
+				tb.PlaceholderText = ph:sub(1, idx)
+				if idx >= #ph then fwd = false; task.wait(1.2) else task.wait(0.07) end
+			else
+				idx = idx - 1
+				tb.PlaceholderText = ph:sub(1, idx)
+				if idx <= 0 then fwd = true; task.wait(0.4) else task.wait(0.04) end
+			end
+		end
+	end)
+end
+
+function Hub:BuildRedeem(parentOverride)
+	local rf = Instance.new("Frame", parentOverride or self.inner)
+	rf.Size                  = UDim2.new(1, 0, 0, 0)
+	rf.BackgroundTransparency = 1
+	rf.AutomaticSize         = Enum.AutomaticSize.Y
+	rf.LayoutOrder           = 3
+	local rl = Instance.new("UIListLayout", rf)
+	rl.Padding             = UDim.new(0, 5)
+	rl.FillDirection       = Enum.FillDirection.Vertical
+	rl.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+	local btn = Instance.new("Frame", rf)
+	btn.Size             = UDim2.new(1, 0, 0, 32)
+	btn.BackgroundColor3 = self.cfg.Color
+	btn.LayoutOrder      = 0
+	MkCorner(btn, 10)
+
+	local tf = Instance.new("Frame", btn)
+	tf.Size                  = UDim2.new(1, 0, 1, 0)
+	tf.BackgroundTransparency = 1
+	local tl = Instance.new("UIListLayout", tf)
+	tl.FillDirection       = Enum.FillDirection.Horizontal
+	tl.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	tl.VerticalAlignment   = Enum.VerticalAlignment.Center
+	tl.Padding             = UDim.new(0, 5)
+
+	local bi = Instance.new("ImageLabel", tf)
+	bi.Size                  = UDim2.new(0, 15, 0, 15)
+	bi.BackgroundTransparency = 1
+	bi.Image                 = "rbxassetid://14938884688"
+	bi.ImageColor3           = ResolveTextColor()
+	bi.LayoutOrder           = 0
+
+	local bt = Instance.new("TextLabel", tf)
+	bt.Size                  = UDim2.new(0, 0, 1, 0)
+	bt.AutomaticSize         = Enum.AutomaticSize.X
+	bt.BackgroundTransparency = 1
+	bt.Text                  = "Redeem"
+	bt.TextColor3            = ResolveTextColor()
+	bt.TextSize              = 13
+	bt.LayoutOrder           = 1
+	ApplyFont(bt, "bold")
+
+	local click = Instance.new("TextButton", btn)
+	click.Size                  = UDim2.new(1, 0, 1, 0)
+	click.BackgroundTransparency = 1
+	click.Text                  = ""
+	click.MouseButton1Click:Connect(function() self:Redeem() end)
+	click.MouseEnter:Connect(function()
+		TweenService:Create(btn, TweenInfo.new(0.1), { BackgroundColor3 = self.cfg.Color:Lerp(Color3.fromRGB(255, 255, 255), 0.13) }):Play()
+	end)
+	click.MouseLeave:Connect(function()
+		TweenService:Create(btn, TweenInfo.new(0.1), { BackgroundColor3 = self.cfg.Color }):Play()
+	end)
+
+	local attLbl = Instance.new("TextLabel", rf)
+	attLbl.Size                  = UDim2.new(1, 0, 0, 12)
+	attLbl.BackgroundTransparency = 1
+	attLbl.Text                  = ""
+	attLbl.TextColor3            = Color3.fromRGB(255, 255, 255)
+	attLbl.TextTransparency      = 0.45
+	attLbl.TextSize              = 10
+	attLbl.TextXAlignment        = Enum.TextXAlignment.Center
+	attLbl.LayoutOrder           = 1
+	ApplyFont(attLbl, "regular")
+	self.attemptsLbl = attLbl
+
+	local discRow = Instance.new("Frame", rf)
+	discRow.Size                  = UDim2.new(1, 0, 0, 16)
+	discRow.BackgroundTransparency = 1
+	discRow.LayoutOrder           = 2
+	local discLayout = Instance.new("UIListLayout", discRow)
+	discLayout.FillDirection       = Enum.FillDirection.Horizontal
+	discLayout.VerticalAlignment   = Enum.VerticalAlignment.Center
+	discLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	discLayout.Padding             = UDim.new(0, 4)
+
+	local r = math.floor(self.cfg.Color.R * 255)
+	local g = math.floor(self.cfg.Color.G * 255)
+	local b = math.floor(self.cfg.Color.B * 255)
+	local st = Instance.new("TextLabel", discRow)
+	st.Size                  = UDim2.new(0, 0, 1, 0)
+	st.AutomaticSize         = Enum.AutomaticSize.X
+	st.BackgroundTransparency = 1
+	st.Text                  = string.format("Need support? <font color='rgb(%d,%d,%d)'><b>Join Discord</b></font>", r, g, b)
+	st.TextColor3            = Color3.fromRGB(200, 200, 200)
+	st.TextSize              = 10
+	st.TextTransparency      = 0.1
+	st.RichText              = true
+	ApplyFont(st, "regular")
+
+	local sb2 = Instance.new("TextButton", st)
+	sb2.Size                  = UDim2.new(1, 0, 1, 0)
+	sb2.BackgroundTransparency = 1
+	sb2.Text                  = ""
+	sb2.MouseButton1Click:Connect(function() self:JoinDiscord() end)
+
+	if self.cfg.ShowMemberCount then
+		local sepDot = Instance.new("Frame", discRow)
+		sepDot.Size             = UDim2.new(0, 3, 0, 3)
+		sepDot.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+		sepDot.BorderSizePixel  = 0
+		MkCorner(sepDot, 99)
+
+		local ml = Instance.new("TextLabel", discRow)
+		ml.Size                  = UDim2.new(0, 0, 1, 0)
+		ml.AutomaticSize         = Enum.AutomaticSize.X
+		ml.BackgroundTransparency = 1
+		ml.Text                  = "Fetching..."
+		ml.TextColor3            = Color3.fromRGB(160, 160, 160)
+		ml.TextSize              = 10
+		ml.RichText              = true
+		ApplyFont(ml, "regular")
+		self.memberLbl = ml
+	end
+
+	local socialH = Mobile() and 42 or 46
+	local scroll  = Instance.new("ScrollingFrame", rf)
+	scroll.Size                 = UDim2.new(1, 0, 0, socialH + 6)
+	scroll.BackgroundTransparency = 1
+	scroll.BorderSizePixel      = 0
+	scroll.ScrollBarThickness   = 0
+	scroll.ScrollingDirection   = Enum.ScrollingDirection.X
+	scroll.CanvasSize           = UDim2.fromOffset(0, 0)
+	scroll.AutomaticCanvasSize  = Enum.AutomaticSize.X
+	scroll.ElasticBehavior      = Enum.ElasticBehavior.WhenScrollable
+	scroll.LayoutOrder          = 3
+
+	local sp = Instance.new("UIPadding", scroll)
+	sp.PaddingLeft   = UDim.new(0, 3)
+	sp.PaddingRight  = UDim.new(0, 3)
+	sp.PaddingTop    = UDim.new(0, 3)
+	sp.PaddingBottom = UDim.new(0, 3)
+
+	local visSocialsFooter = GetVisibleSocials()
+	local socialCentered   = #visSocialsFooter <= 2
+
+	local strip = Instance.new("Frame", scroll)
+	if socialCentered then
+		strip.Size = UDim2.new(1, 0, 1, 0)
+	else
+		strip.Size          = UDim2.new(0, 0, 1, 0)
+		strip.AutomaticSize = Enum.AutomaticSize.X
+	end
+	strip.BackgroundTransparency = 1
+	local stripL = Instance.new("UIListLayout", strip)
+	stripL.FillDirection       = Enum.FillDirection.Horizontal
+	stripL.VerticalAlignment   = Enum.VerticalAlignment.Center
+	stripL.Padding             = UDim.new(0, 5)
+	stripL.HorizontalAlignment = socialCentered and Enum.HorizontalAlignment.Center or Enum.HorizontalAlignment.Left
+
+	local chipW = Mobile() and 76 or 84
+	local chipH = socialH - 2
+
+	for _, sd in ipairs(visSocialsFooter) do
+		local chip = Instance.new("Frame", strip)
+		chip.Size                  = UDim2.fromOffset(chipW, chipH)
+		chip.BackgroundColor3      = Color3.fromRGB(14, 18, 32)
+		chip.BackgroundTransparency = 0
+		chip.BorderSizePixel       = 0
+		MkCorner(chip, 99)
+		MkStroke(chip, self.cfg.Color, sd.Pinned and 1.5 or 1, sd.Pinned and 0.1 or 0.6)
+
+		local cgrad = Instance.new("UIGradient", chip)
+		local gradStart = sd.Pinned
+			and self.cfg.Color:Lerp(Color3.fromRGB(10, 14, 28), 0.55)
+			or  self.cfg.Color:Lerp(Color3.fromRGB(10, 14, 28), 0.78)
+		cgrad.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, gradStart),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 14, 28)),
+		})
+		cgrad.Rotation = 90
+
+		local inf = Instance.new("Frame", chip)
+		inf.Size                  = UDim2.new(1, 0, 1, 0)
+		inf.BackgroundTransparency = 1
+		local il = Instance.new("UIListLayout", inf)
+		il.Padding             = UDim.new(0, 5)
+		il.FillDirection       = Enum.FillDirection.Horizontal
+		il.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		il.VerticalAlignment   = Enum.VerticalAlignment.Center
+		local ip = Instance.new("UIPadding", inf)
+		ip.PaddingLeft  = UDim.new(0, 8)
+		ip.PaddingRight = UDim.new(0, 8)
+
+		local cico = Instance.new("ImageLabel", inf)
+		cico.Size                  = UDim2.fromOffset(13, 13)
+		cico.BackgroundTransparency = 1
+		cico.Image                 = sd.Icon
+		cico.ImageColor3           = Color3.fromRGB(255, 255, 255)
+		cico.LayoutOrder           = 0
+
+		local ctxt = Instance.new("TextLabel", inf)
+		ctxt.Size                  = UDim2.new(0, 0, 1, 0)
+		ctxt.AutomaticSize         = Enum.AutomaticSize.X
+		ctxt.BackgroundTransparency = 1
+		ctxt.Text                  = sd.Name
+		ctxt.TextColor3            = Color3.fromRGB(255, 255, 255)
+		ctxt.TextTransparency      = 0.08
+		ctxt.TextSize              = 10
+		ctxt.LayoutOrder           = 1
+		ctxt.TextXAlignment        = Enum.TextXAlignment.Left
+		ctxt.ClipsDescendants      = true
+		ApplyFont(ctxt, "bold")
+
+		local ccl = Instance.new("TextButton", chip)
+		ccl.Size                  = UDim2.new(1, 0, 1, 0)
+		ccl.BackgroundTransparency = 1
+		ccl.Text                  = ""
+		ccl.ZIndex                = 10
+		local lnk, nm = sd.Link, sd.Name
+		ccl.MouseButton1Click:Connect(function()
+			if setclipboard then setclipboard(lnk) end
+			self:Toast(nm .. " copied!", "success")
+		end)
+		ccl.MouseEnter:Connect(function()
+			TweenService:Create(chip,  TweenInfo.new(0.12), { BackgroundColor3 = self.cfg.Color:Lerp(Color3.fromRGB(8, 12, 22), 0.5) }):Play()
+			TweenService:Create(cgrad, TweenInfo.new(0.12), { Rotation = 270 }):Play()
+			TweenService:Create(cico,  TweenInfo.new(0.12), { ImageColor3 = Color3.fromRGB(255, 255, 255) }):Play()
+		end)
+		ccl.MouseLeave:Connect(function()
+			TweenService:Create(chip,  TweenInfo.new(0.12), { BackgroundColor3 = Color3.fromRGB(14, 18, 32) }):Play()
+			TweenService:Create(cgrad, TweenInfo.new(0.12), { Rotation = 90 }):Play()
+			TweenService:Create(cico,  TweenInfo.new(0.12), { ImageColor3 = Color3.fromRGB(255, 255, 255) }):Play()
+		end)
+	end
+
+	local div = Instance.new("Frame", rf)
+	div.Size                  = UDim2.new(1, 0, 0, 1)
+	div.BackgroundColor3      = Color3.fromRGB(255, 255, 255)
+	div.BackgroundTransparency = 0.88
+	div.BorderSizePixel       = 0
+	div.LayoutOrder           = 4
+end
+
+function Hub:BuildProviderHint(parentOverride)
+	local isMob = Mobile()
+	local hf    = Instance.new("Frame", parentOverride or self.inner)
+	hf.Size                  = UDim2.new(1, 0, 0, 14)
+	hf.BackgroundTransparency = 1
+	hf.LayoutOrder           = 4
+	local hl = Instance.new("UIListLayout", hf)
+	hl.FillDirection       = Enum.FillDirection.Horizontal
+	hl.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	hl.VerticalAlignment   = Enum.VerticalAlignment.Center
+	hl.Padding             = UDim.new(0, 5)
+
+	local dot = Instance.new("Frame", hf)
+	dot.Size             = UDim2.fromOffset(3, 3)
+	dot.BackgroundColor3 = self.cfg.Color
+	dot.BackgroundTransparency = 0.4
+	dot.BorderSizePixel  = 0
+	MkCorner(dot, 99)
+
+	local lbl = Instance.new("TextLabel", hf)
+	lbl.Size                  = UDim2.new(0, 0, 1, 0)
+	lbl.AutomaticSize         = Enum.AutomaticSize.X
+	lbl.BackgroundTransparency = 1
+	lbl.Text                  = "Click a button below to get your key"
+	lbl.TextColor3            = Color3.fromRGB(160, 168, 190)
+	lbl.TextTransparency      = 0.1
+	lbl.TextSize              = isMob and 9 or 10
+	lbl.TextXAlignment        = Enum.TextXAlignment.Center
+	ApplyFont(lbl, "regular")
+
+	local dot2 = Instance.new("Frame", hf)
+	dot2.Size             = UDim2.fromOffset(3, 3)
+	dot2.BackgroundColor3 = self.cfg.Color
+	dot2.BackgroundTransparency = 0.4
+	dot2.BorderSizePixel  = 0
+	MkCorner(dot2, 99)
+end
+
+function Hub:BuildTabs(parentOverride)
+	local outerH = 36
+	local outer  = Instance.new("Frame", parentOverride or self.inner)
+	outer.Size                  = UDim2.new(1, 0, 0, outerH)
+	outer.BackgroundTransparency = 1
+	outer.LayoutOrder           = 5
+
+	local scroll = Instance.new("ScrollingFrame", outer)
+	scroll.Size                 = UDim2.new(1, 0, 1, 0)
+	scroll.BackgroundTransparency = 1
+	scroll.BorderSizePixel      = 0
+	scroll.ScrollBarThickness   = 0
+	scroll.ScrollingDirection   = Enum.ScrollingDirection.X
+	scroll.CanvasSize           = UDim2.fromOffset(0, 0)
+	scroll.AutomaticCanvasSize  = Enum.AutomaticSize.X
+	scroll.ElasticBehavior      = Enum.ElasticBehavior.WhenScrollable
+
+	local tp = Instance.new("UIPadding", scroll)
+	tp.PaddingLeft   = UDim.new(0, 3)
+	tp.PaddingRight  = UDim.new(0, 3)
+	tp.PaddingTop    = UDim.new(0, 3)
+	tp.PaddingBottom = UDim.new(0, 3)
+
+	local visProviders = GetVisibleProviders()
+	local provCentered = #visProviders <= 2
+
+	local tl = Instance.new("Frame", scroll)
+	if provCentered then
+		tl.Size = UDim2.new(1, 0, 1, 0)
+	else
+		tl.Size          = UDim2.new(0, 0, 1, 0)
+		tl.AutomaticSize = Enum.AutomaticSize.X
+	end
+	tl.BackgroundTransparency = 1
+	local lay = Instance.new("UIListLayout", tl)
+	lay.Padding             = UDim.new(0, 6)
+	lay.FillDirection       = Enum.FillDirection.Horizontal
+	lay.HorizontalAlignment = provCentered and Enum.HorizontalAlignment.Center or Enum.HorizontalAlignment.Left
+	lay.VerticalAlignment   = Enum.VerticalAlignment.Center
+
+	for _, td in ipairs(visProviders) do
+		local resolvedIcon = ResolveIcon(td.Name, td.Icon)
+		local isPinned     = td.Pinned == true
+		local tab          = Instance.new("Frame", tl)
+		tab.Size             = UDim2.new(0, 26, 0, 26)
+		tab.AutomaticSize    = Enum.AutomaticSize.X
+		tab.BackgroundColor3 = self.cfg.Color
+		MkCorner(tab, 99)
+
+		local tgrad = Instance.new("UIGradient", tab)
+		tgrad.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(165, 165, 165)),
+		})
+		if isPinned then MkStroke(tab, Color3.fromRGB(255, 255, 255), 1.5, 0.45) end
+
+		local inf = Instance.new("Frame", tab)
+		inf.Size                  = UDim2.new(1, 0, 1, 0)
+		inf.BackgroundTransparency = 1
+		local il = Instance.new("UIListLayout", inf)
+		il.Padding             = UDim.new(0, 5)
+		il.FillDirection       = Enum.FillDirection.Horizontal
+		il.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		il.VerticalAlignment   = Enum.VerticalAlignment.Center
+		local ip = Instance.new("UIPadding", inf)
+		ip.PaddingLeft  = UDim.new(0, 7)
+		ip.PaddingRight = UDim.new(0, 7)
+
+		local ti = Instance.new("ImageLabel", inf)
+		ti.Size                  = UDim2.new(0, 13, 0, 13)
+		ti.BackgroundTransparency = 1
+		ti.Image                 = resolvedIcon
+		ti.ImageColor3           = Color3.fromRGB(255, 255, 255)
+
+		local tt = Instance.new("TextLabel", inf)
+		tt.Size                  = UDim2.new(0, 0, 1, 0)
+		tt.AutomaticSize         = Enum.AutomaticSize.X
+		tt.BackgroundTransparency = 1
+		tt.Text                  = td.Name
+		tt.TextColor3            = Color3.fromRGB(255, 255, 255)
+		tt.TextSize              = 11
+		tt.TextXAlignment        = Enum.TextXAlignment.Left
+		tt.LayoutOrder           = 1
+		ApplyFont(tt, "regular")
+
+		local cb = Instance.new("TextButton", tab)
+		cb.Size                  = UDim2.new(1, 0, 1, 0)
+		cb.BackgroundTransparency = 1
+		cb.Text                  = ""
+		local n = td.Name
+		cb.MouseButton1Click:Connect(function()
+			self.currentTab = n:lower()
+			self:GetKey()
+		end)
+		cb.MouseEnter:Connect(function()
+			TweenService:Create(tab, TweenInfo.new(0.1), { Size = UDim2.new(0, 28, 0, 28) }):Play()
+		end)
+		cb.MouseLeave:Connect(function()
+			TweenService:Create(tab, TweenInfo.new(0.1), { Size = UDim2.new(0, 26, 0, 26) }):Play()
+		end)
+	end
+end
+
+function Hub:BuildChangelog()
+	local cl = self.cfg.Changelog
+	if not cl or not cl.Show then return end
+
+	local isMob   = Mobile()
+	local clTitle = (cl.Title and cl.Title ~= "") and cl.Title or "What's New"
+	local versions = cl.Versions or {}
+
+	local TAG_INFO = {
+		NEW      = { label = "NEW",      col = Color3.fromRGB(45, 185, 100)  },
+		FIX      = { label = "FIX",      col = Color3.fromRGB(215, 70, 70)   },
+		IMPROVED = { label = "IMPROVED", col = Color3.fromRGB(70, 145, 235)  },
+		REMOVED  = { label = "REMOVED",  col = Color3.fromRGB(185, 85, 45)   },
+		SECURITY = { label = "SECURITY", col = Color3.fromRGB(195, 155, 35)  },
+	}
+
+	local view = Instance.new("Frame", self.inner)
+	view.Name                  = "ChangelogView"
+	view.Size                  = UDim2.new(1, 0, 0, 0)
+	view.AutomaticSize         = Enum.AutomaticSize.Y
+	view.BackgroundTransparency = 1
+	view.BorderSizePixel       = 0
+	view.LayoutOrder           = 4
+	view.Visible               = false
+	self.changelogView         = view
+
+	local vl = Instance.new("UIListLayout", view)
+	vl.Padding        = UDim.new(0, 5)
+	vl.FillDirection  = Enum.FillDirection.Vertical
+	vl.SortOrder      = Enum.SortOrder.LayoutOrder
+
+	local hCard = Instance.new("Frame", view)
+	hCard.Size             = UDim2.new(1, 0, 0, isMob and 36 or 40)
+	hCard.BackgroundColor3 = Color3.fromRGB(13, 17, 28)
+	hCard.BorderSizePixel  = 0
+	hCard.LayoutOrder      = 0
+	MkCorner(hCard, 8)
+	if self.cfg.ShowOutline ~= false then MkStroke(hCard, self.cfg.Color, 1.5, 0.3) end
+
+	local hcg = Instance.new("UIGradient", hCard)
+	hcg.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, self.cfg.Color:Lerp(Color3.fromRGB(8, 10, 20), 0.82)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 13, 22)),
+	})
+	hcg.Rotation = 135
+
+	local hRow = Instance.new("Frame", hCard)
+	hRow.Size                  = UDim2.new(1, -16, 1, 0)
+	hRow.Position              = UDim2.new(0, 8, 0, 0)
+	hRow.BackgroundTransparency = 1
+	local hrl = Instance.new("UIListLayout", hRow)
+	hrl.FillDirection     = Enum.FillDirection.Horizontal
+	hrl.VerticalAlignment = Enum.VerticalAlignment.Center
+	hrl.Padding           = UDim.new(0, 7)
+
+	local hIco = Instance.new("TextLabel", hRow)
+	hIco.Size                  = UDim2.fromOffset(isMob and 18 or 20, isMob and 18 or 20)
+	hIco.BackgroundColor3      = self.cfg.Color
+	hIco.BackgroundTransparency = 0.2
+	hIco.BorderSizePixel       = 0
+	MkCorner(hIco, 99)
+	hIco.Text          = "★"
+	hIco.TextColor3    = ResolveTextColor()
+	hIco.TextSize      = isMob and 9 or 10
+	hIco.TextXAlignment = Enum.TextXAlignment.Center
+	ApplyFont(hIco, "black")
+
+	local hTxt = Instance.new("Frame", hRow)
+	hTxt.Size                  = UDim2.new(1, -30, 1, 0)
+	hTxt.BackgroundTransparency = 1
+	local htl2 = Instance.new("UIListLayout", hTxt)
+	htl2.FillDirection     = Enum.FillDirection.Vertical
+	htl2.VerticalAlignment = Enum.VerticalAlignment.Center
+	htl2.Padding           = UDim.new(0, 1)
+
+	local htitle = Instance.new("TextLabel", hTxt)
+	htitle.Size                  = UDim2.new(1, 0, 0, 0)
+	htitle.AutomaticSize         = Enum.AutomaticSize.Y
+	htitle.BackgroundTransparency = 1
+	htitle.Text                  = clTitle
+	htitle.TextColor3            = Color3.fromRGB(238, 240, 255)
+	htitle.TextSize              = isMob and 11 or 13
+	htitle.TextXAlignment        = Enum.TextXAlignment.Left
+	ApplyFont(htitle, "black")
+
+	local hsub2 = Instance.new("TextLabel", hTxt)
+	hsub2.Size                  = UDim2.new(1, 0, 0, 0)
+	hsub2.AutomaticSize         = Enum.AutomaticSize.Y
+	hsub2.BackgroundTransparency = 1
+	hsub2.Text                  = tostring(#versions) .. " version" .. (#versions == 1 and "" or "s")
+	hsub2.TextColor3            = Color3.fromRGB(110, 115, 145)
+	hsub2.TextSize              = isMob and 8 or 9
+	hsub2.TextXAlignment        = Enum.TextXAlignment.Left
+	ApplyFont(hsub2, "regular")
+
+	local maxH   = isMob and 195 or 230
+	local wrapper = Instance.new("Frame", view)
+	wrapper.Size                  = UDim2.new(1, 0, 0, maxH)
+	wrapper.BackgroundTransparency = 1
+	wrapper.BorderSizePixel       = 0
+	wrapper.LayoutOrder           = 1
+	wrapper.ClipsDescendants      = false
+
+	local scroll = Instance.new("ScrollingFrame", wrapper)
+	scroll.Size                 = UDim2.new(1, 0, 1, 0)
+	scroll.CanvasSize           = UDim2.fromOffset(0, 0)
+	scroll.AutomaticCanvasSize  = Enum.AutomaticSize.Y
+	scroll.BackgroundTransparency = 1
+	scroll.BorderSizePixel      = 0
+	scroll.ScrollBarThickness   = 3
+	scroll.ScrollBarImageColor3 = self.cfg.Color
+	scroll.ScrollingDirection   = Enum.ScrollingDirection.Y
+
+	local spad = Instance.new("UIPadding", scroll)
+	spad.PaddingLeft   = UDim.new(0, 3)
+	spad.PaddingRight  = UDim.new(0, 6)
+	spad.PaddingTop    = UDim.new(0, 3)
+	spad.PaddingBottom = UDim.new(0, 4)
+
+	local slist = Instance.new("UIListLayout", scroll)
+	slist.Padding       = UDim.new(0, 5)
+	slist.FillDirection = Enum.FillDirection.Vertical
+	slist.SortOrder     = Enum.SortOrder.LayoutOrder
+
+	for vi, entry in ipairs(versions) do
+		local isLatest = vi == 1
+		local tagKey   = entry.Tag and entry.Tag:upper() or nil
+		local tagInfo  = tagKey and TAG_INFO[tagKey] or nil
+		local tagCol   = tagInfo and tagInfo.col or Color3.fromRGB(80, 85, 115)
+		local tagLabel = tagInfo and tagInfo.label or (tagKey or "")
+
+		local card = Instance.new("Frame", scroll)
+		card.Size             = UDim2.new(1, 0, 0, 0)
+		card.AutomaticSize    = Enum.AutomaticSize.Y
+		card.BackgroundColor3 = Color3.fromRGB(14, 18, 30)
+		card.BorderSizePixel  = 0
+		card.LayoutOrder      = vi
+		MkCorner(card, 8)
+		if self.cfg.ShowOutline ~= false then
+			MkStroke(card, isLatest and self.cfg.Color or Color3.fromRGB(42, 47, 70), isLatest and 1.5 or 1, isLatest and 0.35 or 0.68)
+		end
+
+		local cg = Instance.new("UIGradient", card)
+		cg.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, self.cfg.Color:Lerp(Color3.fromRGB(9, 11, 21), isLatest and 0.85 or 0.95)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 13, 23)),
+		})
+		cg.Rotation = 90
+
+		local cp = Instance.new("UIPadding", card)
+		cp.PaddingTop    = UDim.new(0, 8)
+		cp.PaddingBottom = UDim.new(0, 9)
+		cp.PaddingLeft   = UDim.new(0, 9)
+		cp.PaddingRight  = UDim.new(0, 9)
+
+		local cl2 = Instance.new("UIListLayout", card)
+		cl2.Padding       = UDim.new(0, 5)
+		cl2.FillDirection = Enum.FillDirection.Vertical
+		cl2.SortOrder     = Enum.SortOrder.LayoutOrder
+
+		local vRow = Instance.new("Frame", card)
+		vRow.Size                  = UDim2.new(1, 0, 0, isMob and 16 or 18)
+		vRow.BackgroundTransparency = 1
+		vRow.LayoutOrder           = 0
+		local vrl = Instance.new("UIListLayout", vRow)
+		vrl.FillDirection     = Enum.FillDirection.Horizontal
+		vrl.VerticalAlignment = Enum.VerticalAlignment.Center
+		vrl.Padding           = UDim.new(0, 4)
+
+		local function MkPill(parent, text, bgCol, bgTrans, textCol, textSize, lo)
+			local p = Instance.new("Frame", parent)
+			p.Size                  = UDim2.new(0, 0, 1, 0)
+			p.AutomaticSize         = Enum.AutomaticSize.X
+			p.BackgroundColor3      = bgCol
+			p.BackgroundTransparency = bgTrans
+			p.BorderSizePixel       = 0
+			MkCorner(p, 99)
+			if lo then p.LayoutOrder = lo end
+			local pp = Instance.new("UIPadding", p)
+			pp.PaddingLeft  = UDim.new(0, 5)
+			pp.PaddingRight = UDim.new(0, 5)
+			local pt = Instance.new("TextLabel", p)
+			pt.Size                  = UDim2.new(0, 0, 1, 0)
+			pt.AutomaticSize         = Enum.AutomaticSize.X
+			pt.BackgroundTransparency = 1
+			pt.Text                  = text
+			pt.TextColor3            = textCol
+			pt.TextSize              = textSize
+			pt.TextXAlignment        = Enum.TextXAlignment.Center
+			ApplyFont(pt, "black")
+			return p
+		end
+
+		MkPill(vRow, "v" .. tostring(entry.Version),
+			isLatest and self.cfg.Color or Color3.fromRGB(36, 40, 62),
+			isLatest and 0.1 or 0,
+			isLatest and ResolveTextColor() or Color3.fromRGB(180, 185, 215),
+			isMob and 8 or 9, 0)
+
+		if tagLabel ~= "" then
+			MkPill(vRow, tagLabel, tagCol, 0.2, Color3.fromRGB(255, 255, 255), isMob and 7 or 8, 1)
+		end
+		if isLatest then
+			MkPill(vRow, "LATEST", Color3.fromRGB(30, 170, 80), 0.15, Color3.fromRGB(255, 255, 255), isMob and 7 or 8, 2)
+		end
+
+		local spacer = Instance.new("Frame", vRow)
+		spacer.Size                  = UDim2.new(1, 0, 1, 0)
+		spacer.BackgroundTransparency = 1
+		spacer.LayoutOrder           = 90
+
+		if entry.Date then
+			local dl = Instance.new("TextLabel", vRow)
+			dl.Size                  = UDim2.new(0, 0, 1, 0)
+			dl.AutomaticSize         = Enum.AutomaticSize.X
+			dl.BackgroundTransparency = 1
+			dl.Text                  = tostring(entry.Date)
+			dl.TextColor3            = Color3.fromRGB(85, 90, 120)
+			dl.TextSize              = isMob and 7 or 8
+			dl.LayoutOrder           = 99
+			ApplyFont(dl, "regular")
+		end
+
+		local sep = Instance.new("Frame", card)
+		sep.Size                  = UDim2.new(1, 0, 0, 1)
+		sep.BackgroundColor3      = Color3.fromRGB(255, 255, 255)
+		sep.BackgroundTransparency = isLatest and 0.84 or 0.92
+		sep.BorderSizePixel       = 0
+		sep.LayoutOrder           = 1
+
+		local bulletCol = isLatest and tagCol or Color3.fromRGB(70, 75, 105)
+		for ni, note in ipairs(entry.Notes or {}) do
+			local noteStr = type(note) == "table" and (note.Text or tostring(note)) or tostring(note)
+
+			local noteRow = Instance.new("Frame", card)
+			noteRow.Size                  = UDim2.new(1, 0, 0, 0)
+			noteRow.AutomaticSize         = Enum.AutomaticSize.Y
+			noteRow.BackgroundTransparency = 1
+			noteRow.LayoutOrder           = ni + 1
+			local nrl = Instance.new("UIListLayout", noteRow)
+			nrl.FillDirection     = Enum.FillDirection.Horizontal
+			nrl.VerticalAlignment = Enum.VerticalAlignment.Top
+			nrl.Padding           = UDim.new(0, 5)
+
+			local bullet = Instance.new("Frame", noteRow)
+			bullet.Size                  = UDim2.fromOffset(4, 4)
+			bullet.BackgroundColor3      = bulletCol
+			bullet.BackgroundTransparency = 0.1
+			bullet.BorderSizePixel       = 0
+			MkCorner(bullet, 99)
+			local bp = Instance.new("UIPadding", bullet)
+			bp.PaddingTop = UDim.new(0, 4)
+
+			local ntxt = Instance.new("TextLabel", noteRow)
+			ntxt.Size                  = UDim2.new(1, -12, 0, 0)
+			ntxt.AutomaticSize         = Enum.AutomaticSize.Y
+			ntxt.BackgroundTransparency = 1
+			ntxt.Text                  = noteStr
+			ntxt.TextColor3            = isLatest and Color3.fromRGB(200, 205, 228) or Color3.fromRGB(148, 153, 178)
+			ntxt.TextSize              = isMob and 10 or 11
+			ntxt.TextXAlignment        = Enum.TextXAlignment.Left
+			ntxt.TextWrapped           = true
+			ApplyFont(ntxt, "regular")
+		end
+	end
+
+	local bdiv = Instance.new("Frame", view)
+	bdiv.Size                  = UDim2.new(1, 0, 0, 1)
+	bdiv.BackgroundColor3      = Color3.fromRGB(255, 255, 255)
+	bdiv.BackgroundTransparency = 0.88
+	bdiv.BorderSizePixel       = 0
+	bdiv.LayoutOrder           = 2
+end
+
+function Hub:BuildSidePanel()
+	local isMob  = Mobile()
+	local cols   = isMob and 3 or 4
+	local cellW  = isMob and 52 or 58
+	local cellH  = isMob and 58 or 64
+	local padH   = 12
+	local padTop = 12
+	local gap    = 7
+
+	local visSocials    = GetVisibleSocials()
+	local visApps       = GetVisibleApps()
+	local totalSocials  = #visSocials
+	local totalRows     = math.max(1, math.ceil(totalSocials / cols))
+	local maxVisRows    = isMob and 3 or 4
+	local visRows       = math.min(totalRows, maxVisRows)
+	local appChipW      = isMob and 82 or 92
+	local appChipH      = isMob and 26 or 28
+	local appH          = #visApps > 0 and (appChipH + 10 + 18) or 0
+	local pw            = cols * cellW + (cols - 1) * gap + padH * 2
+	local gridH         = visRows * cellH + (visRows - 1) * gap
+	local headerY       = padTop
+	local divY          = headerY + 18 + 6
+	local gridY         = divY + 1 + 8
+	local appSepY       = gridY + gridH + 10
+	local panelH        = appSepY + appH + 12
+
+	local panel = Instance.new("Frame", self.gui)
+	panel.Name             = "SidePanel"
+	panel.Size             = UDim2.fromOffset(pw, panelH)
+	panel.BackgroundColor3 = Color3.fromRGB(10, 12, 22)
+	panel.BorderSizePixel  = 0
+	panel.Visible          = false
+	panel.ZIndex           = 20
+	self.sidePanel         = panel
+	MkCorner(panel, 14)
+	MkStroke(panel, self.cfg.Color, 1.5, 0.35)
+	MkGlow(panel, self.cfg.Color)
+
+	local grad = Instance.new("UIGradient", panel)
+	grad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(14, 18, 30)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 10, 18)),
+	})
+	grad.Rotation = 90
+
+	local hrow = Instance.new("Frame", panel)
+	hrow.Size                  = UDim2.fromOffset(pw - padH * 2, 18)
+	hrow.Position              = UDim2.fromOffset(padH, headerY)
+	hrow.BackgroundTransparency = 1
+
+	local dot = Instance.new("Frame", hrow)
+	dot.Size             = UDim2.fromOffset(6, 6)
+	dot.Position         = UDim2.new(0, 0, 0.5, 0)
+	dot.AnchorPoint      = Vector2.new(0, 0.5)
+	dot.BackgroundColor3 = self.cfg.Color
+	dot.BorderSizePixel  = 0
+	MkCorner(dot, 99)
+
+	local htitle = Instance.new("TextLabel", hrow)
+	htitle.Size                  = UDim2.fromOffset(80, 18)
+	htitle.Position              = UDim2.fromOffset(14, 0)
+	htitle.BackgroundTransparency = 1
+	htitle.Text                  = "SOCIALS"
+	htitle.TextColor3            = self.cfg.Color
+	htitle.TextSize              = isMob and 10 or 11
+	htitle.TextXAlignment        = Enum.TextXAlignment.Left
+	ApplyFont(htitle, "bold")
+
+	local countLbl = Instance.new("TextLabel", hrow)
+	countLbl.Size                  = UDim2.new(1, -96, 1, 0)
+	countLbl.Position              = UDim2.fromOffset(96, 0)
+	countLbl.BackgroundTransparency = 1
+	countLbl.Text                  = totalSocials .. " links"
+	countLbl.TextColor3            = Color3.fromRGB(120, 120, 140)
+	countLbl.TextSize              = 9
+	countLbl.TextXAlignment        = Enum.TextXAlignment.Right
+	ApplyFont(countLbl, "regular")
+
+	local div = Instance.new("Frame", panel)
+	div.Size             = UDim2.fromOffset(pw - padH * 2, 1)
+	div.Position         = UDim2.fromOffset(padH, divY)
+	div.BackgroundColor3 = self.cfg.Color
+	div.BackgroundTransparency = 0.6
+	div.BorderSizePixel  = 0
+
+	local scroll = Instance.new("ScrollingFrame", panel)
+	scroll.Name                 = "SocialScroll"
+	scroll.Size                 = UDim2.fromOffset(pw - padH * 2, gridH)
+	scroll.Position             = UDim2.fromOffset(padH, gridY)
+	scroll.BackgroundTransparency = 1
+	scroll.BorderSizePixel      = 0
+	scroll.ScrollBarThickness   = totalRows > maxVisRows and 3 or 0
+	scroll.ScrollBarImageColor3 = self.cfg.Color
+	scroll.CanvasSize           = UDim2.fromOffset(pw - padH * 2, totalRows * cellH + (totalRows - 1) * gap)
+	scroll.ScrollingDirection   = Enum.ScrollingDirection.Y
+	scroll.ElasticBehavior      = Enum.ElasticBehavior.WhenScrollable
+
+	local grid = Instance.new("Frame", scroll)
+	grid.Size                  = UDim2.fromOffset(pw - padH * 2, totalRows * cellH + (totalRows - 1) * gap)
+	grid.Position              = UDim2.fromOffset(0, 0)
+	grid.BackgroundTransparency = 1
+
+	local gl = Instance.new("UIGridLayout", grid)
+	gl.CellSize             = UDim2.fromOffset(cellW, cellH)
+	gl.CellPadding          = UDim2.fromOffset(gap, gap)
+	gl.FillDirection        = Enum.FillDirection.Horizontal
+	gl.HorizontalAlignment  = totalSocials <= 2 and Enum.HorizontalAlignment.Center or Enum.HorizontalAlignment.Left
+	gl.SortOrder            = Enum.SortOrder.LayoutOrder
+
+	for i, sd in ipairs(visSocials) do
+		local b = Instance.new("Frame", grid)
+		b.BackgroundColor3      = Color3.fromRGB(18, 21, 36)
+		b.BackgroundTransparency = 0
+		b.BorderSizePixel       = 0
+		b.LayoutOrder           = i
+		MkCorner(b, 12)
+
+		local strokeTrans = sd.Pinned and 0.1 or 0
+		local strokeThick = sd.Pinned and 1.5 or 1
+		local bs = MkStroke(b, sd.Pinned and self.cfg.Color or Color3.fromRGB(60, 65, 90), strokeThick, strokeTrans)
+
+		local cg = Instance.new("UIGradient", b)
+		local gradStart = sd.Pinned
+			and self.cfg.Color:Lerp(Color3.fromRGB(14, 17, 30), 0.65)
+			or  Color3.fromRGB(24, 28, 46)
+		cg.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, gradStart),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(14, 17, 30)),
+		})
+		cg.Rotation = 90
+
+		local iconSz = isMob and 20 or 22
+		local ic = Instance.new("ImageLabel", b)
+		ic.Size                  = UDim2.fromOffset(iconSz, iconSz)
+		ic.Position              = UDim2.new(0.5, 0, 0, isMob and 10 or 11)
+		ic.AnchorPoint           = Vector2.new(0.5, 0)
+		ic.BackgroundTransparency = 1
+		ic.Image                 = sd.Icon
+		ic.ImageColor3           = Color3.fromRGB(255, 255, 255)
+
+		local nt = Instance.new("TextLabel", b)
+		nt.Size             = UDim2.new(1, -4, 0, 10)
+		nt.Position         = UDim2.new(0, 2, 1, -13)
+		nt.BackgroundTransparency = 1
+		nt.Text             = sd.Name
+		nt.TextColor3       = sd.Pinned and self.cfg.Color or Color3.fromRGB(180, 185, 210)
+		nt.TextTransparency = 0
+		nt.TextSize         = isMob and 7 or 8
+		nt.TextXAlignment   = Enum.TextXAlignment.Center
+		nt.ClipsDescendants = true
+		ApplyFont(nt, "bold")
+
+		local cl = Instance.new("TextButton", b)
+		cl.Size                  = UDim2.new(1, 0, 1, 0)
+		cl.BackgroundTransparency = 1
+		cl.Text                  = ""
+		cl.ZIndex                = 25
+		local lnk, nm = sd.Link, sd.Name
+		cl.MouseButton1Click:Connect(function()
+			if setclipboard then setclipboard(lnk) end
+			self:Toast(nm .. " copied!", "success")
+		end)
+		cl.MouseEnter:Connect(function()
+			TweenService:Create(b,  TweenInfo.new(0.15), { BackgroundColor3 = self.cfg.Color:Lerp(Color3.fromRGB(5, 8, 18), 0.55) }):Play()
+			TweenService:Create(bs, TweenInfo.new(0.15), { Transparency = 0.3, Color = self.cfg.Color }):Play()
+			TweenService:Create(ic, TweenInfo.new(0.15), { ImageColor3 = self.cfg.Color }):Play()
+			TweenService:Create(nt, TweenInfo.new(0.15), { TextColor3 = self.cfg.Color }):Play()
+		end)
+		cl.MouseLeave:Connect(function()
+			TweenService:Create(b,  TweenInfo.new(0.15), { BackgroundColor3 = Color3.fromRGB(18, 21, 36) }):Play()
+			TweenService:Create(bs, TweenInfo.new(0.15), { Transparency = strokeTrans, Color = sd.Pinned and self.cfg.Color or Color3.fromRGB(60, 65, 90) }):Play()
+			TweenService:Create(ic, TweenInfo.new(0.15), { ImageColor3 = Color3.fromRGB(255, 255, 255) }):Play()
+			TweenService:Create(nt, TweenInfo.new(0.15), { TextColor3 = sd.Pinned and self.cfg.Color or Color3.fromRGB(180, 185, 210) }):Play()
+		end)
+	end
+
+	if #visApps > 0 then
+		local appDiv = Instance.new("Frame", panel)
+		appDiv.Size             = UDim2.fromOffset(pw - padH * 2, 1)
+		appDiv.Position         = UDim2.fromOffset(padH, appSepY)
+		appDiv.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		appDiv.BackgroundTransparency = 0.88
+		appDiv.BorderSizePixel  = 0
+
+		local appHeader = Instance.new("TextLabel", panel)
+		appHeader.Size                  = UDim2.fromOffset(pw - padH * 2, 14)
+		appHeader.Position              = UDim2.fromOffset(padH, appSepY + 6)
+		appHeader.BackgroundTransparency = 1
+		appHeader.Text                  = "APPS"
+		appHeader.TextColor3            = Color3.fromRGB(120, 120, 140)
+		appHeader.TextSize              = 9
+		appHeader.TextXAlignment        = Enum.TextXAlignment.Left
+		ApplyFont(appHeader, "bold")
+
+		local appRow = Instance.new("Frame", panel)
+		appRow.Size                  = UDim2.fromOffset(pw - padH * 2, appChipH)
+		appRow.Position              = UDim2.fromOffset(padH, appSepY + 6 + 14 + 4)
+		appRow.BackgroundTransparency = 1
+		local appLL = Instance.new("UIListLayout", appRow)
+		appLL.FillDirection     = Enum.FillDirection.Horizontal
+		appLL.VerticalAlignment = Enum.VerticalAlignment.Center
+		appLL.Padding           = UDim.new(0, 6)
+
+		for _, ad in ipairs(visApps) do
+			local chip = Instance.new("Frame", appRow)
+			chip.Size             = UDim2.fromOffset(appChipW, appChipH)
+			chip.BackgroundColor3 = Color3.fromRGB(14, 18, 32)
+			chip.BorderSizePixel  = 0
+			MkCorner(chip, 99)
+
+			local strokeT = ad.Pinned and 0.2 or 0.55
+			MkStroke(chip, self.cfg.Color, ad.Pinned and 1.5 or 1, strokeT)
+
+			local cgrad = Instance.new("UIGradient", chip)
+			local gs = ad.Pinned
+				and self.cfg.Color:Lerp(Color3.fromRGB(10, 14, 28), 0.6)
+				or  self.cfg.Color:Lerp(Color3.fromRGB(10, 14, 28), 0.82)
+			cgrad.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, gs),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 14, 28)),
+			})
+			cgrad.Rotation = 90
+
+			local aInner = Instance.new("Frame", chip)
+			aInner.Size                  = UDim2.new(1, 0, 1, 0)
+			aInner.BackgroundTransparency = 1
+			local aLL = Instance.new("UIListLayout", aInner)
+			aLL.Padding             = UDim.new(0, 5)
+			aLL.FillDirection       = Enum.FillDirection.Horizontal
+			aLL.HorizontalAlignment = Enum.HorizontalAlignment.Center
+			aLL.VerticalAlignment   = Enum.VerticalAlignment.Center
+			local aIP = Instance.new("UIPadding", aInner)
+			aIP.PaddingLeft  = UDim.new(0, 7)
+			aIP.PaddingRight = UDim.new(0, 7)
+
+			local aIco = Instance.new("ImageLabel", aInner)
+			aIco.Size                  = UDim2.fromOffset(13, 13)
+			aIco.BackgroundTransparency = 1
+			aIco.Image                 = ad.Icon
+			aIco.ImageColor3           = Color3.fromRGB(255, 255, 255)
+			aIco.LayoutOrder           = 0
+
+			local aTxt = Instance.new("TextLabel", aInner)
+			aTxt.Size                  = UDim2.new(0, 0, 1, 0)
+			aTxt.AutomaticSize         = Enum.AutomaticSize.X
+			aTxt.BackgroundTransparency = 1
+			aTxt.Text                  = ad.Name
+			aTxt.TextColor3            = Color3.fromRGB(255, 255, 255)
+			aTxt.TextTransparency      = 0.08
+			aTxt.TextSize              = 10
+			aTxt.LayoutOrder           = 1
+			aTxt.TextXAlignment        = Enum.TextXAlignment.Left
+			aTxt.ClipsDescendants      = true
+			ApplyFont(aTxt, "bold")
+
+			local aCl = Instance.new("TextButton", chip)
+			aCl.Size                  = UDim2.new(1, 0, 1, 0)
+			aCl.BackgroundTransparency = 1
+			aCl.Text                  = ""
+			aCl.ZIndex                = 25
+			local lnk, nm = ad.Link, ad.Name
+			aCl.MouseButton1Click:Connect(function()
+				if setclipboard then setclipboard(lnk) end
+				self:Toast(nm .. " copied!", "success")
+			end)
+			aCl.MouseEnter:Connect(function()
+				TweenService:Create(chip, TweenInfo.new(0.12), { BackgroundColor3 = self.cfg.Color:Lerp(Color3.fromRGB(8, 12, 22), 0.5) }):Play()
+				TweenService:Create(aIco, TweenInfo.new(0.12), { ImageColor3 = Color3.fromRGB(255, 255, 255) }):Play()
+			end)
+			aCl.MouseLeave:Connect(function()
+				TweenService:Create(chip, TweenInfo.new(0.12), { BackgroundColor3 = Color3.fromRGB(14, 18, 32) }):Play()
+				TweenService:Create(aIco, TweenInfo.new(0.12), { ImageColor3 = Color3.fromRGB(255, 255, 255) }):Play()
+			end)
+		end
+	end
+
+	MakeDraggable(panel, panel)
+end
+
+function Hub:TogglePanel()
+	local p = self.sidePanel
+	if not p then return end
+	self.panelOpen = not self.panelOpen
+	if self.panelOpen then
+		local bgP = self.bg.AbsolutePosition
+		local bgS = self.bg.AbsoluteSize
+		local pW  = p.AbsoluteSize.X
+		local pH  = p.AbsoluteSize.Y
+		local s   = SS()
+		local px  = bgP.X + bgS.X + 8
+		if px + pW > s.X - 4 then px = bgP.X - pW - 8 end
+		if px < 4 then px = math.max(4, bgP.X + bgS.X - pW - 2) end
+		local py = bgP.Y
+		if py + pH > s.Y - 4 then py = math.max(4, s.Y - pH - 4) end
+		p.AnchorPoint           = Vector2.new(0, 0)
+		p.Position              = UDim2.fromOffset(px, py)
+		p.BackgroundTransparency = 1
+		p.Visible               = true
+		TweenService:Create(p, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			BackgroundTransparency = 0
+		}):Play()
+	else
+		TweenService:Create(p, TweenInfo.new(0.15), { BackgroundTransparency = 1 }):Play()
+		task.delay(0.17, function() if p then p.Visible = false end end)
+	end
+end
+
+function Hub:Close()
+	if self.panelOpen then self:TogglePanel() end
+	local bg = self.bg
+	if bg then
+		bg.AutomaticSize = Enum.AutomaticSize.None
+		TweenService:Create(bg, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			Size                 = UDim2.fromOffset(bg.AbsoluteSize.X, 0),
+			BackgroundTransparency = 1,
+		}):Play()
+	end
+	if self.overlay then
+		TweenService:Create(self.overlay, TweenInfo.new(0.3), { BackgroundTransparency = 1 }):Play()
+		task.delay(0.3, function()
+			if self.overlay and self.overlay.Parent then self.overlay:Destroy() end
+		end)
+	end
+	if self.blurFx then
+		TweenService:Create(self.blurFx, TweenInfo.new(0.3), { Size = 0 }):Play()
+		task.delay(0.3, function() self.blurFx:Destroy() end)
+	end
+	task.delay(0.23, function()
+		if self.gui then self.gui:Destroy() end
+	end)
+end
+
+function Hub:Shake()
+	local bg = self.bg
+	if not bg then return end
+	local px = bg.AbsolutePosition.X
+	local py = bg.AbsolutePosition.Y
+	local s  = SS()
+	local fw = bg.AbsoluteSize.X
+	local fh = bg.AbsoluteSize.Y
+	px = math.clamp(px, 0, math.max(0, s.X - fw))
+	py = math.clamp(py, 0, math.max(0, s.Y - fh))
+	task.spawn(function()
+		for _, o in ipairs({ 8, -8, 6, -6, 4, -4, 2, -2, 0 }) do
+			local nx = math.clamp(px + o, 0, math.max(0, s.X - fw))
+			bg.Position = UDim2.fromOffset(nx, py)
+			task.wait(0.03)
+		end
+		bg.Position = UDim2.fromOffset(px, py)
+	end)
+end
+
+function Hub:GetKey()
+	for _, t in ipairs(GetVisibleProviders()) do
+		if t.Name:lower() == self.currentTab then
+			if self.junkie and t.IsJunkie then
+				local link = self.junkie.get_key_link()
+				if link then
+					if setclipboard then setclipboard(link) end
+					self:Toast("Key link copied!", "info")
+				else
+					if setclipboard then setclipboard(t.Url) end
+					self:Toast("Copied " .. t.Name .. " link!", "info")
+				end
+			else
+				if setclipboard then setclipboard(t.Url) end
+				self:Toast("Copied " .. t.Name .. " link!", "info")
+			end
+			return
+		end
+	end
+end
+
+function Hub:Redeem()
+	if self.keyInput == "" then
+		self:Shake()
+		self:Toast("Enter a key first.", "error")
+		return
+	end
+
+	local key    = self.keyInput:upper()
+	self.keyInput = key
+	if self.textBox then self.textBox.Text = key end
+
+	self.keyAttempts = self.keyAttempts + 1
+	if self.keyAttempts > self.cfg.MaxKeyAttempts then
+		self:Toast("Too many attempts.", "error")
+		task.delay(1, function() self:Close() end)
+		return
+	end
+
+	local remaining = self.cfg.MaxKeyAttempts - self.keyAttempts
+	if self.attemptsLbl then
+		self.attemptsLbl.Text = tostring(remaining) .. " attempt" .. (remaining == 1 and "" or "s") .. " remaining"
+		self.attemptsLbl.TextColor3 = remaining <= 1 and Color3.fromRGB(220, 55, 55)
+		                           or remaining <= 2 and Color3.fromRGB(230, 160, 30)
+		                           or Color3.fromRGB(255, 255, 255)
+	end
+
+	if self.cfg.UseJunkie and not self.junkie then
+		self:Shake()
+		self:Toast("SDK still loading — try again.", "error")
+		self.keyAttempts = self.keyAttempts - 1
+		return
+	end
+
+	if self.junkie then
+		local result = self.junkie.check_key(key)
+		if result and result.valid then
+			self.validatedToken = self.authToken
+			local keyToStore    = (result.message == "KEYLESS") and "KEYLESS" or key
+			getgenv().SCRIPT_KEY = keyToStore
+			pcall(function() if writefile then writefile(self.keyFile, keyToStore) end end)
+			self:Toast(self.cfg.SuccessMessage, "success")
+			self:SendWebhook(key)
+			if self.cfg.CloseOnSuccess then
+				task.delay(0.8, function() self:LoadScript() end)
+			end
+		else
+			local err = result and result.error or "Unknown error"
+			self:Shake()
+			if     err == "KEY_EXPIRED"       then self:Toast("Key expired — get a new one.", "error")
+			elseif err == "HWID_BANNED"       then self:Toast("Hardware banned.", "error"); task.delay(1, function() Players.LocalPlayer:Kick("Hardware banned.") end)
+			elseif err == "KEY_INVALIDATED"   then self:Toast("Key was disabled.", "error")
+			elseif err == "ALREADY_USED"      then self:Toast("One-time key already used.", "error")
+			elseif err == "HWID_MISMATCH"     then self:Toast("HWID limit reached.", "error")
+			elseif err == "PREMIUM_REQUIRED"  then self:Toast("Premium key required.", "error")
+			elseif err == "SERVICE_MISMATCH"  then self:Toast("Key is for a different service.", "error")
+			elseif err == "SERVICE_NOT_FOUND" then self:Toast("Service not found — check your config.", "error")
+			elseif err == "KEY_INVALID"       then self:Toast("Invalid key.", "error")
+			elseif err == "ERROR"             then self:Toast("Network error — try again.", "error")
+			elseif tostring(err):match("^http %d+") then self:Toast("Server error: " .. tostring(err), "error")
+			else self:Toast("✗ " .. tostring(err), "error") end
+		end
+	else
+		self.validatedToken  = self.authToken
+		getgenv().SCRIPT_KEY = key
+		pcall(function() if writefile then writefile(self.keyFile, key) end end)
+		self:Toast(self.cfg.SuccessMessage, "success")
+		self:SendWebhook(key)
+		if self.cfg.CloseOnSuccess then
+			task.delay(0.8, function() self:LoadScript() end)
+		end
+	end
+end
+
+function Hub:JoinDiscord()
+	local link = "https://discord.gg/" .. self.cfg.Discord
+	if setclipboard then setclipboard(link) end
+	self:Toast("Discord link copied!", "info")
+	local HS  = game:GetService("HttpService")
+	local req = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
+	if req then
+		pcall(req, {
+			Url    = "http://127.0.0.1:6463/rpc?v=1",
+			Method = "POST",
+			Headers = {
+				["Content-Type"] = "application/json",
+				["Origin"]       = "https://discord.com",
+			},
+			Body = HS:JSONEncode({
+				cmd   = "INVITE_BROWSER",
+				args  = { code = self.cfg.Discord },
+				nonce = HS:GenerateGUID(false),
+			}),
+		})
+	end
+end
+
+function Hub:LoadScript()
+	if self.validatedToken ~= self.authToken then return end
+	local gc = self.cfg.GameSupport[game.PlaceId] or self.cfg.GameSupport.Universal
+	if gc then
+		local url = self.cfg.Premium and gc.Premium or gc.Free
+		if url then
+			pcall(function() loadstring(game:HttpGet(url))() end)
+		end
+	end
+	if self.overlay then
+		TweenService:Create(self.overlay, TweenInfo.new(0.4), { BackgroundTransparency = 1 }):Play()
+		task.delay(0.4, function()
+			if self.overlay and self.overlay.Parent then self.overlay:Destroy() end
+		end)
+	end
+	if self.blurFx then
+		TweenService:Create(self.blurFx, TweenInfo.new(0.4), { Size = 0 }):Play()
+		task.delay(0.4, function() self.blurFx:Destroy() end)
+	end
+	if self.gui then self.gui:Destroy() end
+end
+
+-- ============================================================
+--  ARQEL-STYLE 3-PANEL HORIZONTAL LAYOUT
+-- ============================================================
+
+function Hub:BuildTriPanel()
+	local isMob   = Mobile()
+	local panelH  = isMob and 360 or 400
+	local pad     = 10
+	local gap     = 8
+
+	-- Fix bg height
+	self.bg.AutomaticSize  = Enum.AutomaticSize.None
+	self.bg.Size           = UDim2.fromOffset(self.bg.AbsoluteSize.X == 0 and (isMob and 680 or 720) or self.bg.Size.X.Offset, panelH + pad * 2 + 26)
+	-- Fix inner layout
+	local inner = self.inner
+	local oldLayout = inner:FindFirstChildOfClass("UIListLayout")
+	if oldLayout then oldLayout:Destroy() end
+	local oldPad = inner:FindFirstChildOfClass("UIPadding")
+	if oldPad then oldPad:Destroy() end
+	inner.Size = UDim2.new(1, 0, 1, 0)
+
+	-- Title bar at top (full width)
+	self:BuildTitleBar()
+	local titleBar = inner:FindFirstChild("TitleBar")
+	if titleBar then
+		titleBar.LayoutOrder = nil
+		titleBar.Size = UDim2.new(1, -20, 0, 26)
+		titleBar.Position = UDim2.fromOffset(10, 8)
+	end
+
+	-- Horizontal columns container
+	local colsFrame = Instance.new("Frame", inner)
+	colsFrame.Name                  = "TriColumns"
+	colsFrame.Size                  = UDim2.new(1, -20, 0, panelH)
+	colsFrame.Position              = UDim2.fromOffset(10, 40)
+	colsFrame.BackgroundTransparency = 1
+
+	local totalW = self.bg.Size.X.Offset - 20
+	local colW   = math.floor((totalW - gap * 2) / 3)
+
+	-- Vertical divider helper
+	local function MkVDivider(parent, x)
+		local d = Instance.new("Frame", parent)
+		d.Size             = UDim2.fromOffset(1, panelH - 10)
+		d.Position         = UDim2.fromOffset(x, 5)
+		d.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		d.BackgroundTransparency = 0.88
+		d.BorderSizePixel  = 0
+	end
+
+	MkVDivider(colsFrame, colW + gap // 2)
+	MkVDivider(colsFrame, colW * 2 + gap + gap // 2)
+
+	-- =================== LEFT PANEL: User Info ===================
+	local leftCol = Instance.new("Frame", colsFrame)
+	leftCol.Name                   = "LeftCol"
+	leftCol.Size                   = UDim2.fromOffset(colW, panelH)
+	leftCol.Position               = UDim2.fromOffset(0, 0)
+	leftCol.BackgroundColor3       = Color3.fromRGB(12, 15, 26)
+	leftCol.BackgroundTransparency = 0
+	leftCol.BorderSizePixel        = 0
+	MkCorner(leftCol, 10)
+	MkStroke(leftCol, self.cfg.Color, 1, 0.6)
+
+	local leftGrad = Instance.new("UIGradient", leftCol)
+	leftGrad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, self.cfg.Color:Lerp(Color3.fromRGB(8, 10, 20), 0.88)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(9, 11, 21)),
+	})
+	leftGrad.Rotation = 135
+
+	local lpad = Instance.new("UIPadding", leftCol)
+	lpad.PaddingTop    = UDim.new(0, 12)
+	lpad.PaddingBottom = UDim.new(0, 10)
+	lpad.PaddingLeft   = UDim.new(0, 12)
+	lpad.PaddingRight  = UDim.new(0, 12)
+
+	local lLayout = Instance.new("UIListLayout", leftCol)
+	lLayout.Padding             = UDim.new(0, 8)
+	lLayout.FillDirection       = Enum.FillDirection.Vertical
+	lLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	lLayout.VerticalAlignment   = Enum.VerticalAlignment.Top
+
+	-- Left panel header label
+	local lHeader = Instance.new("TextLabel", leftCol)
+	lHeader.Size                  = UDim2.new(1, 0, 0, 13)
+	lHeader.BackgroundTransparency = 1
+	lHeader.Text                  = "USER INFO"
+	lHeader.TextColor3            = self.cfg.Color
+	lHeader.TextSize              = 10
+	lHeader.TextXAlignment        = Enum.TextXAlignment.Left
+	ApplyFont(lHeader, "bold")
+
+	-- Divider under header
+	local lDiv = Instance.new("Frame", leftCol)
+	lDiv.Size             = UDim2.new(1, 0, 0, 1)
+	lDiv.BackgroundColor3 = self.cfg.Color
+	lDiv.BackgroundTransparency = 0.6
+	lDiv.BorderSizePixel  = 0
+
+	-- Avatar area
+	local avatarRow = Instance.new("Frame", leftCol)
+	avatarRow.Size                  = UDim2.new(1, 0, 0, 58)
+	avatarRow.BackgroundColor3      = Color3.fromRGB(14, 18, 32)
+	avatarRow.BackgroundTransparency = 0
+	avatarRow.BorderSizePixel       = 0
+	MkCorner(avatarRow, 8)
+	MkStroke(avatarRow, self.cfg.Color, 1, 0.7)
+
+	local avatarGrad = Instance.new("UIGradient", avatarRow)
+	avatarGrad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, self.cfg.Color:Lerp(Color3.fromRGB(10, 13, 24), 0.82)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 13, 24)),
+	})
+	avatarGrad.Rotation = 90
+
+	local arlo = Instance.new("UIListLayout", avatarRow)
+	arlo.FillDirection     = Enum.FillDirection.Horizontal
+	arlo.VerticalAlignment = Enum.VerticalAlignment.Center
+	arlo.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	arlo.Padding           = UDim.new(0, 8)
+	local arpad = Instance.new("UIPadding", avatarRow)
+	arpad.PaddingLeft  = UDim.new(0, 10)
+	arpad.PaddingRight = UDim.new(0, 8)
+
+	-- Avatar image
+	local avFrame = Instance.new("Frame", avatarRow)
+	avFrame.Size             = UDim2.fromOffset(36, 36)
+	avFrame.BackgroundColor3 = self.cfg.Color
+	avFrame.BackgroundTransparency = 0.75
+	avFrame.BorderSizePixel  = 0
+	MkCorner(avFrame, 99)
+	MkStroke(avFrame, self.cfg.Color, 1.5, 0.3)
+
+	local avImg = Instance.new("ImageLabel", avFrame)
+	avImg.Size                  = UDim2.new(0.88, 0, 0.88, 0)
+	avImg.Position              = UDim2.new(0.06, 0, 0.06, 0)
+	avImg.BackgroundTransparency = 1
+	avImg.Image                 = "rbxthumb://type=AvatarHeadShot&id=" .. Players.LocalPlayer.UserId .. "&w=48&h=48"
+	MkCorner(avImg, 99)
+
+	local avInfo = Instance.new("Frame", avatarRow)
+	avInfo.Size                  = UDim2.new(1, -52, 1, 0)
+	avInfo.BackgroundTransparency = 1
+	local avInfoL = Instance.new("UIListLayout", avInfo)
+	avInfoL.FillDirection     = Enum.FillDirection.Vertical
+	avInfoL.VerticalAlignment = Enum.VerticalAlignment.Center
+	avInfoL.Padding           = UDim.new(0, 2)
+
+	local avName = Instance.new("TextLabel", avInfo)
+	avName.Size                  = UDim2.new(1, 0, 0, 14)
+	avName.BackgroundTransparency = 1
+	avName.Text                  = "Welcome, " .. Players.LocalPlayer.Name
+	avName.TextColor3            = Color3.fromRGB(230, 232, 255)
+	avName.TextSize              = 11
+	avName.TextXAlignment        = Enum.TextXAlignment.Left
+	avName.TextTruncate          = Enum.TextTruncate.AtEnd
+	ApplyFont(avName, "bold")
+
+	local avSub = Instance.new("TextLabel", avInfo)
+	avSub.Size                  = UDim2.new(1, 0, 0, 11)
+	avSub.BackgroundTransparency = 1
+	avSub.Text                  = "ID: " .. tostring(Players.LocalPlayer.UserId)
+	avSub.TextColor3            = Color3.fromRGB(100, 108, 138)
+	avSub.TextSize              = 9
+	avSub.TextXAlignment        = Enum.TextXAlignment.Left
+	ApplyFont(avSub, "regular")
+
+	-- Info rows helper
+	local function MkInfoRow(parent, label, value, valueColor)
+		local row = Instance.new("Frame", parent)
+		row.Size                  = UDim2.new(1, 0, 0, 20)
+		row.BackgroundColor3      = Color3.fromRGB(13, 17, 28)
+		row.BackgroundTransparency = 0
+		row.BorderSizePixel       = 0
+		MkCorner(row, 6)
+		local rpad = Instance.new("UIPadding", row)
+		rpad.PaddingLeft  = UDim.new(0, 8)
+		rpad.PaddingRight = UDim.new(0, 8)
+		local rlo = Instance.new("UIListLayout", row)
+		rlo.FillDirection       = Enum.FillDirection.Horizontal
+		rlo.VerticalAlignment   = Enum.VerticalAlignment.Center
+		rlo.HorizontalAlignment = Enum.HorizontalAlignment.Left
+
+		local lbl = Instance.new("TextLabel", row)
+		lbl.Size                  = UDim2.new(0.42, 0, 1, 0)
+		lbl.BackgroundTransparency = 1
+		lbl.Text                  = label
+		lbl.TextColor3            = Color3.fromRGB(95, 100, 128)
+		lbl.TextSize              = 9
+		lbl.TextXAlignment        = Enum.TextXAlignment.Left
+		ApplyFont(lbl, "regular")
+
+		local val = Instance.new("TextLabel", row)
+		val.Size                  = UDim2.new(0.58, 0, 1, 0)
+		val.BackgroundTransparency = 1
+		val.Text                  = tostring(value)
+		val.TextColor3            = valueColor or Color3.fromRGB(200, 205, 228)
+		val.TextSize              = 9
+		val.TextXAlignment        = Enum.TextXAlignment.Right
+		val.TextTruncate          = Enum.TextTruncate.AtEnd
+		ApplyFont(val, "bold")
+		return row, val
+	end
+
+	-- Info section
+	local infoSection = Instance.new("Frame", leftCol)
+	infoSection.Size                  = UDim2.new(1, 0, 0, 0)
+	infoSection.AutomaticSize         = Enum.AutomaticSize.Y
+	infoSection.BackgroundTransparency = 1
+	local islo = Instance.new("UIListLayout", infoSection)
+	islo.Padding       = UDim.new(0, 3)
+	islo.FillDirection = Enum.FillDirection.Vertical
+
+	local execName = "Unknown"
+	for _, execId in ipairs({ "krnl", "synapse", "fluxus", "script-ware", "wave", "delta" }) do
+		if _G[execId] or getgenv()[execId] then execName = execId:upper(); break end
+	end
+	if identifyexecutor then
+		local ok, en = pcall(identifyexecutor)
+		if ok and en then execName = en end
+	end
+
+	MkInfoRow(infoSection, "Executor", execName, self.cfg.Color)
+	MkInfoRow(infoSection, "Device",   isMob and "Mobile" or "PC",  Color3.fromRGB(180, 185, 215))
+
+	-- HWID row with copy
+	local hwidRow, hwidVal = MkInfoRow(infoSection, "HWID", "—", Color3.fromRGB(130, 135, 165))
+	task.spawn(function()
+		local hwid = "—"
+		if getcustomasset then
+			local ok2, v = pcall(function()
+				return game:HttpGet("https://hwid.junkie.dev/") -- placeholder
+			end)
+		end
+		if getfingerprint then
+			local ok2, v = pcall(getfingerprint)
+			if ok2 then hwid = tostring(v):sub(1, 12) .. "..." end
+		elseif game.JobId then
+			hwid = tostring(game.JobId):sub(1, 8)
+		end
+		hwidVal.Text = hwid
+	end)
+
+	-- Copy HWID btn
+	local cpBtn = Instance.new("ImageLabel", hwidRow)
+	cpBtn.Size                  = UDim2.fromOffset(10, 10)
+	cpBtn.Position              = UDim2.new(1, -2, 0.5, 0)
+	cpBtn.AnchorPoint           = Vector2.new(1, 0.5)
+	cpBtn.BackgroundTransparency = 1
+	cpBtn.Image                 = "rbxassetid://13868333926"
+	cpBtn.ImageColor3           = Color3.fromRGB(130, 135, 165)
+	cpBtn.ZIndex                = 5
+	local cpBtnClick = Instance.new("TextButton", cpBtn)
+	cpBtnClick.Size                  = UDim2.new(1, 0, 1, 0)
+	cpBtnClick.BackgroundTransparency = 1
+	cpBtnClick.Text                  = ""
+	cpBtnClick.ZIndex                = 6
+	cpBtnClick.MouseButton1Click:Connect(function()
+		if setclipboard then setclipboard(hwidVal.Text) end
+		self:Toast("HWID copied!", "info")
+	end)
+
+	-- Clock row
+	local timeRow = Instance.new("Frame", leftCol)
+	timeRow.Size                  = UDim2.new(1, 0, 0, 30)
+	timeRow.BackgroundColor3      = self.cfg.Color
+	timeRow.BackgroundTransparency = 0.82
+	timeRow.BorderSizePixel       = 0
+	MkCorner(timeRow, 8)
+	MkStroke(timeRow, self.cfg.Color, 1, 0.5)
+
+	local trlo = Instance.new("UIListLayout", timeRow)
+	trlo.FillDirection       = Enum.FillDirection.Vertical
+	trlo.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	trlo.VerticalAlignment   = Enum.VerticalAlignment.Center
+
+	local clockLbl = Instance.new("TextLabel", timeRow)
+	clockLbl.Size                  = UDim2.new(1, 0, 0, 15)
+	clockLbl.BackgroundTransparency = 1
+	clockLbl.TextColor3            = Color3.fromRGB(220, 224, 255)
+	clockLbl.TextSize              = 12
+	clockLbl.TextXAlignment        = Enum.TextXAlignment.Center
+	ApplyFont(clockLbl, "bold")
+
+	local dateLbl = Instance.new("TextLabel", timeRow)
+	dateLbl.Size                  = UDim2.new(1, 0, 0, 11)
+	dateLbl.BackgroundTransparency = 1
+	dateLbl.TextColor3            = Color3.fromRGB(100, 108, 138)
+	dateLbl.TextSize              = 9
+	dateLbl.TextXAlignment        = Enum.TextXAlignment.Center
+	ApplyFont(dateLbl, "regular")
+
+	-- Live clock update
+	task.spawn(function()
+		local months = {"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"}
+		while clockLbl and clockLbl.Parent do
+			local t = os.time()
+			local d = os.date("*t", t)
+			local h = d.hour; local suffix = "AM"
+			if h >= 12 then suffix = "PM" end
+			if h > 12 then h = h - 12 elseif h == 0 then h = 12 end
+			clockLbl.Text = string.format("%d:%02d:%02d %s", h, d.min, d.sec, suffix)
+			dateLbl.Text  = string.format("%s %d, %d", months[d.month], d.day, d.year)
+			task.wait(1)
+		end
+	end)
+
+	-- =================== CENTER PANEL: Key System ===================
+	local centerCol = Instance.new("Frame", colsFrame)
+	centerCol.Name                   = "CenterCol"
+	centerCol.Size                   = UDim2.fromOffset(colW, panelH)
+	centerCol.Position               = UDim2.fromOffset(colW + gap, 0)
+	centerCol.BackgroundColor3       = Color3.fromRGB(12, 15, 26)
+	centerCol.BackgroundTransparency = 0
+	centerCol.BorderSizePixel        = 0
+	MkCorner(centerCol, 10)
+	MkStroke(centerCol, self.cfg.Color, 1.5, 0.4)
+
+	local centerGrad = Instance.new("UIGradient", centerCol)
+	centerGrad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, self.cfg.Color:Lerp(Color3.fromRGB(6, 8, 18), 0.84)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(8, 10, 20)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(6, 8, 18)),
+	})
+	centerGrad.Rotation = 135
+
+	local cpad = Instance.new("UIPadding", centerCol)
+	cpad.PaddingTop    = UDim.new(0, 14)
+	cpad.PaddingBottom = UDim.new(0, 12)
+	cpad.PaddingLeft   = UDim.new(0, 14)
+	cpad.PaddingRight  = UDim.new(0, 14)
+
+	local cLayout = Instance.new("UIListLayout", centerCol)
+	cLayout.Padding             = UDim.new(0, 7)
+	cLayout.FillDirection       = Enum.FillDirection.Vertical
+	cLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	cLayout.VerticalAlignment   = Enum.VerticalAlignment.Top
+
+	-- Center header
+	local cHeaderRow = Instance.new("Frame", centerCol)
+	cHeaderRow.Size                  = UDim2.new(1, 0, 0, 13)
+	cHeaderRow.BackgroundTransparency = 1
+	local chrl = Instance.new("UIListLayout", cHeaderRow)
+	chrl.FillDirection     = Enum.FillDirection.Horizontal
+	chrl.VerticalAlignment = Enum.VerticalAlignment.Center
+	chrl.Padding           = UDim.new(0, 6)
+
+	local cIco = Instance.new("ImageLabel", cHeaderRow)
+	cIco.Size                  = UDim2.fromOffset(13, 13)
+	cIco.BackgroundTransparency = 1
+	cIco.Image                 = self.cfg.Icon
+	cIco.ImageColor3           = self.cfg.Color
+
+	local cHeader = Instance.new("TextLabel", cHeaderRow)
+	cHeader.Size                  = UDim2.new(0, 0, 1, 0)
+	cHeader.AutomaticSize         = Enum.AutomaticSize.X
+	cHeader.BackgroundTransparency = 1
+	cHeader.Text                  = self.cfg.BadgeText or self.cfg.Name
+	cHeader.TextColor3            = self.cfg.Color
+	cHeader.TextSize              = 10
+	cHeader.TextXAlignment        = Enum.TextXAlignment.Left
+	ApplyFont(cHeader, "bold")
+
+	local cDiv = Instance.new("Frame", centerCol)
+	cDiv.Size             = UDim2.new(1, 0, 0, 1)
+	cDiv.BackgroundColor3 = self.cfg.Color
+	cDiv.BackgroundTransparency = 0.6
+	cDiv.BorderSizePixel  = 0
+
+	-- Big title
+	local bigTitle = Instance.new("Frame", centerCol)
+	bigTitle.Size                  = UDim2.new(1, 0, 0, 0)
+	bigTitle.AutomaticSize         = Enum.AutomaticSize.Y
+	bigTitle.BackgroundTransparency = 1
+	local btl = Instance.new("UIListLayout", bigTitle)
+	btl.FillDirection       = Enum.FillDirection.Vertical
+	btl.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	btl.Padding             = UDim.new(0, 1)
+
+	local enterPrompt = Instance.new("TextLabel", bigTitle)
+	enterPrompt.Size                  = UDim2.new(1, 0, 0, 0)
+	enterPrompt.AutomaticSize         = Enum.AutomaticSize.Y
+	enterPrompt.BackgroundTransparency = 1
+	enterPrompt.Text                  = "Enter your key to continue"
+	enterPrompt.TextColor3            = Color3.fromRGB(190, 195, 220)
+	enterPrompt.TextSize              = isMob and 13 or 15
+	enterPrompt.TextXAlignment        = Enum.TextXAlignment.Left
+	enterPrompt.TextWrapped           = true
+	ApplyFont(enterPrompt, "black")
+
+	local enterSub = Instance.new("TextLabel", bigTitle)
+	enterSub.Size                  = UDim2.new(1, 0, 0, 11)
+	enterSub.BackgroundTransparency = 1
+	enterSub.Text                  = self.cfg.KeySystemLabel or "Enter your key below"
+	enterSub.TextColor3            = Color3.fromRGB(100, 108, 138)
+	enterSub.TextSize              = 9
+	enterSub.TextXAlignment        = Enum.TextXAlignment.Left
+	ApplyFont(enterSub, "regular")
+
+	-- Key input box
+	local kb = Instance.new("Frame", centerCol)
+	kb.Size             = UDim2.new(1, 0, 0, 34)
+	kb.BackgroundColor3 = self.cfg.Color
+	kb.BackgroundTransparency = 0.83
+	MkCorner(kb, 8)
+	MkStroke(kb, self.cfg.Color, 1.2, 0.5)
+
+	local kbp = Instance.new("UIPadding", kb)
+	kbp.PaddingLeft  = UDim.new(0, 10)
+	kbp.PaddingRight = UDim.new(0, 36)
+
+	local kblo = Instance.new("UIListLayout", kb)
+	kblo.FillDirection     = Enum.FillDirection.Horizontal
+	kblo.VerticalAlignment = Enum.VerticalAlignment.Center
+
+	local keyLockIco = Instance.new("ImageLabel", kb)
+	keyLockIco.Size                  = UDim2.fromOffset(13, 13)
+	keyLockIco.BackgroundTransparency = 1
+	keyLockIco.Image                 = "rbxassetid://14938884688"
+	keyLockIco.ImageColor3           = Color3.fromRGB(120, 128, 160)
+	keyLockIco.LayoutOrder           = 0
+
+	local tb = Instance.new("TextBox", kb)
+	tb.Size                  = UDim2.new(1, -18, 1, 0)
+	tb.BackgroundTransparency = 1
+	tb.Text                  = ""
+	tb.PlaceholderText       = "Enter your key..."
+	tb.PlaceholderColor3     = Color3.fromRGB(80, 85, 115)
+	tb.TextColor3            = Color3.fromRGB(255, 255, 255)
+	tb.TextSize              = 12
+	tb.TextXAlignment        = Enum.TextXAlignment.Left
+	tb.ClearTextOnFocus      = false
+	tb.LayoutOrder           = 1
+	ApplyFont(tb, "regular")
+	self.textBox = tb
+
+	tb:GetPropertyChangedSignal("Text"):Connect(function()
+		self.keyInput = tb.Text
+	end)
+
+	-- Animated placeholder
+	local ph, idx, fwd = self.cfg.KeySystemPlaceholder or "Enter your key...", 0, true
+	task.spawn(function()
+		while tb and tb.Parent do
+			if tb.Text ~= "" then
+				task.wait(0.1)
+			elseif fwd then
+				idx = idx + 1
+				tb.PlaceholderText = ph:sub(1, idx)
+				if idx >= #ph then fwd = false; task.wait(1.2) else task.wait(0.07) end
+			else
+				idx = idx - 1
+				tb.PlaceholderText = ph:sub(1, idx)
+				if idx <= 0 then fwd = true; task.wait(0.4) else task.wait(0.04) end
+			end
+		end
+	end)
+
+	-- Copy icon on key input
+	local copyCircle = Instance.new("Frame", kb)
+	copyCircle.Size                  = UDim2.fromOffset(22, 22)
+	copyCircle.Position              = UDim2.new(1, -2, 0.5, 0)
+	copyCircle.AnchorPoint           = Vector2.new(1, 0.5)
+	copyCircle.BackgroundColor3      = self.cfg.Color
+	copyCircle.BackgroundTransparency = 0.55
+	copyCircle.BorderSizePixel       = 0
+	copyCircle.ZIndex                = 5
+	MkCorner(copyCircle, 99)
+	local copyIco = Instance.new("ImageLabel", copyCircle)
+	copyIco.Size                  = UDim2.fromOffset(10, 10)
+	copyIco.Position              = UDim2.new(0.5, 0, 0.5, 0)
+	copyIco.AnchorPoint           = Vector2.new(0.5, 0.5)
+	copyIco.BackgroundTransparency = 1
+	copyIco.Image                 = "rbxassetid://13868333926"
+	copyIco.ImageColor3           = Color3.fromRGB(255, 255, 255)
+	local copyBtn = Instance.new("TextButton", copyCircle)
+	copyBtn.Size                  = UDim2.new(1, 0, 1, 0)
+	copyBtn.BackgroundTransparency = 1
+	copyBtn.Text                  = ""
+	copyBtn.ZIndex                = 6
+	copyBtn.MouseButton1Click:Connect(function()
+		self.currentTab = GetVisibleProviders()[1] and GetVisibleProviders()[1].Name:lower() or ""
+		self:GetKey()
+	end)
+
+	-- Attempts label
+	local attLbl = Instance.new("TextLabel", centerCol)
+	attLbl.Size                  = UDim2.new(1, 0, 0, 11)
+	attLbl.BackgroundTransparency = 1
+	attLbl.Text                  = ""
+	attLbl.TextColor3            = Color3.fromRGB(255, 255, 255)
+	attLbl.TextTransparency      = 0.45
+	attLbl.TextSize              = 10
+	attLbl.TextXAlignment        = Enum.TextXAlignment.Center
+	ApplyFont(attLbl, "regular")
+	self.attemptsLbl = attLbl
+
+	-- Redeem button (big, full width, accent color)
+	local redeemBtn = Instance.new("Frame", centerCol)
+	redeemBtn.Size             = UDim2.new(1, 0, 0, 34)
+	redeemBtn.BackgroundColor3 = self.cfg.Color
+	MkCorner(redeemBtn, 10)
+
+	local redeemInner = Instance.new("Frame", redeemBtn)
+	redeemInner.Size                  = UDim2.new(1, 0, 1, 0)
+	redeemInner.BackgroundTransparency = 1
+	local ril = Instance.new("UIListLayout", redeemInner)
+	ril.FillDirection       = Enum.FillDirection.Horizontal
+	ril.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	ril.VerticalAlignment   = Enum.VerticalAlignment.Center
+	ril.Padding             = UDim.new(0, 6)
+
+	local redeemIco = Instance.new("ImageLabel", redeemInner)
+	redeemIco.Size                  = UDim2.fromOffset(14, 14)
+	redeemIco.BackgroundTransparency = 1
+	redeemIco.Image                 = "rbxassetid://14938884688"
+	redeemIco.ImageColor3           = ResolveTextColor()
+
+	local redeemTxt = Instance.new("TextLabel", redeemInner)
+	redeemTxt.Size                  = UDim2.new(0, 0, 1, 0)
+	redeemTxt.AutomaticSize         = Enum.AutomaticSize.X
+	redeemTxt.BackgroundTransparency = 1
+	redeemTxt.Text                  = "Redeem Key"
+	redeemTxt.TextColor3            = ResolveTextColor()
+	redeemTxt.TextSize              = 13
+	ApplyFont(redeemTxt, "bold")
+
+	local redeemClick = Instance.new("TextButton", redeemBtn)
+	redeemClick.Size                  = UDim2.new(1, 0, 1, 0)
+	redeemClick.BackgroundTransparency = 1
+	redeemClick.Text                  = ""
+	redeemClick.MouseButton1Click:Connect(function() self:Redeem() end)
+	redeemClick.MouseEnter:Connect(function()
+		TweenService:Create(redeemBtn, TweenInfo.new(0.1), { BackgroundColor3 = self.cfg.Color:Lerp(Color3.fromRGB(255,255,255), 0.13) }):Play()
+	end)
+	redeemClick.MouseLeave:Connect(function()
+		TweenService:Create(redeemBtn, TweenInfo.new(0.1), { BackgroundColor3 = self.cfg.Color }):Play()
+	end)
+
+	-- Get Key + Discord row
+	local ctaRow = Instance.new("Frame", centerCol)
+	ctaRow.Size                  = UDim2.new(1, 0, 0, 28)
+	ctaRow.BackgroundTransparency = 1
+	local ctaL = Instance.new("UIListLayout", ctaRow)
+	ctaL.FillDirection       = Enum.FillDirection.Horizontal
+	ctaL.VerticalAlignment   = Enum.VerticalAlignment.Center
+	ctaL.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	ctaL.Padding             = UDim.new(0, 6)
+
+	local getBtn = Instance.new("Frame", ctaRow)
+	getBtn.Size             = UDim2.new(0.56, 0, 1, 0)
+	getBtn.BackgroundColor3 = self.cfg.Color
+	getBtn.BackgroundTransparency = 0.15
+	getBtn.BorderSizePixel  = 0
+	MkCorner(getBtn, 8)
+	MkStroke(getBtn, self.cfg.Color, 1, 0.35)
+
+	local getBtnInner = Instance.new("Frame", getBtn)
+	getBtnInner.Size                  = UDim2.new(1, 0, 1, 0)
+	getBtnInner.BackgroundTransparency = 1
+	local gbil = Instance.new("UIListLayout", getBtnInner)
+	gbil.FillDirection       = Enum.FillDirection.Horizontal
+	gbil.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	gbil.VerticalAlignment   = Enum.VerticalAlignment.Center
+	gbil.Padding             = UDim.new(0, 4)
+
+	local getL = Instance.new("TextLabel", getBtnInner)
+	getL.Size                  = UDim2.new(0, 0, 1, 0)
+	getL.AutomaticSize         = Enum.AutomaticSize.X
+	getL.BackgroundTransparency = 1
+	getL.Text                  = "Get Key"
+	getL.TextColor3            = ResolveTextColor()
+	getL.TextSize              = 11
+	ApplyFont(getL, "bold")
+	local getArr = Instance.new("TextLabel", getBtnInner)
+	getArr.Size                  = UDim2.new(0, 0, 1, 0)
+	getArr.AutomaticSize         = Enum.AutomaticSize.X
+	getArr.BackgroundTransparency = 1
+	getArr.Text                  = "→"
+	getArr.TextColor3            = ResolveTextColor()
+	getArr.TextSize              = 12
+	ApplyFont(getArr, "bold")
+
+	local getBtnClick = Instance.new("TextButton", getBtn)
+	getBtnClick.Size                  = UDim2.new(1, 0, 1, 0)
+	getBtnClick.BackgroundTransparency = 1
+	getBtnClick.Text                  = ""
+	getBtnClick.MouseButton1Click:Connect(function()
+		self.currentTab = GetVisibleProviders()[1] and GetVisibleProviders()[1].Name:lower() or ""
+		self:GetKey()
+	end)
+	getBtnClick.MouseEnter:Connect(function()
+		TweenService:Create(getBtn, TweenInfo.new(0.1), { BackgroundTransparency = 0 }):Play()
+	end)
+	getBtnClick.MouseLeave:Connect(function()
+		TweenService:Create(getBtn, TweenInfo.new(0.1), { BackgroundTransparency = 0.15 }):Play()
+	end)
+
+	local discBtn = Instance.new("Frame", ctaRow)
+	discBtn.Size                  = UDim2.new(0.4, 0, 1, 0)
+	discBtn.BackgroundColor3      = Color3.fromRGB(88, 101, 242)
+	discBtn.BackgroundTransparency = 0.15
+	discBtn.BorderSizePixel       = 0
+	MkCorner(discBtn, 8)
+	MkStroke(discBtn, Color3.fromRGB(88, 101, 242), 1, 0.35)
+
+	local discInner = Instance.new("Frame", discBtn)
+	discInner.Size                  = UDim2.new(1, 0, 1, 0)
+	discInner.BackgroundTransparency = 1
+	local discLL = Instance.new("UIListLayout", discInner)
+	discLL.FillDirection       = Enum.FillDirection.Horizontal
+	discLL.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	discLL.VerticalAlignment   = Enum.VerticalAlignment.Center
+	discLL.Padding             = UDim.new(0, 4)
+
+	local discL = Instance.new("TextLabel", discInner)
+	discL.Size                  = UDim2.new(0, 0, 1, 0)
+	discL.AutomaticSize         = Enum.AutomaticSize.X
+	discL.BackgroundTransparency = 1
+	discL.Text                  = "Discord"
+	discL.TextColor3            = Color3.fromRGB(255, 255, 255)
+	discL.TextSize              = 11
+	ApplyFont(discL, "bold")
+
+	local discClick = Instance.new("TextButton", discBtn)
+	discClick.Size                  = UDim2.new(1, 0, 1, 0)
+	discClick.BackgroundTransparency = 1
+	discClick.Text                  = ""
+	discClick.MouseButton1Click:Connect(function() self:JoinDiscord() end)
+	discClick.MouseEnter:Connect(function()
+		TweenService:Create(discBtn, TweenInfo.new(0.1), { BackgroundTransparency = 0 }):Play()
+	end)
+	discClick.MouseLeave:Connect(function()
+		TweenService:Create(discBtn, TweenInfo.new(0.1), { BackgroundTransparency = 0.15 }):Play()
+	end)
+
+	-- Provider tabs in center
+	self:BuildTabs(centerCol)
+
+	-- Member count row
+	if self.cfg.ShowMemberCount then
+		local mlRow = Instance.new("Frame", centerCol)
+		mlRow.Size                  = UDim2.new(1, 0, 0, 12)
+		mlRow.BackgroundTransparency = 1
+		local ml = Instance.new("TextLabel", mlRow)
+		ml.Size                  = UDim2.new(1, 0, 1, 0)
+		ml.BackgroundTransparency = 1
+		ml.Text                  = "Fetching..."
+		ml.TextColor3            = Color3.fromRGB(160, 160, 160)
+		ml.TextSize              = 9
+		ml.TextXAlignment        = Enum.TextXAlignment.Center
+		ml.RichText              = true
+		ApplyFont(ml, "regular")
+		self.memberLbl = ml
+	end
+
+	-- =================== RIGHT PANEL: Changelog ===================
+	local rightCol = Instance.new("Frame", colsFrame)
+	rightCol.Name                   = "RightCol"
+	rightCol.Size                   = UDim2.fromOffset(colW, panelH)
+	rightCol.Position               = UDim2.fromOffset(colW * 2 + gap * 2, 0)
+	rightCol.BackgroundColor3       = Color3.fromRGB(12, 15, 26)
+	rightCol.BackgroundTransparency = 0
+	rightCol.BorderSizePixel        = 0
+	MkCorner(rightCol, 10)
+	MkStroke(rightCol, self.cfg.Color, 1, 0.6)
+
+	local rightGrad = Instance.new("UIGradient", rightCol)
+	rightGrad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, self.cfg.Color:Lerp(Color3.fromRGB(8, 10, 20), 0.88)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(9, 11, 21)),
+	})
+	rightGrad.Rotation = 135
+
+	local rpad = Instance.new("UIPadding", rightCol)
+	rpad.PaddingTop    = UDim.new(0, 12)
+	rpad.PaddingBottom = UDim.new(0, 10)
+	rpad.PaddingLeft   = UDim.new(0, 12)
+	rpad.PaddingRight  = UDim.new(0, 12)
+
+	local rLayout = Instance.new("UIListLayout", rightCol)
+	rLayout.Padding             = UDim.new(0, 7)
+	rLayout.FillDirection       = Enum.FillDirection.Vertical
+	rLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+	-- Right panel header
+	local rHeader = Instance.new("TextLabel", rightCol)
+	rHeader.Size                  = UDim2.new(1, 0, 0, 13)
+	rHeader.BackgroundTransparency = 1
+	rHeader.Text                  = "CHANGELOG"
+	rHeader.TextColor3            = self.cfg.Color
+	rHeader.TextSize              = 10
+	rHeader.TextXAlignment        = Enum.TextXAlignment.Left
+	ApplyFont(rHeader, "bold")
+
+	local rDiv = Instance.new("Frame", rightCol)
+	rDiv.Size             = UDim2.new(1, 0, 0, 1)
+	rDiv.BackgroundColor3 = self.cfg.Color
+	rDiv.BackgroundTransparency = 0.6
+	rDiv.BorderSizePixel  = 0
+
+	-- Changelog content
+	local cl = self.cfg.Changelog
+	if cl and cl.Show and cl.Versions and #cl.Versions > 0 then
+		local TAG_INFO = {
+			NEW      = Color3.fromRGB(45, 185, 100),
+			FIX      = Color3.fromRGB(215, 70, 70),
+			IMPROVED = Color3.fromRGB(70, 145, 235),
+			REMOVED  = Color3.fromRGB(185, 85, 45),
+			SECURITY = Color3.fromRGB(195, 155, 35),
+		}
+
+		local clScroll = Instance.new("ScrollingFrame", rightCol)
+		clScroll.Size                 = UDim2.new(1, 0, 1, -40)
+		clScroll.BackgroundTransparency = 1
+		clScroll.BorderSizePixel      = 0
+		clScroll.ScrollBarThickness   = 3
+		clScroll.ScrollBarImageColor3 = self.cfg.Color
+		clScroll.CanvasSize           = UDim2.fromOffset(0, 0)
+		clScroll.AutomaticCanvasSize  = Enum.AutomaticSize.Y
+		clScroll.ScrollingDirection   = Enum.ScrollingDirection.Y
+
+		local clspad = Instance.new("UIPadding", clScroll)
+		clspad.PaddingRight = UDim.new(0, 4)
+
+		local clslist = Instance.new("UIListLayout", clScroll)
+		clslist.Padding       = UDim.new(0, 5)
+		clslist.FillDirection = Enum.FillDirection.Vertical
+		clslist.SortOrder     = Enum.SortOrder.LayoutOrder
+
+		for vi, entry in ipairs(cl.Versions) do
+			local isLatest = vi == 1
+			local tagKey   = entry.Tag and entry.Tag:upper() or nil
+			local tagCol   = TAG_INFO[tagKey] or Color3.fromRGB(80, 85, 115)
+
+			local card = Instance.new("Frame", clScroll)
+			card.Size             = UDim2.new(1, 0, 0, 0)
+			card.AutomaticSize    = Enum.AutomaticSize.Y
+			card.BackgroundColor3 = Color3.fromRGB(14, 18, 30)
+			card.BorderSizePixel  = 0
+			card.LayoutOrder      = vi
+			MkCorner(card, 7)
+			MkStroke(card, isLatest and self.cfg.Color or Color3.fromRGB(36, 40, 62), isLatest and 1.5 or 1, isLatest and 0.35 or 0.7)
+
+			local cardGrad = Instance.new("UIGradient", card)
+			cardGrad.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, self.cfg.Color:Lerp(Color3.fromRGB(9, 11, 21), isLatest and 0.85 or 0.95)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 13, 23)),
+			})
+			cardGrad.Rotation = 90
+
+			local cardPad = Instance.new("UIPadding", card)
+			cardPad.PaddingTop    = UDim.new(0, 6)
+			cardPad.PaddingBottom = UDim.new(0, 7)
+			cardPad.PaddingLeft   = UDim.new(0, 7)
+			cardPad.PaddingRight  = UDim.new(0, 7)
+
+			local cardList = Instance.new("UIListLayout", card)
+			cardList.Padding       = UDim.new(0, 4)
+			cardList.FillDirection = Enum.FillDirection.Vertical
+			cardList.SortOrder     = Enum.SortOrder.LayoutOrder
+
+			-- Version row
+			local vRow = Instance.new("Frame", card)
+			vRow.Size                  = UDim2.new(1, 0, 0, 16)
+			vRow.BackgroundTransparency = 1
+			vRow.LayoutOrder           = 0
+			local vrlo = Instance.new("UIListLayout", vRow)
+			vrlo.FillDirection     = Enum.FillDirection.Horizontal
+			vrlo.VerticalAlignment = Enum.VerticalAlignment.Center
+			vrlo.Padding           = UDim.new(0, 4)
+
+			local vPill = Instance.new("Frame", vRow)
+			vPill.Size                  = UDim2.new(0, 0, 1, 0)
+			vPill.AutomaticSize         = Enum.AutomaticSize.X
+			vPill.BackgroundColor3      = isLatest and self.cfg.Color or Color3.fromRGB(36, 40, 62)
+			vPill.BackgroundTransparency = isLatest and 0.1 or 0
+			vPill.BorderSizePixel       = 0
+			MkCorner(vPill, 99)
+			local vpp = Instance.new("UIPadding", vPill)
+			vpp.PaddingLeft = UDim.new(0, 5); vpp.PaddingRight = UDim.new(0, 5)
+			local vPillTxt = Instance.new("TextLabel", vPill)
+			vPillTxt.Size                  = UDim2.new(0, 0, 1, 0)
+			vPillTxt.AutomaticSize         = Enum.AutomaticSize.X
+			vPillTxt.BackgroundTransparency = 1
+			vPillTxt.Text                  = "v" .. tostring(entry.Version)
+			vPillTxt.TextColor3            = isLatest and ResolveTextColor() or Color3.fromRGB(180, 185, 215)
+			vPillTxt.TextSize              = 8
+			vPillTxt.TextXAlignment        = Enum.TextXAlignment.Center
+			ApplyFont(vPillTxt, "black")
+
+			if isLatest then
+				local latestPill = Instance.new("Frame", vRow)
+				latestPill.Size                  = UDim2.new(0, 0, 1, 0)
+				latestPill.AutomaticSize         = Enum.AutomaticSize.X
+				latestPill.BackgroundColor3      = Color3.fromRGB(30, 170, 80)
+				latestPill.BackgroundTransparency = 0.15
+				latestPill.BorderSizePixel       = 0
+				MkCorner(latestPill, 99)
+				local lpp = Instance.new("UIPadding", latestPill)
+				lpp.PaddingLeft = UDim.new(0, 4); lpp.PaddingRight = UDim.new(0, 4)
+				local latestTxt = Instance.new("TextLabel", latestPill)
+				latestTxt.Size                  = UDim2.new(0, 0, 1, 0)
+				latestTxt.AutomaticSize         = Enum.AutomaticSize.X
+				latestTxt.BackgroundTransparency = 1
+				latestTxt.Text                  = "LATEST"
+				latestTxt.TextColor3            = Color3.fromRGB(255, 255, 255)
+				latestTxt.TextSize              = 7
+				latestTxt.TextXAlignment        = Enum.TextXAlignment.Center
+				ApplyFont(latestTxt, "black")
+			end
+
+			if entry.Date then
+				local spacer2 = Instance.new("Frame", vRow)
+				spacer2.Size                  = UDim2.new(1, 0, 1, 0)
+				spacer2.BackgroundTransparency = 1
+				spacer2.LayoutOrder           = 90
+				local dateLbl2 = Instance.new("TextLabel", vRow)
+				dateLbl2.Size                  = UDim2.new(0, 0, 1, 0)
+				dateLbl2.AutomaticSize         = Enum.AutomaticSize.X
+				dateLbl2.BackgroundTransparency = 1
+				dateLbl2.Text                  = tostring(entry.Date)
+				dateLbl2.TextColor3            = Color3.fromRGB(75, 80, 110)
+				dateLbl2.TextSize              = 7
+				dateLbl2.LayoutOrder           = 99
+				ApplyFont(dateLbl2, "regular")
+			end
+
+			local sep2 = Instance.new("Frame", card)
+			sep2.Size                  = UDim2.new(1, 0, 0, 1)
+			sep2.BackgroundColor3      = Color3.fromRGB(255, 255, 255)
+			sep2.BackgroundTransparency = isLatest and 0.84 or 0.92
+			sep2.BorderSizePixel       = 0
+			sep2.LayoutOrder           = 1
+
+			for ni, note in ipairs(entry.Notes or {}) do
+				local noteStr = type(note) == "table" and (note.Text or tostring(note)) or tostring(note)
+				local noteRow = Instance.new("Frame", card)
+				noteRow.Size                  = UDim2.new(1, 0, 0, 0)
+				noteRow.AutomaticSize         = Enum.AutomaticSize.Y
+				noteRow.BackgroundTransparency = 1
+				noteRow.LayoutOrder           = ni + 1
+				local nrl2 = Instance.new("UIListLayout", noteRow)
+				nrl2.FillDirection     = Enum.FillDirection.Horizontal
+				nrl2.VerticalAlignment = Enum.VerticalAlignment.Top
+				nrl2.Padding           = UDim.new(0, 4)
+
+				local bullet2 = Instance.new("Frame", noteRow)
+				bullet2.Size                  = UDim2.fromOffset(4, 4)
+				bullet2.BackgroundColor3      = isLatest and tagCol or Color3.fromRGB(70, 75, 105)
+				bullet2.BackgroundTransparency = 0.1
+				bullet2.BorderSizePixel       = 0
+				MkCorner(bullet2, 99)
+				local bp2 = Instance.new("UIPadding", bullet2)
+				bp2.PaddingTop = UDim.new(0, 4)
+
+				local ntxt2 = Instance.new("TextLabel", noteRow)
+				ntxt2.Size                  = UDim2.new(1, -10, 0, 0)
+				ntxt2.AutomaticSize         = Enum.AutomaticSize.Y
+				ntxt2.BackgroundTransparency = 1
+				ntxt2.Text                  = noteStr
+				ntxt2.TextColor3            = isLatest and Color3.fromRGB(200, 205, 228) or Color3.fromRGB(148, 153, 178)
+				ntxt2.TextSize              = 10
+				ntxt2.TextXAlignment        = Enum.TextXAlignment.Left
+				ntxt2.TextWrapped           = true
+				ApplyFont(ntxt2, "regular")
+			end
+		end
+	else
+		-- No changelog configured, show placeholder
+		local noCl = Instance.new("TextLabel", rightCol)
+		noCl.Size                  = UDim2.new(1, 0, 0, 60)
+		noCl.BackgroundTransparency = 1
+		noCl.Text                  = "No changelog entries yet."
+		noCl.TextColor3            = Color3.fromRGB(80, 85, 115)
+		noCl.TextSize              = 11
+		noCl.TextXAlignment        = Enum.TextXAlignment.Center
+		noCl.TextYAlignment        = Enum.TextYAlignment.Center
+		ApplyFont(noCl, "regular")
+	end
+
+	-- Socials strip at bottom of center col
+	local visS = GetVisibleSocials()
+	if #visS > 0 then
+		local socialH2 = 30
+		local socialScroll = Instance.new("ScrollingFrame", centerCol)
+		socialScroll.Size                 = UDim2.new(1, 0, 0, socialH2 + 4)
+		socialScroll.BackgroundTransparency = 1
+		socialScroll.BorderSizePixel      = 0
+		socialScroll.ScrollBarThickness   = 0
+		socialScroll.ScrollingDirection   = Enum.ScrollingDirection.X
+		socialScroll.CanvasSize           = UDim2.fromOffset(0, 0)
+		socialScroll.AutomaticCanvasSize  = Enum.AutomaticSize.X
+		socialScroll.ElasticBehavior      = Enum.ElasticBehavior.WhenScrollable
+
+		local sstrip = Instance.new("Frame", socialScroll)
+		sstrip.Size                  = UDim2.new(0, 0, 1, 0)
+		sstrip.AutomaticSize         = Enum.AutomaticSize.X
+		sstrip.BackgroundTransparency = 1
+		local ssl = Instance.new("UIListLayout", sstrip)
+		ssl.FillDirection       = Enum.FillDirection.Horizontal
+		ssl.VerticalAlignment   = Enum.VerticalAlignment.Center
+		ssl.Padding             = UDim.new(0, 4)
+
+		local chipW2, chipH2 = 72, socialH2
+		for _, sd in ipairs(visS) do
+			local chip2 = Instance.new("Frame", sstrip)
+			chip2.Size                  = UDim2.fromOffset(chipW2, chipH2)
+			chip2.BackgroundColor3      = Color3.fromRGB(14, 18, 32)
+			chip2.BorderSizePixel       = 0
+			MkCorner(chip2, 99)
+			MkStroke(chip2, self.cfg.Color, sd.Pinned and 1.5 or 1, sd.Pinned and 0.1 or 0.65)
+
+			local cg2 = Instance.new("UIGradient", chip2)
+			cg2.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, self.cfg.Color:Lerp(Color3.fromRGB(10, 14, 28), 0.8)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 14, 28)),
+			})
+
+			local inf2 = Instance.new("Frame", chip2)
+			inf2.Size                  = UDim2.new(1, 0, 1, 0)
+			inf2.BackgroundTransparency = 1
+			local il2 = Instance.new("UIListLayout", inf2)
+			il2.Padding             = UDim.new(0, 4)
+			il2.FillDirection       = Enum.FillDirection.Horizontal
+			il2.HorizontalAlignment = Enum.HorizontalAlignment.Center
+			il2.VerticalAlignment   = Enum.VerticalAlignment.Center
+			local ip2 = Instance.new("UIPadding", inf2)
+			ip2.PaddingLeft = UDim.new(0, 6); ip2.PaddingRight = UDim.new(0, 6)
+
+			local si2 = Instance.new("ImageLabel", inf2)
+			si2.Size                  = UDim2.fromOffset(12, 12)
+			si2.BackgroundTransparency = 1
+			si2.Image                 = ResolveIcon(sd.Name, sd.Icon)
+			si2.ImageColor3           = Color3.fromRGB(255, 255, 255)
+
+			local st2 = Instance.new("TextLabel", inf2)
+			st2.Size                  = UDim2.new(0, 0, 1, 0)
+			st2.AutomaticSize         = Enum.AutomaticSize.X
+			st2.BackgroundTransparency = 1
+			st2.Text                  = sd.Name
+			st2.TextColor3            = Color3.fromRGB(255, 255, 255)
+			st2.TextTransparency      = 0.1
+			st2.TextSize              = 9
+			st2.ClipsDescendants      = true
+			ApplyFont(st2, "bold")
+
+			local sc2 = Instance.new("TextButton", chip2)
+			sc2.Size                  = UDim2.new(1, 0, 1, 0)
+			sc2.BackgroundTransparency = 1
+			sc2.Text                  = ""
+			sc2.ZIndex                = 10
+			local lnk2, nm2 = sd.Link, sd.Name
+			sc2.MouseButton1Click:Connect(function()
+				if setclipboard then setclipboard(lnk2) end
+				self:Toast(nm2 .. " copied!", "success")
+			end)
+			sc2.MouseEnter:Connect(function()
+				TweenService:Create(chip2, TweenInfo.new(0.12), { BackgroundColor3 = self.cfg.Color:Lerp(Color3.fromRGB(8, 12, 22), 0.5) }):Play()
+			end)
+			sc2.MouseLeave:Connect(function()
+				TweenService:Create(chip2, TweenInfo.new(0.12), { BackgroundColor3 = Color3.fromRGB(14, 18, 32) }):Play()
+			end)
+		end
+	end
+
+	-- Still build the side panel for socials popup (triggered via toggle button)
+	self:BuildSidePanel()
+end
+
+return Hub
